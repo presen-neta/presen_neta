@@ -1,0 +1,5 @@
+# AI context
+.ai_context/
+
+# Obfuscation related
+app.*.map.json
