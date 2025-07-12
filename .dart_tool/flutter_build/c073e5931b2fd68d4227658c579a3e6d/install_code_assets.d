@@ -1,0 +1,1 @@
+ /Users/n.ikemoto/workspace/app/presen_neta/.dart_tool/flutter_build/c073e5931b2fd68d4227658c579a3e6d/native_assets.json: 
