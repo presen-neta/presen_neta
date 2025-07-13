@@ -1,0 +1,75 @@
+name: Flutter CI
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set JAVA_HOME for Gradle
+        run: echo "org.gradle.java.home=$JAVA_HOME" >> android/gradle.properties
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.4'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate code
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      - name: Run static analysis (Lint)
+        run: |
+          echo "🔍 Running static analysis..."
+          dart analyze
+
+      - name: Check Dart formatting
+        run: |
+          echo "🧹 Checking Dart formatting..."
+          dart format --set-exit-if-changed .
+
+      - name: Run tests with coverage
+        run: flutter test --coverage
+
+      - name: Install lcov
+        run: sudo apt-get install -y lcov
+
+      - name: Check coverage threshold
+        run: |
+          echo "📊 Checking test coverage..."
+          COVERAGE=$(lcov --summary coverage/lcov.info | grep lines | awk '{ print $2 }' | sed 's/%//')
+          echo "Test coverage: $COVERAGE%"
+          if (( $(echo "$COVERAGE < 100.0" | bc -l) )); then
+            echo "❌ Coverage $COVERAGE% is below the minimum threshold of 100%"
+            exit 1
+          else
+            echo "✅ Coverage $COVERAGE% meets the minimum threshold"
+          fi
+
+      - name: Build APK (Development)
+        run: flutter build apk --dart-define=FLAVOR=dev
+
+      - name: Build APK (Staging)
+        if: github.event_name == 'push'
+        run: flutter build apk --dart-define=FLAVOR=stg
+
+      - name: Build APK (Production)
+        if: github.event_name == 'push'
+        run: flutter build apk --dart-define=FLAVOR=prod
