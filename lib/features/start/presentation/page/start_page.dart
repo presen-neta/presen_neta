@@ -6,12 +6,10 @@ import 'package:presen_neta/features/start/presentation/page/file_picker_service
 ///
 /// スライドファイルのアップロードと、簡単なチェックリストを提供するページ。
 class StartPage extends StatelessWidget {
-  /// コンストラクタ。
-  StartPage({super.key, FilePickerService? service})
-    : service = service ?? FilePickerService();
+  const StartPage({super.key, FilePickerService? service}) : _service = service;
+  final FilePickerService? _service;
 
-  /// ファイルピッカーサービス。
-  final FilePickerService service;
+  FilePickerService get service => _service ?? FilePickerService();
 
   /// ファイルピッカーを起動し、ファイルが選択されたら result ページへ遷移する。
   ///
