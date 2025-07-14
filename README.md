@@ -1,73 +1,73 @@
 # presen_neta
 
-## プロジェクト概要
+## Project Overview
 
-プレゼンのスライドを読み込んで、100人中何人が寝るほどつまらないか判定するネタスマホアプリ
+A fun mobile app that analyzes your presentation slides and estimates how many out of 100 people would fall asleep due to boredom.
 
 ---
 
-## 技術スタック
+## Tech Stack
 
-- **フロントエンド**: Flutter（Dart）
-- **状態管理**: hooks_riverpod
-- **ルーティング**: go_router
+- **Frontend**: Flutter (Dart)
+- **State Management**: hooks_riverpod
+- **Routing**: go_router
 - **CI/CD**: GitHub Actions
-- **テスト**: Flutter Test, Mockito
-- **ログ管理**: logger
-- **ドキュメント管理**: Notion
-- **デザイン**: Figma
+- **Testing**: Flutter Test, Mockito
+- **Logging**: logger
+- **Documentation**: Notion
+- **Design**: Figma
 
 ---
 
-## ページ構成
+## Page Structure
 
 ### StartPage
 
-- プレゼンをしている人のイラスト
-- 「100人中何人が寝るかな？」という大きなタイトル
-- 振り返りを促すブロック（例：「目的ははっきりしている？」「文字ばかりじゃない？」「自分よがりじゃない？」）
-- 「スライドをアップロード」ボタン
-    - ファイル選択
-    - AI解析中はリワード広告を表示
+- Illustration of a person giving a presentation
+- Large title: "How many out of 100 will fall asleep?"
+- Reflection prompts (e.g., "Is your purpose clear?", "Is it all text?", "Is it self-centered?")
+- "Upload Slide" button
+    - Select file
+    - Reward ad is shown while AI is analyzing
 
 ### ResultPage
 
-- 結果画像（寝ている人のイラスト）
-    - 簡潔な一言（例：「何が言いたいの？」「文字ばっかり！」「つまんない！」）
-    - 何人が寝たか（例：「80%が寝た！」）
-- シェアボタン
-- ブラーがかかった「近日中に詳細評価を実装予定」のブロック
-- 「別のスライドをアップロード」ボタン
+- Result image (illustration of people sleeping)
+    - Short comment (e.g., "What's your point?", "Too much text!", "So boring!")
+    - Number of people who fell asleep (e.g., "80% fell asleep!")
+- Share button
+- Blurred block indicating "Detailed evaluation coming soon"
+- "Upload another slide" button
 
 ---
 
-## ディレクトリ構成（クリーンアーキテクチャ）
+## Directory Structure (Clean Architecture)
 
 ```
 lib/
-  app/        # アプリ全体の設定・ルーティング・DI・共通Widget等
-  features/   # 各機能ごとのモジュール（UI/モデル/リポジトリ/サービス/プロバイダ等）
-  shared/     # 共通リソース（モデル/リポジトリ/サービス/Widget/定数/例外等）
-  main.dart   # エントリーポイント
-test/         # テストコード
-assets/       # 画像等のアセット
+  app/        # App-wide settings, routing, DI, common widgets, etc.
+  features/   # Feature modules (UI, models, repositories, services, providers, etc.)
+  shared/     # Shared resources (models, repositories, services, widgets, constants, exceptions, etc.)
+  main.dart   # Entry point
+test/         # Test code
+assets/       # Image and other assets
 ```
 
-- **依存関係**: App → Feature → Shared のみ許可。Feature間の依存は禁止。Sharedはどこにも依存しない。
+- **Dependency Rule**: Only App → Feature → Shared is allowed. No direct dependencies between features. Shared does not depend on anything.
 
 ---
 
-## 開発・運用ルール
+## Development & Operation Rules
 
-- 各Featureは責務ごとにサブディレクトリを分ける
-- 共通処理は `shared/` にまとめる
-- 新規機能追加時は `features/` 配下にディレクトリを作成
-- Providerは関連するRepositoryやServiceの実装ファイル内に定義
-- 命名規則を統一
+- Each feature should be divided into subdirectories by responsibility
+- Common logic should be placed in `shared/`
+- When adding new features, create a new directory under `features/`
+- Providers should be defined in the same file as their related repository or service implementation
+- Use consistent naming conventions
 
 ---
 
-## 参考
+## References
 
 - [Flutter App Architecture – a modular approach](https://deep5.io/en/flutter-app-architecture-a-modular-approach/)
 - [Effective Dart: Directory Structure](https://dart.dev/guides/libraries/create-library-packages#directory-structure)
