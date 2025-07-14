@@ -6,9 +6,19 @@ import 'package:presen_neta/features/start/presentation/page/file_picker_service
 ///
 /// スライドファイルのアップロードと、簡単なチェックリストを提供するページ。
 class StartPage extends StatelessWidget {
+  /// [FilePickerService] を外部から注入できるコンストラクタ。
+  ///
+  /// テスト時などにモックを渡すことで、ファイル選択処理を差し替えられる。
   const StartPage({super.key, FilePickerService? service}) : _service = service;
+
+  /// ファイルピッカーサービスのインスタンス。
+  ///
+  /// テスト時は外部から注入、本番時はデフォルトインスタンスを利用する。
   final FilePickerService? _service;
 
+  /// 実際に利用する [FilePickerService] を返すゲッター。
+  ///
+  /// 外部から注入されていればそれを、なければデフォルトインスタンスを返す。
   FilePickerService get service => _service ?? FilePickerService();
 
   /// ファイルピッカーを起動し、ファイルが選択されたら result ページへ遷移する。
