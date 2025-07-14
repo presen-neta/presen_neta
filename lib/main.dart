@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:presen_neta/app/app_router/app_router.dart';
+import 'app/app_router/app_router.dart';
 
 void main() {
   runApp(const MyApp());
