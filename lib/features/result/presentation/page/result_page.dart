@@ -9,12 +9,11 @@ class ResultPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('結果'),
       ),
-      body: Center(
+      body: const Center(
         child: Text('ここに結果を表示'),
       ),
     );

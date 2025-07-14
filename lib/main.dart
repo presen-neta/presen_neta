@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
-import 'app/app_router/app_router.dart';
 
+import 'package:presen_neta/app/app_router/app_router.dart';
+
+/// アプリケーションのエントリーポイント。
 void main() {
   runApp(const MyApp());
 }
 
-/// アプリケーションのエントリーポイント。
+/// アプリ全体のルートウィジェット。
 ///
-/// go_router を利用してルーティングを管理する。
+/// [appRouter] を利用してルーティングを管理する。
 class MyApp extends StatelessWidget {
+  /// [MyApp] のコンストラクタ。
   const MyApp({super.key});
 
+  /// ウィジェットツリーを構築する。
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(

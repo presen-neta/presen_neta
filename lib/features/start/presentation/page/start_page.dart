@@ -83,11 +83,11 @@ class StartPage extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: Column(
+                  child: const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        children: const [
+                        children: [
                           Icon(
                             Icons.check_circle_outline,
                             color: Color(0xFF00B8D9),
@@ -96,9 +96,9 @@ class StartPage extends StatelessWidget {
                           Text('目的ははっきりしている？', style: TextStyle(fontSize: 16)),
                         ],
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
                       Row(
-                        children: const [
+                        children: [
                           Icon(
                             Icons.text_snippet_outlined,
                             color: Color(0xFF00B8D9),
@@ -107,9 +107,9 @@ class StartPage extends StatelessWidget {
                           Text('文字ばっかりのスライド？', style: TextStyle(fontSize: 16)),
                         ],
                       ),
-                      const SizedBox(height: 10),
+                      SizedBox(height: 10),
                       Row(
-                        children: const [
+                        children: [
                           Icon(
                             Icons.visibility_outlined,
                             color: Color(0xFF00B8D9),
