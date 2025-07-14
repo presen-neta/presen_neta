@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:presen_neta/features/start/presentation/page/file_picker_service.dart';
 import 'package:presen_neta/features/start/presentation/page/start_page.dart';
+import 'package:presen_neta/shared/service/file_picker_service.dart';
 
 import 'start_page_test.mocks.dart';
 
@@ -20,7 +20,9 @@ void main() {
       routes: [
         GoRoute(
           path: '/',
-          builder: (context, state) => StartPage(service: mockService),
+          builder:
+              (context, state) =>
+                  StartPage(service: mockService as FilePickerService?),
         ),
         GoRoute(
           path: '/result',

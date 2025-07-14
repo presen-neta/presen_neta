@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:presen_neta/features/start/presentation/page/file_picker_service.dart';
+import 'package:presen_neta/shared/service/file_picker_service.dart';
 
 /// スタートページを表示するウィジェット。
 ///
