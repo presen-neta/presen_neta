@@ -1,5 +1,6 @@
-import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
 
+import 'package:go_router/go_router.dart';
 import 'package:presen_neta/features/result/presentation/page/result_page.dart';
 import 'package:presen_neta/features/start/presentation/page/start_page.dart';
 
@@ -20,4 +21,10 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const ResultPage(),
     ),
   ],
+  errorBuilder:
+      (context, state) => const Scaffold(
+        body: Center(
+          child: Text('Page Not Found'),
+        ),
+      ),
 );
