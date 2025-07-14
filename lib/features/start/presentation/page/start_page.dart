@@ -13,7 +13,7 @@ class StartPage extends StatelessWidget {
   ///
   /// [context] は遷移に利用される。async gap 後の利用は mounted でガードする。
   Future<void> _pickFile(BuildContext context) async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.any);
+    final result = await FilePicker.platform.pickFiles();
     if (!context.mounted) return;
     if (result != null && result.files.isNotEmpty) {
       context.go('/result');
@@ -30,11 +30,10 @@ class StartPage extends StatelessWidget {
         child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: 20.0,
-              vertical: 32.0,
+              horizontal: 20,
+              vertical: 32,
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 16),
                 Container(
@@ -43,7 +42,7 @@ class StartPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.07),
+                        color: Colors.black.withValues(alpha: 0.07),
                         blurRadius: 16,
                         offset: const Offset(0, 8),
                       ),
@@ -78,7 +77,7 @@ class StartPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(18),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
+                        color: Colors.black.withValues(alpha: 0.06),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
