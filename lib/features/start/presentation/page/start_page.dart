@@ -1,19 +1,23 @@
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:presen_neta/features/start/presentation/page/file_picker_service.dart';
 
 /// スタートページを表示するウィジェット。
 ///
 /// スライドファイルのアップロードと、簡単なチェックリストを提供するページ。
 class StartPage extends StatelessWidget {
   /// コンストラクタ。
-  const StartPage({super.key});
+  StartPage({super.key, FilePickerService? service})
+    : service = service ?? FilePickerService();
+
+  /// ファイルピッカーサービス。
+  final FilePickerService service;
 
   /// ファイルピッカーを起動し、ファイルが選択されたら result ページへ遷移する。
   ///
   /// [context] は遷移に利用される。async gap 後の利用は mounted でガードする。
   Future<void> _pickFile(BuildContext context) async {
-    final result = await FilePicker.platform.pickFiles();
+    final result = await service.pickFile();
     if (!context.mounted) return;
     if (result != null && result.files.isNotEmpty) {
       context.go('/result');
