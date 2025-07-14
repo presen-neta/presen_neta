@@ -1,17 +1,19 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:presen_neta/ui/result_page.dart';
+import 'package:go_router/go_router.dart';
+
+/// スタートページを表示するウィジェット。
+///
+/// スライドファイルのアップロードと、簡単なチェックリストを提供するページ。
 
 class StartPage extends StatelessWidget {
   const StartPage({super.key});
 
+  /// ファイルピッカーを起動し、ファイルが選択されたら result ページへ遷移する。
   Future<void> _pickFile(BuildContext context) async {
     final result = await FilePicker.platform.pickFiles(type: FileType.any);
     if (result != null && result.files.isNotEmpty) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const ResultPage()),
-      );
+      context.go('/result');
     }
   }
 
