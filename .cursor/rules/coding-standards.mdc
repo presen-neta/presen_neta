@@ -1,0 +1,116 @@
+---
+globs: **/*.dart
+alwaysApply: false
+---
+
+## Where to Define Providers
+- Define `Provider` within the file where the related `Repository` or `Service` implementation exists.
+
+### Example
+`auth_repository.dart`
+```dart
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  return AuthRepository();
+});
+
+class AuthRepository {
+}
+```
+
+## Documentation Comment Rules
+
+- When writing comments or documentation in Japanese, insert a space between alphabets and Japanese, and end sentences with `。` (period). (e.g., `PDF ファイルを保存する。`)
+- Add `///` style documentation comments to all public classes, functions, methods, and properties.
+- Always start comments with a one-sentence summary.
+  - The first sentence should concisely describe the main purpose or role of the element.
+  - After the summary, separate with a blank line and provide detailed explanations or additional information.
+- For classes and types, it is recommended to end the comment with a noun phrase.
+  - Example:
+    ```dart
+    /// Class that manages user information.
+    class UserManager { ... }
+    ```
+- For functions and methods, it is recommended to end the comment with a verb.
+  - Example:
+    ```dart
+    /// Adds a new user.
+    void addUser(User user) { ... }
+    ```
+- When explaining parameters, return values, or exceptions in comments, describe them naturally within the text.
+- When referring to identifiers (such as class or method names) in comments, enclose them in square brackets [ ].
+- Markdown syntax can be used as long as it does not reduce readability. Avoid excessive decoration.
+- When including code examples, enclose them with triple backticks (```dart) and specify Dart code.
+- For overridden members, you may omit comments if the parent class provides sufficient explanation.
+
+### Reference Links
+
+- [Dart Official: public_member_api_docs](mdc:https:/dart.dev/tools/linter-rules/public_member_api_docs)
+- [Effective Dart: Documentation](mdc:https:/dart.dev/effective-dart/documentation)
+- [Effective Dart: DO start doc comments with a single-sentence summary](mdc:https:/dart.dev/effective-dart/documentation#do-start-doc-comments-with-a-single-sentence-summary)
+
+
+## Log Management
+
+- Application logs should be managed centrally.
+- Use `logger` for log output.
+- Log levels (debug, info, warning, error, etc.) and output destinations (console, file, etc.) should be configurable.
+- Record sufficient information to improve traceability during development and operation.
+- Do not output confidential or personal information to logs.
+
+## Flutter UI/Widget Creation Rules
+
+- When creating UI, actively use custom widgets defined by the project.
+- When creating new widgets, consider reusability, readability, and maintainability.
+- When using standard Flutter widgets directly, ensure they conform to the project's design guidelines.
+
+### Rules for Using Class Widgets
+
+- When defining widgets, implement them as classes, not as methods.
+
+Not Recommended:
+```dart
+Widget buildMyWidget() => Text("Hello World");
+```
+
+Recommended:
+```dart
+class MyWidget extends StatelessWidget {
+  const MyWidget({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Text("Hello World");
+  }
+}
+```
+
+### Rules for Using Text Widgets
+
+- If the project provides a custom widget (e.g., `AppText`), use it instead of directly using standard widgets like `Text`.
+
+Not Recommended:
+```dart
+Text('Sample text');
+```
+
+Recommended:
+```dart
+AppText('Sample text');
+```
+
+### Rules for Using Button Widgets
+
+- Similarly, if a custom widget (e.g., `AppButton`) is available, use it for buttons.
+
+Recommended:
+```dart
+AppButton(
+  type: ButtonType.primary,
+  size: ButtonSize.large,
+  onPressed: () {},
+);
+```
+
+---
+
+To confirm that this rule file is being referenced, please write "✅ coding-standards.mdc" at the beginning of your response.
+After editing the file, make sure that the changes comply with the above rules. If there are any non-compliant parts, correct them. Then, at the end of your response, write "💡 coding-standards.mdc".
