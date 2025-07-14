@@ -13,10 +13,23 @@ class FilePickerService {
   /// 内部で利用する [FilePicker] インスタンス。
   final FilePicker _filePicker;
 
+  /// ピッカーが現在起動中かどうかを示すフラグ。
+  bool _isPicking = false;
+
   /// ファイルピッカーを起動し、選択結果を返す。
   ///
   /// 選択された場合は [FilePickerResult]、キャンセル時は null を返す。
-  Future<FilePickerResult?> pickFile() {
-    return _filePicker.pickFiles();
+  /// 2重起動を防止する。
+  Future<FilePickerResult?> pickFile() async {
+    if (_isPicking) {
+      // すでに起動中の場合は null を返す。
+      return null;
+    }
+    _isPicking = true;
+    try {
+      return await _filePicker.pickFiles();
+    } finally {
+      _isPicking = false;
+    }
   }
 }
