@@ -28,8 +28,10 @@ migrate_working_dir/
 *.iws
 .idea/
 
-# VSCode (optional)
-#.vscode/
+# CocoaPods（iOS）
+ios/Pods/
+ios/Podfile.lock
+ios/.symlinks/
 
 # Flutter/Dart/Pub related
 **/doc/api/
