@@ -5,18 +5,22 @@ import 'package:go_router/go_router.dart';
 /// スタートページを表示するウィジェット。
 ///
 /// スライドファイルのアップロードと、簡単なチェックリストを提供するページ。
-
 class StartPage extends StatelessWidget {
+  /// コンストラクタ。
   const StartPage({super.key});
 
   /// ファイルピッカーを起動し、ファイルが選択されたら result ページへ遷移する。
+  ///
+  /// [context] は遷移に利用される。async gap 後の利用は mounted でガードする。
   Future<void> _pickFile(BuildContext context) async {
     final result = await FilePicker.platform.pickFiles(type: FileType.any);
+    if (!context.mounted) return;
     if (result != null && result.files.isNotEmpty) {
       context.go('/result');
     }
   }
 
+  /// ウィジェットツリーを構築する。
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -128,7 +132,7 @@ class StartPage extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      elevation: 4,
+                      // elevation: 4, // デフォルト値なので削除
                     ),
                     onPressed: () {
                       _pickFile(context);
