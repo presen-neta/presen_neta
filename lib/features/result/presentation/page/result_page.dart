@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 /// 結果画面を表示するウィジェット。
@@ -130,7 +131,7 @@ class ResultPage extends StatelessWidget {
                       ),
                     ),
                     onPressed: () {
-                      Navigator.popUntil(context, (route) => route.isFirst);
+                      context.go('/');
                     },
                     icon: const Icon(
                       Icons.upload_file,
