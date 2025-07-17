@@ -39,7 +39,7 @@ class ResultPage extends StatelessWidget {
                   ),
                   padding: const EdgeInsets.all(16),
                   child: Image.asset(
-                    'assets/ReslutPage.png',
+                    'assets/ResultPage.png',
                     width: 220,
                     fit: BoxFit.contain,
                   ),
