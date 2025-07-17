@@ -50,7 +50,9 @@ void main() {
     );
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('スライドをアップロード'));
+    final uploadButton = find.text('スライドをアップロード');
+    await tester.ensureVisible(uploadButton);
+    await tester.tap(uploadButton);
     await tester.pumpAndSettle();
     expect(router.state.uri.toString(), '/result');
     expect(find.byKey(const Key('result-page')), findsOneWidget);
@@ -60,7 +62,9 @@ void main() {
     when(mockService.pickFile()).thenAnswer((_) async => null);
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('スライドをアップロード'));
+    final uploadButton = find.text('スライドをアップロード');
+    await tester.ensureVisible(uploadButton);
+    await tester.tap(uploadButton);
     await tester.pumpAndSettle();
     // ルートは変わらない
     expect(router.state.uri.toString(), '/');
