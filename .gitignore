@@ -1,15 +1,19 @@
 # AI context
 .ai_context/
 
+# Cursor settings
+.cursor/mcp.json
+.DS_Store
+
 # Obfuscation related
 app.*.map.json
+app.*.symbols
 
 # Miscellaneous
 *.class
 *.log
 *.pyc
 *.swp
-.DS_Store
 .atom/
 .build/
 .buildlog/
@@ -17,7 +21,6 @@ app.*.map.json
 .svn/
 .swiftpm/
 migrate_working_dir/
-.cursor/mcp.json
 
 # IntelliJ related
 *.iml
@@ -25,10 +28,10 @@ migrate_working_dir/
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# CocoaPods（iOS）
+ios/Pods/
+ios/Podfile.lock
+ios/.symlinks/
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -38,22 +41,13 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/build/
+build/
 coverage/
 
-# Symbolication related
-app.*.symbols
-
-# Obfuscation related
-app.*.map.json
-
-# Android Studio will place build artifacts here
+# Android Studio build outputs
 /android/app/debug
 /android/app/profile
 /android/app/release
 
-# FVM Version Cache
+# FVM
 .fvm/
-
-# AI context
-.ai_context/

@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:presen_neta/ui/start_page.dart';
 
+import 'package:presen_neta/app/app_router/app_router.dart';
+
+/// アプリケーションのエントリーポイント。
 void main() {
   runApp(const MyApp());
 }
 
+/// アプリ全体のルートウィジェット。
+///
+/// [appRouter] を利用してルーティングを管理する。
 class MyApp extends StatelessWidget {
+  /// [MyApp] のコンストラクタ。
   const MyApp({super.key});
 
+  /// ウィジェットツリーを構築する。
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: const StartPage(),
+    return MaterialApp.router(
+      routerConfig: appRouter,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightBlue),
       ),
