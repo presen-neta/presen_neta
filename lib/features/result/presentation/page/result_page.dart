@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -98,7 +96,7 @@ class ResultPage extends ConsumerWidget {
                 // Gemini AI分析結果セクション
                 Consumer(
                   builder: (context, ref, child) {
-                    final analysisResult = ref.watch(analysisResultProvider);
+                    final analysisResult = ref.watch(analysisNotifierProvider);
 
                     return analysisResult.when(
                       data:
@@ -219,8 +217,10 @@ class ResultPage extends ConsumerWidget {
                     ),
                     onPressed: () {
                       // サンプルコンテンツで分析を実行
-                      ref.read(analysisResultProvider.notifier).analyzeContent(
-                        '''
+                      ref
+                          .read(analysisNotifierProvider.notifier)
+                          .analyzeContent(
+                            '''
 サンプルプレゼンテーション内容：
 1. 導入：弊社の新製品について
 2. 問題提起：現在の市場課題
@@ -230,7 +230,7 @@ class ResultPage extends ConsumerWidget {
 このプレゼンテーションは文字が多く、視覚的な要素が少ないため、
 視聴者が退屈に感じる可能性があります。
 ''',
-                      );
+                          );
                     },
                     icon: const Icon(Icons.auto_awesome, color: Colors.white),
                     label: const Text(
