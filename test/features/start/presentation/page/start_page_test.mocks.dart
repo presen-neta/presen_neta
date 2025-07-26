@@ -38,4 +38,12 @@ class MockFilePickerService extends _i1.Mock implements _i2.FilePickerService {
             returnValue: _i3.Future<_i4.FilePickerResult?>.value(),
           )
           as _i3.Future<_i4.FilePickerResult?>);
+
+  @override
+  _i3.Future<String?> readFileContent(_i4.PlatformFile? file) =>
+      (super.noSuchMethod(
+            Invocation.method(#readFileContent, [file]),
+            returnValue: _i3.Future<String?>.value(),
+          )
+          as _i3.Future<String?>);
 }
