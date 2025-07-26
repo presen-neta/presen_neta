@@ -70,40 +70,6 @@ class GeminiService {
     }
   }
 
-  /// ストリーミングでプレゼンテーションを分析する
-  ///
-  /// [content] 分析対象のプレゼンテーション内容
-  /// [onData] データを受信した時のコールバック
-  Future<void> analyzePresentationStream(
-    String content,
-    void Function(String) onData,
-  ) async {
-    try {
-      _logger.i('ストリーミング分析開始');
-      _logger.d('分析対象コンテンツ: ${content.length}文字');
-
-      final prompt = Content.text(
-        _presentationAnalysisPrompt.replaceAll('{content}', content),
-      );
-
-      final response = _model.generateContentStream([prompt]);
-
-      await for (final chunk in response) {
-        final text = chunk.text;
-        if (text != null) {
-          _logger.d('ストリーミングデータ受信: ${text.length}文字');
-          onData(text);
-        }
-      }
-
-      _logger.i('ストリーミング分析完了');
-    } catch (e) {
-      final errorMessage = 'エラーが発生しました: $e';
-      _logger.e('ストリーミング分析エラー: $e');
-      onData(errorMessage);
-    }
-  }
-
   /// トークン数をカウントする
   ///
   /// [content] カウント対象のコンテンツ
