@@ -44,11 +44,12 @@ void main() {
       expect(picked!.files.first.name, 'first.txt');
     });
 
-    test('空のファイルリストが返された場合、nullを返す', () async {
-      final result = FilePickerResult([]);
+    test('空のファイルリストが返された場合、FilePickerResultを返す', () async {
+      const result = FilePickerResult([]);
       when(mockFilePicker.pickFiles()).thenAnswer((_) async => result);
       final picked = await service.pickFile();
-      expect(picked, isNull);
+      expect(picked, isNotNull);
+      expect(picked!.files, isEmpty);
     });
 
     test('pickFilesが例外を投げた場合、nullを返す', () async {

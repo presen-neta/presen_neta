@@ -26,7 +26,7 @@ void main() {
     await tester.pumpWidget(MaterialApp.router(routerConfig: router));
     await tester.pumpAndSettle();
     expect(find.text('つまらん！'), findsOneWidget);
-    expect(find.text('69%が寝た!'), findsOneWidget);
+    expect(find.text('69人が寝た!'), findsOneWidget);
     expect(find.text('結果をシェア'), findsOneWidget);
     expect(find.text('別のスライドをアップロード'), findsOneWidget);
     expect(find.text('良い点'), findsOneWidget);
