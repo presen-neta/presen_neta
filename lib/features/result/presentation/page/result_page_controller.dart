@@ -7,15 +7,6 @@ import 'package:share_plus/share_plus.dart';
 
 /// ResultPageのシェア機能を担当するコントローラー。
 class ResultPageController {
-  /// 画像生成サービス。
-  final ImageGeneratorService _imageGenerator;
-
-  /// シェアサービス。
-  final SharePlus _shareService;
-
-  /// 一時ディレクトリ取得関数。
-  final Future<Directory> Function() _getTemporaryDirectory;
-
   /// [ResultPageController] のコンストラクタ。
   ///
   /// [imageGenerator] 画像生成サービス（デフォルト: ImageGeneratorService）
@@ -28,6 +19,15 @@ class ResultPageController {
   }) : _imageGenerator = imageGenerator ?? const ImageGeneratorService(),
        _shareService = shareService ?? SharePlus.instance,
        _getTemporaryDirectory = getTempDir ?? getTemporaryDirectory;
+
+  /// 画像生成サービス。
+  final ImageGeneratorService _imageGenerator;
+
+  /// シェアサービス。
+  final SharePlus _shareService;
+
+  /// 一時ディレクトリ取得関数。
+  final Future<Directory> Function() _getTemporaryDirectory;
 
   /// 結果画像を生成してシェアする。
   ///

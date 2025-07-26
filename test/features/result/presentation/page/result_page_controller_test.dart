@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:presen_neta/features/result/presentation/page/result_page_controller.dart';
 import 'package:presen_neta/shared/service/image_generator_service.dart';
 import 'package:share_plus/share_plus.dart';
