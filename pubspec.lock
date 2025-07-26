@@ -218,7 +218,7 @@ packages:
     source: hosted
     version: "1.1.1"
   envied_generator:
-    dependency: "direct main"
+    dependency: "direct dev"
     description:
       name: envied_generator
       sha256: "894f6c5eb624c60a1ce6f642b6fd7ec68bc3440aa6f1881837aa9acbbeade0c8"
