@@ -20,7 +20,7 @@ class GeminiService {
 
     _logger.i('GeminiService初期化完了');
     _model = GenerativeModel(
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-pro',
       apiKey: key,
     );
   }
