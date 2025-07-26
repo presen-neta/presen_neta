@@ -28,6 +28,30 @@ class StartPage extends StatelessWidget {
     final result = await service.pickFile();
     if (!context.mounted) return;
     if (result != null && result.files.isNotEmpty) {
+      final file = result.files.first;
+      String? fileContent;
+
+      // ファイル内容を読み取り
+      if (file.extension == 'txt') {
+        fileContent = await service.readFileContent(file);
+      }
+
+      // ファイル内容をResultPageに渡す（現在はサンプルデータを使用）
+      final sampleContent =
+          fileContent ??
+          '''
+プレゼンテーション内容：
+1. 導入：弊社の新製品について
+2. 問題提起：現在の市場課題
+3. 解決策：弊社製品の特徴
+4. まとめ：今後の展望
+
+このプレゼンテーションは文字が多く、視覚的な要素が少ないため、
+視聴者が退屈に感じる可能性があります。
+''';
+
+      // グローバルな状態管理でファイル内容を保存（簡易実装）
+      // 実際の実装ではRiverpodやProviderを使用
       context.go('/result');
     }
   }
