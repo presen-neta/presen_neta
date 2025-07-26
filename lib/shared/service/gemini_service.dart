@@ -1,15 +1,27 @@
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:logger/logger.dart';
+import 'package:presen_neta/shared/config/env_config.dart';
 
 /// Google Generative AIを使用してプレゼンテーションを分析するサービス
 class GeminiService {
   late final GenerativeModel _model;
+  final Logger _logger = Logger();
 
   /// GeminiServiceのコンストラクタ
   ///
   /// APIキーは環境変数から取得するか、直接渡すことができます
   GeminiService({String? apiKey}) {
-    // 実際の実装では、環境変数や設定ファイルからAPIキーを取得
-    final key = apiKey ?? 'your_api_key_here';
+    // 環境変数からAPIキーを取得
+    final key = apiKey ?? EnvConfig.geminiApiKey;
+
+    // デバッグ用：APIキーが設定されているかチェック
+    if (key.isEmpty || key == 'your_gemini_api_key_here') {
+      final errorMessage = 'API key not valid. Please pass a valid API key.';
+      _logger.e('GeminiService初期化エラー: $errorMessage');
+      throw Exception(errorMessage);
+    }
+
+    _logger.i('GeminiService初期化完了');
     _model = GenerativeModel(
       model: 'gemini-1.5-flash',
       apiKey: key,
@@ -22,6 +34,9 @@ class GeminiService {
   /// 分析結果の文字列を返す
   Future<String> analyzePresentation(String content) async {
     try {
+      _logger.i('プレゼンテーション分析開始');
+      _logger.d('分析対象コンテンツ: ${content.length}文字');
+
       final prompt = Content.text('''
 以下のプレゼンテーション内容を分析し、以下の観点で評価してください：
 
@@ -38,9 +53,16 @@ $content
 ''');
 
       final response = await _model.generateContent([prompt]);
-      return response.text ?? '分析に失敗しました';
+      final result = response.text ?? '分析に失敗しました';
+
+      _logger.i('プレゼンテーション分析完了');
+      _logger.d('分析結果: ${result.length}文字');
+
+      return result;
     } catch (e) {
-      return 'エラーが発生しました: $e';
+      final errorMessage = 'エラーが発生しました: $e';
+      _logger.e('プレゼンテーション分析エラー: $e');
+      return errorMessage;
     }
   }
 
@@ -53,6 +75,9 @@ $content
     void Function(String) onData,
   ) async {
     try {
+      _logger.i('ストリーミング分析開始');
+      _logger.d('分析対象コンテンツ: ${content.length}文字');
+
       final prompt = Content.text('''
 以下のプレゼンテーション内容を分析し、以下の観点で評価してください：
 
@@ -73,11 +98,16 @@ $content
       await for (final chunk in response) {
         final text = chunk.text;
         if (text != null) {
+          _logger.d('ストリーミングデータ受信: ${text.length}文字');
           onData(text);
         }
       }
+
+      _logger.i('ストリーミング分析完了');
     } catch (e) {
-      onData('エラーが発生しました: $e');
+      final errorMessage = 'エラーが発生しました: $e';
+      _logger.e('ストリーミング分析エラー: $e');
+      onData(errorMessage);
     }
   }
 
@@ -87,10 +117,15 @@ $content
   /// トークン数を返す
   Future<int> countTokens(String content) async {
     try {
+      _logger.d('トークン数カウント開始: ${content.length}文字');
+
       final prompt = Content.text(content);
       final tokenCount = await _model.countTokens([prompt]);
+
+      _logger.i('トークン数カウント完了: ${tokenCount.totalTokens}トークン');
       return tokenCount.totalTokens;
     } catch (e) {
+      _logger.e('トークン数カウントエラー: $e');
       return 0;
     }
   }
