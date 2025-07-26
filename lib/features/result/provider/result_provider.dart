@@ -1,3 +1,4 @@
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:presen_neta/shared/service/gemini_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -5,7 +6,7 @@ part 'result_provider.g.dart';
 
 /// GeminiServiceのプロバイダー
 @riverpod
-GeminiService geminiService(GeminiServiceRef ref) {
+GeminiService geminiService(Ref ref) {
   return GeminiService();
 }
 
