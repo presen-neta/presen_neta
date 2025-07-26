@@ -52,10 +52,12 @@ void main() {
       expect(picked!.files, isEmpty);
     });
 
-    test('pickFilesが例外を投げた場合、nullを返す', () async {
+    test('pickFilesが例外を投げた場合、例外が伝播する', () async {
       when(mockFilePicker.pickFiles()).thenThrow(Exception('Test exception'));
-      final picked = await service.pickFile();
-      expect(picked, isNull);
+      expect(
+        () => service.pickFile(),
+        throwsA(isA<Exception>()),
+      );
     });
   });
 }
