@@ -93,24 +93,71 @@ class ResultPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 28),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
-                  child: Stack(
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        width: double.infinity,
-                        color: Colors.white.withValues(alpha: 0.8),
-                        padding: const EdgeInsets.symmetric(vertical: 32),
-                        alignment: Alignment.center,
-                        child: const Text(
-                          '近日中に詳細評価機能実装',
-                          style: TextStyle(fontSize: 20, color: Colors.black87),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.thumb_up,
+                            color: Color(0xFF00B8D9),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '良い点',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF00B8D9),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        '• スライドの構成が分かりやすい\n• 文字サイズが適切\n• 色使いが統一されている',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: const Color(0xFF374151),
+                          height: 1.5,
                         ),
                       ),
-                      Positioned.fill(
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-                          child: Container(color: Colors.transparent),
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.lightbulb_outline,
+                            color: Color(0xFFFF6B35),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '改善提案',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFFFF6B35),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        '• アニメーションを追加して動きを出す\n• より具体的なデータを提示する\n• 結論を最初に示す',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: const Color(0xFF374151),
+                          height: 1.5,
                         ),
                       ),
                     ],
