@@ -55,3 +55,4 @@ coverage/
 # Environment variables
 .env
 env.g.dart
+env_config.g.dart
