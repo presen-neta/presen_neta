@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:presen_neta/app/app_router/app_router.dart';
 
 /// アプリケーションのエントリーポイント。
 void main() {
-  runApp(const MyApp());
+  runApp(
+    const ProviderScope(
+      child: MyApp(),
+    ),
+  );
 }
 
 /// アプリ全体のルートウィジェット。
