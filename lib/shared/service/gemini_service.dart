@@ -4,9 +4,6 @@ import 'package:presen_neta/shared/config/env_config.dart';
 
 /// Google Generative AIを使用してプレゼンテーションを分析するサービス
 class GeminiService {
-  late final GenerativeModel _model;
-  final Logger _logger = Logger();
-
   /// GeminiServiceのコンストラクタ
   ///
   /// APIキーは環境変数から取得するか、直接渡すことができます
@@ -16,7 +13,7 @@ class GeminiService {
 
     // デバッグ用：APIキーが設定されているかチェック
     if (key.isEmpty || key == 'your_gemini_api_key_here') {
-      final errorMessage = 'API key not valid. Please pass a valid API key.';
+      const errorMessage = 'API key not valid. Please pass a valid API key.';
       _logger.e('GeminiService初期化エラー: $errorMessage');
       throw Exception(errorMessage);
     }
@@ -27,6 +24,8 @@ class GeminiService {
       apiKey: key,
     );
   }
+  late final GenerativeModel _model;
+  final Logger _logger = Logger();
 
   /// プレゼンテーション内容を分析する
   ///
