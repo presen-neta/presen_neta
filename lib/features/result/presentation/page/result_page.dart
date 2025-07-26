@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:presen_neta/shared/service/image_generator_service.dart';
 import 'package:share_plus/share_plus.dart';
 
 /// 結果画面を表示するウィジェット。
@@ -57,7 +60,7 @@ class ResultPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  '69%が寝た!',
+                  '69人が寝た!',
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFF00B8D9),
@@ -76,10 +79,44 @@ class ResultPage extends StatelessWidget {
                       ),
                       elevation: 4,
                     ),
-                    onPressed: () {
-                      SharePlus.instance.share(
-                        ShareParams(text: '69%が寝た! #プレゼン寝た判定'),
-                      );
+                    onPressed: () async {
+                      try {
+                        const imageGenerator = ImageGeneratorService();
+                        final imageBytes = await imageGenerator
+                            .generateResultImage(
+                              sleepPercentage: 69,
+                              title: 'つまらん！',
+                              goodPoints: [
+                                'スライドの構成が分かりやすい',
+                                '文字サイズが適切',
+                                '色使いが統一されている',
+                              ],
+                              improvements: [
+                                'アニメーションを追加して動きを出す',
+                                'より具体的なデータを提示する',
+                                '結論を最初に示す',
+                              ],
+                            );
+
+                        final tempDir = await getTemporaryDirectory();
+                        final imageFile = File(
+                          '${tempDir.path}/result_image.png',
+                        );
+                        await imageFile.writeAsBytes(imageBytes);
+
+                        await SharePlus.instance.share(
+                          ShareParams(
+                            text: '69人が寝た! #プレゼン寝た判定',
+                            files: [XFile(imageFile.path)],
+                          ),
+                        );
+                      } on Exception catch (e) {
+                        debugPrint(e.toString());
+                        // エラーが発生した場合はテキストのみシェア
+                        await SharePlus.instance.share(
+                          ShareParams(text: '69人が寝た! #プレゼン寝た判定'),
+                        );
+                      }
                     },
                     icon: const Icon(Icons.share, color: Colors.white),
                     label: const Text(
