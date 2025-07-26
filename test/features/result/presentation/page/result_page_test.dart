@@ -29,7 +29,8 @@ void main() {
     expect(find.text('69%が寝た!'), findsOneWidget);
     expect(find.text('結果をシェア'), findsOneWidget);
     expect(find.text('別のスライドをアップロード'), findsOneWidget);
-    expect(find.text('近日中に詳細評価機能実装'), findsOneWidget);
+    expect(find.text('良い点'), findsOneWidget);
+    expect(find.text('改善提案'), findsOneWidget);
   });
 
   testWidgets('「結果をシェア」ボタンをタップできる', (WidgetTester tester) async {
