@@ -4,6 +4,22 @@ import 'package:presen_neta/shared/config/env_config.dart';
 
 /// Google Generative AIを使用してプレゼンテーションを分析するサービス
 class GeminiService {
+  /// プレゼンテーション分析用のプロンプトテンプレート
+  static const String _presentationAnalysisPrompt = '''
+以下のプレゼンテーション内容を分析し、以下の観点で評価してください：
+
+1. 内容の明確性（0-100点）
+2. 視聴者の興味を引く度合い（0-100点）
+3. 構造の論理性（0-100点）
+4. 視覚的な分かりやすさ（0-100点）
+5. 推定される「寝た率」（0-100%）
+
+改善提案も含めて回答してください。
+
+プレゼンテーション内容：
+{content}
+''';
+
   /// GeminiServiceのコンストラクタ
   ///
   /// APIキーは環境変数から取得するか、直接渡すことができます
@@ -36,20 +52,9 @@ class GeminiService {
       _logger.i('プレゼンテーション分析開始');
       _logger.d('分析対象コンテンツ: ${content.length}文字');
 
-      final prompt = Content.text('''
-以下のプレゼンテーション内容を分析し、以下の観点で評価してください：
-
-1. 内容の明確性（0-100点）
-2. 視聴者の興味を引く度合い（0-100点）
-3. 構造の論理性（0-100点）
-4. 視覚的な分かりやすさ（0-100点）
-5. 推定される「寝た率」（0-100%）
-
-改善提案も含めて回答してください。
-
-プレゼンテーション内容：
-$content
-''');
+      final prompt = Content.text(
+        _presentationAnalysisPrompt.replaceAll('{content}', content),
+      );
 
       final response = await _model.generateContent([prompt]);
       final result = response.text ?? '分析に失敗しました';
@@ -77,20 +82,9 @@ $content
       _logger.i('ストリーミング分析開始');
       _logger.d('分析対象コンテンツ: ${content.length}文字');
 
-      final prompt = Content.text('''
-以下のプレゼンテーション内容を分析し、以下の観点で評価してください：
-
-1. 内容の明確性（0-100点）
-2. 視聴者の興味を引く度合い（0-100点）
-3. 構造の論理性（0-100点）
-4. 視覚的な分かりやすさ（0-100点）
-5. 推定される「寝た率」（0-100%）
-
-改善提案も含めて回答してください。
-
-プレゼンテーション内容：
-$content
-''');
+      final prompt = Content.text(
+        _presentationAnalysisPrompt.replaceAll('{content}', content),
+      );
 
       final response = _model.generateContentStream([prompt]);
 
