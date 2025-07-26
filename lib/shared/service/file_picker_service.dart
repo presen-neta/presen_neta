@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 
 /// ファイル選択処理をラップするサービス。
@@ -27,9 +28,30 @@ class FilePickerService {
     }
     _isPicking = true;
     try {
-      return await _filePicker.pickFiles();
+      return await _filePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'ppt', 'pptx', 'txt'],
+      );
     } finally {
       _isPicking = false;
+    }
+  }
+
+  /// ファイルの内容を読み取る
+  ///
+  /// [file] 読み取るファイル
+  /// ファイルの内容を文字列で返す
+  Future<String?> readFileContent(PlatformFile file) async {
+    try {
+      if (file.extension == 'txt' && file.path != null) {
+        final fileContent = File(file.path!);
+        return await fileContent.readAsString();
+      }
+      // PDFやPPTの場合は別途ライブラリが必要
+      // 現在はテキストファイルのみ対応
+      return null;
+    } catch (e) {
+      return null;
     }
   }
 }
