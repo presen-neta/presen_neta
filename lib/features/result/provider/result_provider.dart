@@ -21,19 +21,19 @@ class AnalysisNotifier extends _$AnalysisNotifier {
     return null;
   }
 
-  /// スライド画像を分析する
+  /// 複数のスライド画像を分析する
   ///
-  /// [imageData] 分析対象の画像データ
+  /// [imageDataList] 分析対象の画像データのリスト
   /// [imageMimeType] 画像のMIMEタイプ（デフォルト: 'image/png'）
-  Future<void> analyzeSlideImage(
-    Uint8List imageData, {
+  Future<void> analyzeMultipleSlideImages(
+    List<Uint8List> imageDataList, {
     String imageMimeType = 'image/png',
   }) async {
     state = const AsyncValue<ReviewResult?>.loading();
     try {
       final geminiService = ref.read(geminiServiceProvider);
-      final result = await geminiService.analyzeSlideImage(
-        imageData,
+      final result = await geminiService.analyzeMultipleSlideImages(
+        imageDataList,
         imageMimeType: imageMimeType,
       );
       state = AsyncValue.data(result);
