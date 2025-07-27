@@ -91,24 +91,30 @@ class GeminiService {
   late final GenerativeModel _model;
   final Logger _logger = Logger();
 
-  /// スライド画像を分析して構造化された評価結果を取得する
+  /// 複数のスライド画像を分析して構造化された評価結果を取得する
   ///
-  /// [imageData] 分析対象の画像データ（Uint8List）
+  /// [imageDataList] 分析対象の画像データのリスト（Uint8List）
   /// [imageMimeType] 画像のMIMEタイプ（デフォルト: 'image/png'）
   /// 構造化された評価結果を返す
-  Future<ReviewResult?> analyzeSlideImage(
-    Uint8List imageData, {
+  Future<ReviewResult?> analyzeMultipleSlideImages(
+    List<Uint8List> imageDataList, {
     String imageMimeType = 'image/png',
   }) async {
     try {
-      _logger.i('スライド画像分析開始');
-      _logger.d('画像サイズ: ${imageData.length}バイト');
+      _logger.i('複数スライド画像分析開始');
+      _logger.d('画像数: ${imageDataList.length}枚');
+
+      final List<Part> contentParts = [
+        TextPart(_empathyPresentationPrompt),
+      ];
+
+      // 各画像をDataPartとして追加
+      for (final imageData in imageDataList) {
+        contentParts.add(DataPart(imageMimeType, imageData));
+      }
 
       final response = await _model.generateContent([
-        Content.multi([
-          TextPart(_empathyPresentationPrompt),
-          DataPart(imageMimeType, imageData),
-        ]),
+        Content.multi(contentParts),
       ]);
 
       final functionCalls = response.functionCalls;
@@ -132,7 +138,7 @@ class GeminiService {
             improve: improveList ?? [],
           );
 
-          _logger.i('スライド画像分析完了: ${result.point}点');
+          _logger.i('複数スライド画像分析完了: ${result.point}点');
           _logger.d(
             '良い点: ${result.good.length}個, 改善点: ${result.improve.length}個',
           );
@@ -144,7 +150,7 @@ class GeminiService {
       _logger.w('Function Callが見つからないか、無効なレスポンス');
       return null;
     } catch (e) {
-      _logger.e('スライド画像分析エラー: $e');
+      _logger.e('複数スライド画像分析エラー: $e');
       return null;
     }
   }
