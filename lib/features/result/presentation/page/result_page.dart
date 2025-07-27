@@ -173,18 +173,10 @@ class ResultPage extends ConsumerWidget {
                         onPressed: () async {
                           final controller = ResultPageController();
                           await controller.shareResult(
-                            sleepPercentage: 69,
-                            title: 'つまらん！',
-                            goodPoints: [
-                              'スライドの構成が分かりやすい',
-                              '文字サイズが適切',
-                              '色使いが統一されている',
-                            ],
-                            improvements: [
-                              'アニメーションを追加して動きを出す',
-                              'より具体的なデータを提示する',
-                              '結論を最初に示す',
-                            ],
+                            sleepPercentage: 100 - result.point,
+                            title: _getJudgmentMessage(result.point),
+                            goodPoints: result.good,
+                            improvements: result.improve,
                           );
                         },
                         icon: const Icon(Icons.share, color: Colors.white),
