@@ -61,14 +61,18 @@ class PresentationAnalysisService
       final extension = file.name.split('.').last.toLowerCase();
       if (extension != 'pdf') {
         _logger.w('PDF以外のファイルが選択されました: $extension');
-        _showErrorSnackBar(context, 'PDFファイルのみ対応しています');
+        if (context.mounted) {
+          _showErrorSnackBar(context, 'PDFファイルのみ対応しています');
+        }
         return false;
       }
 
       final pdfData = await filePickerService.readPdfFileContent(file);
       if (pdfData == null) {
         _logger.e('PDFファイルの読み取りに失敗しました');
-        _showErrorSnackBar(context, 'PDFファイルの読み取りに失敗しました');
+        if (context.mounted) {
+          _showErrorSnackBar(context, 'PDFファイルの読み取りに失敗しました');
+        }
         return false;
       }
 
@@ -78,7 +82,9 @@ class PresentationAnalysisService
       final pngImages = await _convertPdfToPngImages(pdfData);
       if (pngImages.isEmpty) {
         _logger.e('PDFの変換に失敗しました');
-        _showErrorSnackBar(context, 'PDFの変換に失敗しました');
+        if (context.mounted) {
+          _showErrorSnackBar(context, 'PDFの変換に失敗しました');
+        }
         return false;
       }
 
@@ -91,7 +97,7 @@ class PresentationAnalysisService
 
       _logger.i('分析実行完了');
       return true;
-    } catch (e) {
+    } on Exception catch (e) {
       _logger.e('PDF分析エラー: $e');
       if (context.mounted) {
         _showErrorSnackBar(context, 'エラーが発生しました: $e');
@@ -113,7 +119,7 @@ class PresentationAnalysisService
 
       final pngImages = <Uint8List>[];
 
-      for (int pageIndex = 0; pageIndex < pageCount; pageIndex++) {
+      for (var pageIndex = 0; pageIndex < pageCount; pageIndex++) {
         _logger.d('ページ ${pageIndex + 1} を処理中');
         final page = await pdfDocument.getPage(pageIndex + 1);
         final pageImage = await page.render(
@@ -135,7 +141,7 @@ class PresentationAnalysisService
       await pdfDocument.close();
       _logger.i('PDF変換完了: ${pngImages.length}枚の画像を生成');
       return pngImages;
-    } catch (e) {
+    } on Exception catch (e) {
       _logger.e('PDF変換エラー: $e');
       return [];
     }

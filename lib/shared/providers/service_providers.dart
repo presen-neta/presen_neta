@@ -1,10 +1,10 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:presen_neta/shared/service/file_picker_service.dart';
 import 'package:presen_neta/shared/service/gemini_service.dart';
-import 'package:presen_neta/shared/service/presentation_analysis_service.dart';
 import 'package:presen_neta/shared/service/interfaces/file_picker_service_interface.dart';
 import 'package:presen_neta/shared/service/interfaces/gemini_service_interface.dart';
 import 'package:presen_neta/shared/service/interfaces/presentation_analysis_service_interface.dart';
+import 'package:presen_neta/shared/service/presentation_analysis_service.dart';
 
 /// FilePickerServiceのプロバイダー。
 ///

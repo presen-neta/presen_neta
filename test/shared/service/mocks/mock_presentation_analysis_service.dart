@@ -17,7 +17,7 @@ class MockPresentationAnalysisService extends Mock
   @override
   Future<bool> analyzePdfFile(BuildContext context, WidgetRef ref) async {
     // 指定された遅延時間だけ待機
-    await Future.delayed(Duration(milliseconds: delayMilliseconds));
+    await Future<void>.delayed(Duration(milliseconds: delayMilliseconds));
 
     // 成功フラグに基づいて結果を返す
     if (shouldSucceed) {

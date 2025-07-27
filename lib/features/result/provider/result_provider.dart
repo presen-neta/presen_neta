@@ -32,7 +32,7 @@ class AnalysisNotifier extends _$AnalysisNotifier {
         imageMimeType: imageMimeType,
       );
       state = AsyncValue.data(result);
-    } catch (error, stackTrace) {
+    } on Exception catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
     }
   }

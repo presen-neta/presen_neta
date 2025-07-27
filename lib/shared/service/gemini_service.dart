@@ -1,5 +1,5 @@
-import 'dart:typed_data';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:logger/logger.dart';
 import 'package:presen_neta/shared/config/env_config.dart';
@@ -60,10 +60,11 @@ JSON以外の説明は不要です。必ず有効なJSON形式で返答してく
     String imageMimeType = 'image/png',
   }) async {
     try {
-      _logger.i('複数スライド画像分析開始');
-      _logger.d('画像数: ${imageDataList.length}枚');
+      _logger
+        ..i('複数スライド画像分析開始')
+        ..d('画像数: ${imageDataList.length}枚');
 
-      final List<Part> contentParts = [
+      final contentParts = <Part>[
         TextPart(_empathyPresentationPrompt),
       ];
 
@@ -110,13 +111,12 @@ JSON以外の説明は不要です。必ず有効なJSON形式で返答してく
         improve: improveList ?? [],
       );
 
-      _logger.i('複数スライド画像分析完了: ${result.point}点');
-      _logger.d(
-        '良い点: ${result.good.length}個, 改善点: ${result.improve.length}個',
-      );
+      _logger
+        ..i('複数スライド画像分析完了: ${result.point}点')
+        ..d('良い点: ${result.good.length}個, 改善点: ${result.improve.length}個');
 
       return result;
-    } catch (e) {
+    } on Exception catch (e) {
       _logger.e('複数スライド画像分析エラー: $e');
       return null;
     }
@@ -158,7 +158,7 @@ JSON以外の説明は不要です。必ず有効なJSON形式で返答してく
 
       _logger.w('JSONパターンが見つかりませんでした');
       return null;
-    } catch (e) {
+    } on Exception catch (e) {
       _logger.e('JSON解析エラー: $e');
       return null;
     }
@@ -178,7 +178,7 @@ JSON以外の説明は不要です。必ず有効なJSON形式で返答してく
 
       _logger.i('トークン数カウント完了: ${tokenCount.totalTokens}トークン');
       return tokenCount.totalTokens;
-    } catch (e) {
+    } on Exception catch (e) {
       _logger.e('トークン数カウントエラー: $e');
       return 0;
     }

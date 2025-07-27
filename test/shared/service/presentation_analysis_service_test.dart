@@ -5,20 +5,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:presen_neta/shared/service/file_picker_service.dart';
-import 'package:presen_neta/shared/service/presentation_analysis_service.dart';
 
 import 'presentation_analysis_service_test.mocks.dart';
 
 @GenerateMocks([FilePickerService])
 void main() {
-  late PresentationAnalysisService service;
   late MockFilePickerService mockFilePickerService;
 
   setUp(() {
     mockFilePickerService = MockFilePickerService();
-    service = PresentationAnalysisService(
-      filePickerService: mockFilePickerService,
-    );
   });
 
   group('PresentationAnalysisService', () {

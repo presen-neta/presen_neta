@@ -53,7 +53,7 @@ class FilePickerService implements FilePickerServiceInterface {
       // PDFやPPTの場合は別途ライブラリが必要
       // 現在はテキストファイルのみ対応
       return null;
-    } catch (e) {
+    } on Exception {
       return null;
     }
   }
@@ -70,7 +70,7 @@ class FilePickerService implements FilePickerServiceInterface {
         return await fileContent.readAsBytes();
       }
       return null;
-    } catch (e) {
+    } on Exception {
       return null;
     }
   }

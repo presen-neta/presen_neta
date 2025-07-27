@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:presen_neta/features/start/presentation/page/start_page.dart';
-import 'package:presen_neta/shared/service/interfaces/presentation_analysis_service_interface.dart';
 import '../../../../shared/service/mocks/mock_presentation_analysis_service.dart';
 
 /// StartPageのテストクラス。
@@ -32,8 +31,9 @@ void main() {
 
     testWidgets('分析が成功した場合、結果ページに遷移する', (WidgetTester tester) async {
       // モックサービスを成功するように設定
-      mockService.shouldSucceed = true;
-      mockService.delayMilliseconds = 100;
+      mockService
+        ..shouldSucceed = true
+        ..delayMilliseconds = 100;
 
       // StartPageをビルド
       await tester.pumpWidget(
@@ -57,8 +57,9 @@ void main() {
 
     testWidgets('分析が失敗した場合、エラーハンドリングが動作する', (WidgetTester tester) async {
       // モックサービスを失敗するように設定
-      mockService.shouldSucceed = false;
-      mockService.delayMilliseconds = 100;
+      mockService
+        ..shouldSucceed = false
+        ..delayMilliseconds = 100;
 
       // StartPageをビルド
       await tester.pumpWidget(

@@ -61,7 +61,7 @@ class _StartPageState extends ConsumerState<StartPage> {
           });
         }
       }
-    } catch (e) {
+    } on Exception catch (e) {
       _logger.e('分析中にエラーが発生: $e');
       if (mounted) {
         setState(() {
@@ -80,12 +80,12 @@ class _StartPageState extends ConsumerState<StartPage> {
       return;
     }
 
-    showDialog(
+    showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return WillPopScope(
-          onWillPop: () async => false,
+        return PopScope(
+          canPop: false,
           child: Dialog(
             backgroundColor: Colors.transparent,
             child: Container(
@@ -151,7 +151,7 @@ class _StartPageState extends ConsumerState<StartPage> {
     // 分析状態を監視
     final analysisState = ref.watch(analysisNotifierProvider);
 
-    _logger.d('StartPage - 分析状態: ${analysisState.toString()}');
+    _logger.d('StartPage - 分析状態: $analysisState');
 
     // 分析が開始されたらローディングオーバーレイを表示
     analysisState.when(
@@ -178,8 +178,7 @@ class _StartPageState extends ConsumerState<StartPage> {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (context.mounted) {
               // 既にローディングダイアログが表示されているかチェック
-              final isDialogShowing = Navigator.of(context).canPop();
-              if (!isDialogShowing) {
+              if (!Navigator.of(context).canPop()) {
                 _logger.i('StartPage - ローディングオーバーレイを表示');
                 _showLoadingOverlay(context);
               }
@@ -234,7 +233,7 @@ class _StartPageState extends ConsumerState<StartPage> {
                 ),
                 const SizedBox(height: 32),
                 Text(
-                  'PDFプレゼンテーションを分析',
+                  '100人中何人が寝るプレゼンスライド？',
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFF00B8D9),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-/// プレゼンテーション分析処理を担当するサービスのインターフェース。
+/// プレゼンテーション分析処理を担当するサービスの抽象クラス。
 ///
 /// テスト時にモックに置き換え可能にするための抽象化。
 abstract class PresentationAnalysisServiceInterface {

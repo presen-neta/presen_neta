@@ -35,9 +35,9 @@ final testPresentationAnalysisServiceProvider =
 ///
 /// テスト時に実際のサービスをモックに置き換える。
 final List<Override> testServiceOverrides = [
-  filePickerServiceProvider.overrideWithProvider(testFilePickerServiceProvider),
-  geminiServiceProvider.overrideWithProvider(testGeminiServiceProvider),
-  presentationAnalysisServiceProvider.overrideWithProvider(
-    testPresentationAnalysisServiceProvider,
+  filePickerServiceProvider.overrideWith((ref) => MockFilePickerService()),
+  geminiServiceProvider.overrideWith((ref) => MockGeminiService()),
+  presentationAnalysisServiceProvider.overrideWith(
+    (ref) => MockPresentationAnalysisService(),
   ),
 ];

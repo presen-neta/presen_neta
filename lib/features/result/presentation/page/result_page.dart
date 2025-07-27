@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logger/logger.dart';
-import 'package:presen_neta/features/result/provider/result_provider.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:presen_neta/features/result/presentation/page/result_page_controller.dart';
+import 'package:presen_neta/features/result/provider/result_provider.dart';
 
 /// プレゼンテーション分析結果を表示するページ。
 ///
@@ -38,16 +37,7 @@ class ResultPage extends ConsumerWidget {
   /// 寝た率メッセージを返す
   String _getSleepRateMessage(int point) {
     final sleepRate = 100 - point;
-    return '${sleepRate}人が寝た!';
-  }
-
-  /// 分析結果に基づいてシェアメッセージを生成する。
-  ///
-  /// [point] 分析結果の点数
-  /// シェアメッセージを返す
-  String _getShareMessage(int point) {
-    final sleepRate = 100 - point;
-    return '${sleepRate}人が寝た! #プレゼン寝た判定';
+    return '$sleepRate人が寝た!';
   }
 
   @override
@@ -57,7 +47,7 @@ class ResultPage extends ConsumerWidget {
     // 分析状態を監視
     final analysisState = ref.watch(analysisNotifierProvider);
 
-    _logger.d('ResultPage - 分析状態: ${analysisState.toString()}');
+    _logger.d('ResultPage - 分析状態: $analysisState');
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7FAFC),
@@ -73,7 +63,7 @@ class ResultPage extends ConsumerWidget {
                   // 安全にナビゲーション
                   try {
                     context.go('/');
-                  } catch (e) {
+                  } on Exception catch (e) {
                     _logger.e('ResultPage - ナビゲーションエラー: $e');
                   }
                 }
@@ -141,11 +131,10 @@ class ResultPage extends ConsumerWidget {
                     ),
                     const SizedBox(height: 28),
                     Text(
-                      _getJudgmentMessage(result.point),
+                      'あなたのプレゼンテーションは${result.point}点です！',
                       style: theme.textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFF00B8D9),
-                        letterSpacing: 1.2,
                       ),
                       textAlign: TextAlign.center,
                     ),

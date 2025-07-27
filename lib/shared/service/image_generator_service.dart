@@ -111,7 +111,7 @@ class ImageGeneratorService {
 
       final percentageTextPainter = TextPainter(
         text: TextSpan(
-          text: '${sleepPercentage}人が寝た!',
+          text: '$sleepPercentage人が寝た!',
           style: percentageStyle,
         ),
         textDirection: TextDirection.ltr,

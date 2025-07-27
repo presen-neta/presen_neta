@@ -8,7 +8,7 @@ import 'package:presen_neta/shared/service/interfaces/gemini_service_interface.d
 /// テスト時に実際のAI分析処理をシミュレートする。
 class MockGeminiService extends Mock implements GeminiServiceInterface {
   /// モック用の分析結果。
-  static final ReviewResult mockReviewResult = ReviewResult(
+  static const ReviewResult mockReviewResult = ReviewResult(
     point: 75,
     good: [
       '目的が明確に示されている',
