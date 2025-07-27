@@ -28,7 +28,7 @@ class ImageGeneratorService {
     _drawBackground(canvas, size);
 
     // イラストを描画
-    await _drawIllustration(canvas, size, title);
+    await _drawIllustration(canvas, size, title, sleepPercentage);
 
     // タイトルは削除（イラスト部分で表示）
 
@@ -57,7 +57,12 @@ class ImageGeneratorService {
   }
 
   /// イラストを描画する。
-  Future<void> _drawIllustration(Canvas canvas, Size size, String title) async {
+  Future<void> _drawIllustration(
+    Canvas canvas,
+    Size size,
+    String title,
+    int sleepPercentage,
+  ) async {
     try {
       final data = await rootBundle.load('assets/ResultPage.png');
       final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
@@ -97,7 +102,7 @@ class ImageGeneratorService {
         Paint(),
       );
 
-      // 上の中央に「69人が寝た!」を表示
+      // 上の中央に「X人が寝た!」を表示
       const percentageStyle = TextStyle(
         fontSize: 36,
         fontWeight: FontWeight.bold,
@@ -105,8 +110,8 @@ class ImageGeneratorService {
       );
 
       final percentageTextPainter = TextPainter(
-        text: const TextSpan(
-          text: '69人が寝た!',
+        text: TextSpan(
+          text: '${sleepPercentage}人が寝た!',
           style: percentageStyle,
         ),
         textDirection: TextDirection.ltr,
@@ -155,7 +160,7 @@ class ImageGeneratorService {
     );
 
     const contentStyle = TextStyle(
-      fontSize: 18,
+      fontSize: 12,
       color: Color(0xFF374151),
     );
 
@@ -191,7 +196,7 @@ class ImageGeneratorService {
     );
 
     const contentStyle = TextStyle(
-      fontSize: 18,
+      fontSize: 12,
       color: Color(0xFF374151),
     );
 
