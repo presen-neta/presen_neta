@@ -1,14 +1,14 @@
 import 'dart:typed_data';
-import 'package:flutter/material.dart';
 
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:presen_neta/features/result/provider/result_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-/// 結果画面を表示するウィジェット。
+/// プレゼンテーション分析結果を表示するページ。
 ///
-/// 判定結果のイラスト、コメント、シェアボタン、詳細評価予定ブロック、再アップロードボタンを表示する。
+/// 判定結果のイラスト、コメント、シェアボタン、AI分析結果、再アップロードボタンを表示する。
 class ResultPage extends ConsumerWidget {
   /// [ResultPage] のコンストラクタ。
   const ResultPage({super.key});
@@ -309,11 +309,12 @@ class ResultPage extends ConsumerWidget {
                       // サンプル画像データで分析を実行（デモ用）
                       final sampleImageData = Uint8List.fromList([
                         0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
+                        0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
                         // PNGヘッダー（最小限のサンプルデータ）
                       ]);
                       ref
                           .read(analysisNotifierProvider.notifier)
-                          .analyzeSlideImage(sampleImageData);
+                          .analyzeMultipleSlideImages([sampleImageData]);
                     },
                     icon: const Icon(Icons.auto_awesome, color: Colors.white),
                     label: const Text(
