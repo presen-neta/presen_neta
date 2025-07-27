@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 
 /// ファイル選択処理をラップするサービス。
@@ -49,6 +50,22 @@ class FilePickerService {
       }
       // PDFやPPTの場合は別途ライブラリが必要
       // 現在はテキストファイルのみ対応
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// PDFファイルの内容をバイトデータとして読み取る
+  ///
+  /// [file] 読み取るファイル
+  /// ファイルの内容をバイトデータで返す
+  Future<Uint8List?> readPdfFileContent(PlatformFile file) async {
+    try {
+      if (file.extension == 'pdf' && file.path != null) {
+        final fileContent = File(file.path!);
+        return await fileContent.readAsBytes();
+      }
       return null;
     } catch (e) {
       return null;
