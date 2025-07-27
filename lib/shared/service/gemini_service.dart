@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:logger/logger.dart';
 import 'package:presen_neta/shared/config/env_config.dart';
+import 'package:presen_neta/shared/models/review_result.dart';
 
 /// Google Generative AIを使用してプレゼンテーションを分析するサービス
 class GeminiService {
@@ -192,55 +193,5 @@ class GeminiService {
       _logger.e('トークン数カウントエラー: $e');
       return 0;
     }
-  }
-}
-
-/// プレゼンテーション評価結果を表すクラス
-class ReviewResult {
-  /// プレゼンテーションの点数（0-100）
-  final int point;
-
-  /// 良い点のリスト
-  final List<String> good;
-
-  /// 改善点のリスト
-  final List<String> improve;
-
-  /// ReviewResultのコンストラクタ
-  ReviewResult({
-    required this.point,
-    required this.good,
-    required this.improve,
-  });
-
-  /// MapからReviewResultを作成するファクトリメソッド
-  ///
-  /// [map] 変換元のMap
-  /// ReviewResultインスタンスを返す
-  factory ReviewResult.fromMap(Map<String, Object?> map) {
-    return ReviewResult(
-      point: map['point'] as int,
-      good: (map['good'] as List<dynamic>?)?.whereType<String>().toList() ?? [],
-      improve:
-          (map['improve'] as List<dynamic>?)?.whereType<String>().toList() ??
-          [],
-    );
-  }
-
-  /// 寝た率を計算する
-  ///
-  /// 100点から点数を引いた値を返す
-  int get sleepRate => 100 - point;
-
-  /// Mapに変換する
-  ///
-  /// 変換後のMapを返す
-  Map<String, dynamic> toMap() {
-    return {
-      'point': point,
-      'good': good,
-      'improve': improve,
-      'sleepRate': sleepRate,
-    };
   }
 }
