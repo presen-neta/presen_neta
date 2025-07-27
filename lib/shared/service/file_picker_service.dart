@@ -18,7 +18,7 @@ class FilePickerService {
   /// ピッカーが現在起動中かどうかを示すフラグ。
   bool _isPicking = false;
 
-  /// ファイルピッカーを起動し、選択結果を返す。
+  /// PDFファイルピッカーを起動し、選択結果を返す。
   ///
   /// 選択された場合は [FilePickerResult]、キャンセル時は null を返す。
   /// 2重起動を防止する。
@@ -31,7 +31,7 @@ class FilePickerService {
     try {
       return await _filePicker.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['pdf', 'ppt', 'pptx', 'txt'],
+        allowedExtensions: ['pdf'],
       );
     } finally {
       _isPicking = false;
