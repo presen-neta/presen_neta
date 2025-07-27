@@ -3,22 +3,23 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logger/logger.dart';
 import 'package:presen_neta/features/result/provider/result_provider.dart';
-import 'package:presen_neta/shared/service/presentation_analysis_service.dart';
+import 'package:presen_neta/shared/providers/service_providers.dart';
+import 'package:presen_neta/shared/service/interfaces/presentation_analysis_service_interface.dart';
 
 /// PDFプレゼンテーションファイルのアップロードページ。
 ///
 /// PDFファイルのアップロードと、簡単なチェックリストを提供するページ。
 class StartPage extends ConsumerStatefulWidget {
-  /// [PresentationAnalysisService] を外部から注入できるコンストラクタ。
+  /// [PresentationAnalysisServiceInterface] を外部から注入できるコンストラクタ。
   ///
   /// テスト時などにモックを渡すことで、ファイル選択処理を差し替えられる。
-  const StartPage({super.key, PresentationAnalysisService? service})
+  const StartPage({super.key, PresentationAnalysisServiceInterface? service})
     : _service = service;
 
   /// プレゼンテーション分析サービスのインスタンス。
   ///
-  /// テスト時は外部から注入、本番時はデフォルトインスタンスを利用する。
-  final PresentationAnalysisService? _service;
+  /// テスト時は外部から注入、本番時はプロバイダーから取得する。
+  final PresentationAnalysisServiceInterface? _service;
 
   @override
   ConsumerState<StartPage> createState() => _StartPageState();
@@ -31,11 +32,11 @@ class _StartPageState extends ConsumerState<StartPage> {
   /// 分析が開始されたかどうかを追跡するフラグ。
   bool _isAnalysisStarted = false;
 
-  /// 実際に利用する [PresentationAnalysisService] を返すゲッター。
+  /// 実際に利用する [PresentationAnalysisServiceInterface] を返すゲッター。
   ///
-  /// 外部から注入されていればそれを、なければデフォルトインスタンスを返す。
-  PresentationAnalysisService get service =>
-      widget._service ?? PresentationAnalysisService();
+  /// 外部から注入されていればそれを、なければプロバイダーから取得する。
+  PresentationAnalysisServiceInterface get service =>
+      widget._service ?? ref.read(presentationAnalysisServiceProvider);
 
   /// PDFファイルを選択し、分析を実行して結果ページへ遷移する。
   ///

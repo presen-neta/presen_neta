@@ -2,16 +2,10 @@ import 'dart:typed_data';
 
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:presen_neta/shared/models/review_result.dart';
-import 'package:presen_neta/shared/service/gemini_service.dart';
+import 'package:presen_neta/shared/providers/service_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'result_provider.g.dart';
-
-/// GeminiServiceのプロバイダー
-@riverpod
-GeminiService geminiService(Ref ref) {
-  return GeminiService();
-}
 
 /// 分析結果の状態管理プロバイダー
 @riverpod

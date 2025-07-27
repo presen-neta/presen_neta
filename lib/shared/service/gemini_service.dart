@@ -4,9 +4,10 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:logger/logger.dart';
 import 'package:presen_neta/shared/config/env_config.dart';
 import 'package:presen_neta/shared/models/review_result.dart';
+import 'package:presen_neta/shared/service/interfaces/gemini_service_interface.dart';
 
 /// Google Generative AIを使用してプレゼンテーションを分析するサービス
-class GeminiService {
+class GeminiService implements GeminiServiceInterface {
   /// GeminiServiceのコンストラクタ
   ///
   /// APIキーは環境変数から取得するか、直接渡すことができます
@@ -53,6 +54,7 @@ JSON以外の説明は不要です。必ず有効なJSON形式で返答してく
   /// [imageDataList] 分析対象の画像データのリスト（Uint8List）
   /// [imageMimeType] 画像のMIMEタイプ（デフォルト: 'image/png'）
   /// 構造化された評価結果を返す
+  @override
   Future<ReviewResult?> analyzeMultipleSlideImages(
     List<Uint8List> imageDataList, {
     String imageMimeType = 'image/png',
@@ -166,6 +168,7 @@ JSON以外の説明は不要です。必ず有効なJSON形式で返答してく
   ///
   /// [content] カウント対象のコンテンツ
   /// トークン数を返す
+  @override
   Future<int> countTokens(String content) async {
     try {
       _logger.d('トークン数カウント開始: ${content.length}文字');

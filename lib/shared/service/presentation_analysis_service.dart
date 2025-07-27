@@ -6,11 +6,13 @@ import 'package:logger/logger.dart';
 import 'package:pdfx/pdfx.dart';
 import 'package:presen_neta/features/result/provider/result_provider.dart';
 import 'package:presen_neta/shared/service/file_picker_service.dart';
+import 'package:presen_neta/shared/service/interfaces/presentation_analysis_service_interface.dart';
 
 /// プレゼンテーション分析処理を担当するサービス。
 ///
 /// PDFファイルの選択、検証、分析実行、エラーハンドリングを統合的に管理する。
-class PresentationAnalysisService {
+class PresentationAnalysisService
+    implements PresentationAnalysisServiceInterface {
   /// [FilePickerService] を外部から注入できるコンストラクタ。
   ///
   /// テスト時などにモックを渡すことで、ファイル選択処理を差し替えられる。
@@ -36,6 +38,7 @@ class PresentationAnalysisService {
   /// [context] はエラー表示に利用される。async gap 後の利用は mounted でガードする。
   /// [ref] Riverpodのref
   /// 分析成功時は true、失敗時は false を返す。
+  @override
   Future<bool> analyzePdfFile(BuildContext context, WidgetRef ref) async {
     _logger.i('PDFファイル分析開始');
 

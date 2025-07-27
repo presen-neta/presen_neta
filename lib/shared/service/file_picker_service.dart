@@ -1,11 +1,12 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
+import 'package:presen_neta/shared/service/interfaces/file_picker_service_interface.dart';
 
 /// ファイル選択処理をラップするサービス。
 ///
 /// [pickFile] でファイル選択ダイアログを表示し、選択結果を返す。
-class FilePickerService {
+class FilePickerService implements FilePickerServiceInterface {
   /// [FilePicker] を注入できるコンストラクタ。
   ///
   /// 通常利用時は [FilePicker.platform] を利用する。
@@ -22,6 +23,7 @@ class FilePickerService {
   ///
   /// 選択された場合は [FilePickerResult]、キャンセル時は null を返す。
   /// 2重起動を防止する。
+  @override
   Future<FilePickerResult?> pickFile() async {
     if (_isPicking) {
       // すでに起動中の場合は null を返す。
@@ -60,6 +62,7 @@ class FilePickerService {
   ///
   /// [file] 読み取るファイル
   /// ファイルの内容をバイトデータで返す
+  @override
   Future<Uint8List?> readPdfFileContent(PlatformFile file) async {
     try {
       if (file.extension == 'pdf' && file.path != null) {
