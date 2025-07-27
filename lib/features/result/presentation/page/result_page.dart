@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import 'package:go_router/go_router.dart';
@@ -100,8 +101,9 @@ class ResultPage extends ConsumerWidget {
                     final analysisResult = ref.watch(analysisNotifierProvider);
 
                     return analysisResult.when(
-                      data:
-                          (result) => Container(
+                      data: (result) {
+                        if (result == null) {
+                          return Container(
                             width: double.infinity,
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
@@ -115,36 +117,123 @@ class ResultPage extends ConsumerWidget {
                                 ),
                               ],
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.psychology,
-                                      color: Color(0xFF00B8D9),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'AI分析結果',
-                                      style: theme.textTheme.titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            color: const Color(0xFF00B8D9),
-                                          ),
-                                    ),
-                                  ],
+                            child: const Text(
+                              '分析結果がありません',
+                              textAlign: TextAlign.center,
+                            ),
+                          );
+                        }
+
+                        return Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(18),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.06),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.psychology,
+                                    color: Color(0xFF00B8D9),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'AI分析結果',
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: const Color(0xFF00B8D9),
+                                        ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                '評価点数: ${result.point}点',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF00B8D9),
                                 ),
-                                const SizedBox(height: 16),
+                              ),
+                              const SizedBox(height: 12),
+                              if (result.good.isNotEmpty) ...[
                                 Text(
-                                  result,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    height: 1.5,
+                                  '良い点:',
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                ...result.good.map(
+                                  (good) => Padding(
+                                    padding: const EdgeInsets.only(left: 16),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text('• '),
+                                        Expanded(
+                                          child: Text(
+                                            good,
+                                            style: theme.textTheme.bodyMedium
+                                                ?.copyWith(
+                                                  height: 1.5,
+                                                ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                              ],
+                              if (result.improve.isNotEmpty) ...[
+                                Text(
+                                  '改善点:',
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                ...result.improve.map(
+                                  (improve) => Padding(
+                                    padding: const EdgeInsets.only(left: 16),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text('• '),
+                                        Expanded(
+                                          child: Text(
+                                            improve,
+                                            style: theme.textTheme.bodyMedium
+                                                ?.copyWith(
+                                                  height: 1.5,
+                                                  color: Colors.orange,
+                                                ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ],
-                            ),
+                            ],
                           ),
+                        );
+                      },
                       loading:
                           () => Container(
                             width: double.infinity,
@@ -217,21 +306,14 @@ class ResultPage extends ConsumerWidget {
                       ),
                     ),
                     onPressed: () {
-                      // サンプルコンテンツで分析を実行
+                      // サンプル画像データで分析を実行（デモ用）
+                      final sampleImageData = Uint8List.fromList([
+                        0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
+                        // PNGヘッダー（最小限のサンプルデータ）
+                      ]);
                       ref
                           .read(analysisNotifierProvider.notifier)
-                          .analyzeContent(
-                            '''
-サンプルプレゼンテーション内容：
-1. 導入：弊社の新製品について
-2. 問題提起：現在の市場課題
-3. 解決策：弊社製品の特徴
-4. まとめ：今後の展望
-
-このプレゼンテーションは文字が多く、視覚的な要素が少ないため、
-視聴者が退屈に感じる可能性があります。
-''',
-                          );
+                          .analyzeSlideImage(sampleImageData);
                     },
                     icon: const Icon(Icons.auto_awesome, color: Colors.white),
                     label: const Text(
