@@ -21,11 +21,11 @@ class ResultPage extends ConsumerWidget {
   /// 判定メッセージを返す
   String _getJudgmentMessage(int point) {
     if (point >= 90) {
-      return '素晴らしい！';
+      return 'いいんじゃない？';
     } else if (point >= 75) {
-      return 'まあまあ';
+      return 'まあまあだけど';
     } else if (point >= 60) {
-      return '要改善';
+      return 'がんばれ';
     } else {
       return 'つまらん！';
     }
