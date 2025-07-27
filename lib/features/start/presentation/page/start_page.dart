@@ -1,11 +1,15 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:presen_neta/features/result/provider/result_provider.dart';
 import 'package:presen_neta/shared/service/file_picker_service.dart';
 
-/// スタートページを表示するウィジェット。
+/// PDFプレゼンテーションファイルのアップロードページ。
 ///
-/// スライドファイルのアップロードと、簡単なチェックリストを提供するページ。
-class StartPage extends StatelessWidget {
+/// PDFファイルのアップロードと、簡単なチェックリストを提供するページ。
+class StartPage extends ConsumerWidget {
   /// [FilePickerService] を外部から注入できるコンストラクタ。
   ///
   /// テスト時などにモックを渡すことで、ファイル選択処理を差し替えられる。
@@ -21,47 +25,50 @@ class StartPage extends StatelessWidget {
   /// 外部から注入されていればそれを、なければデフォルトインスタンスを返す。
   FilePickerService get service => _service ?? FilePickerService();
 
-  /// ファイルピッカーを起動し、ファイルが選択されたら result ページへ遷移する。
+  /// PDFファイルを選択し、分析を実行して結果ページへ遷移する。
   ///
   /// [context] は遷移に利用される。async gap 後の利用は mounted でガードする。
-  Future<void> _pickFile(BuildContext context) async {
+  /// [ref] Riverpodのref
+  Future<void> _pickFile(BuildContext context, WidgetRef ref) async {
     final result = await service.pickFile();
     if (!context.mounted) return;
     if (result != null && result.files.isNotEmpty) {
       final file = result.files.first;
 
       try {
-        // PDFファイルの場合（一時的に無効化）
+        // PDFファイルのみ対応
         if (file.extension == 'pdf') {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('PDFファイルの処理は現在開発中です')),
-            );
+          final pdfData = await service.readPdfFileContent(file);
+          if (pdfData != null) {
+            // 一時的にサンプル画像データを使用（PDF変換機能は後で実装）
+            final sampleImageData = Uint8List.fromList([
+              0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
+              0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+              // PNGヘッダー（最小限のサンプルデータ）
+            ]);
+
+            // Riverpodを使用して分析を実行
+            await ref
+                .read(analysisNotifierProvider.notifier)
+                .analyzeMultipleSlideImages([sampleImageData]);
+
+            if (context.mounted) {
+              context.go('/result');
+            }
+          } else {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('PDFファイルの読み取りに失敗しました')),
+              );
+            }
           }
         } else {
-          // テキストファイルの場合（既存の処理）
-          String? fileContent;
-          if (file.extension == 'txt') {
-            fileContent = await service.readFileContent(file);
+          // PDFファイル以外は対応していない
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('PDFファイルのみ対応しています')),
+            );
           }
-
-          // ファイル内容をResultPageに渡す（現在はサンプルデータを使用）
-          final sampleContent =
-              fileContent ??
-              '''
-プレゼンテーション内容：
-1. 導入：弊社の新製品について
-2. 問題提起：現在の市場課題
-3. 解決策：弊社製品の特徴
-4. まとめ：今後の展望
-
-このプレゼンテーションは文字が多く、視覚的な要素が少ないため、
-視聴者が退屈に感じる可能性があります。
-''';
-
-          // グローバルな状態管理でファイル内容を保存（簡易実装）
-          // 実際の実装ではRiverpodやProviderを使用
-          context.go('/result');
         }
       } catch (e) {
         if (context.mounted) {
@@ -75,7 +82,7 @@ class StartPage extends StatelessWidget {
 
   /// ウィジェットツリーを構築する。
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF7FAFC),
@@ -110,7 +117,7 @@ class StartPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 32),
                 Text(
-                  '100人中何人が寝るかな？',
+                  'PDFプレゼンテーションを分析',
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFF00B8D9),
@@ -187,10 +194,10 @@ class StartPage extends StatelessWidget {
                       // elevation: 4, // デフォルト値なので削除
                     ),
                     onPressed: () {
-                      _pickFile(context);
+                      _pickFile(context, ref);
                     },
                     child: const Text(
-                      'スライドをアップロード',
+                      'PDFファイルを選択',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
