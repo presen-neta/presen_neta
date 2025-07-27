@@ -42,82 +42,352 @@ void main() {
     ],
   );
 
+  const highScoreReviewResult = ReviewResult(
+    point: 95,
+    good: [
+      '素晴らしいプレゼンテーション',
+      '聴衆を魅了する内容',
+    ],
+    improve: [
+      'さらなる改善の余地は少ない',
+    ],
+  );
+
+  const mediumScoreReviewResult = ReviewResult(
+    point: 75,
+    good: [
+      '基本的な構成は良い',
+    ],
+    improve: [
+      'より詳細な説明が必要',
+      '視覚的な要素を追加',
+    ],
+  );
+
+  const lowScoreReviewResult = ReviewResult(
+    point: 45,
+    good: [
+      '努力は認められる',
+    ],
+    improve: [
+      '構成を見直す必要がある',
+      '内容をより分かりやすく',
+      '練習を重ねる',
+    ],
+  );
+
+  const emptyGoodReviewResult = ReviewResult(
+    point: 50,
+    good: [],
+    improve: [
+      '改善点1',
+      '改善点2',
+    ],
+  );
+
+  const emptyImproveReviewResult = ReviewResult(
+    point: 80,
+    good: [
+      '良い点1',
+      '良い点2',
+    ],
+    improve: [],
+  );
+
+  const emptyBothReviewResult = ReviewResult(
+    point: 60,
+    good: [],
+    improve: [],
+  );
+
   // テスト用のProviderオーバーライド
   final testResultOverrides = [
     ...testServiceOverrides,
-    // 分析結果を直接設定するためのProvider
     analysisNotifierProvider.overrideWith(
       () => AnalysisNotifier()..state = const AsyncValue.data(testReviewResult),
     ),
   ];
 
+  final highScoreOverrides = [
+    ...testServiceOverrides,
+    analysisNotifierProvider.overrideWith(
+      () =>
+          AnalysisNotifier()
+            ..state = const AsyncValue.data(highScoreReviewResult),
+    ),
+  ];
+
+  final mediumScoreOverrides = [
+    ...testServiceOverrides,
+    analysisNotifierProvider.overrideWith(
+      () =>
+          AnalysisNotifier()..state = AsyncValue.data(mediumScoreReviewResult),
+    ),
+  ];
+
+  final lowScoreOverrides = [
+    ...testServiceOverrides,
+    analysisNotifierProvider.overrideWith(
+      () => AnalysisNotifier()..state = AsyncValue.data(lowScoreReviewResult),
+    ),
+  ];
+
+  final loadingOverrides = [
+    ...testServiceOverrides,
+    analysisNotifierProvider.overrideWith(
+      () => AnalysisNotifier()..state = const AsyncValue.loading(),
+    ),
+  ];
+
+  final errorOverrides = [
+    ...testServiceOverrides,
+    analysisNotifierProvider.overrideWith(
+      () =>
+          AnalysisNotifier()
+            ..state = AsyncValue.error('テストエラー', StackTrace.current),
+    ),
+  ];
+
+  final nullResultOverrides = [
+    ...testServiceOverrides,
+    analysisNotifierProvider.overrideWith(
+      () => AnalysisNotifier()..state = const AsyncValue.data(null),
+    ),
+  ];
+
+  final emptyGoodOverrides = [
+    ...testServiceOverrides,
+    analysisNotifierProvider.overrideWith(
+      () => AnalysisNotifier()..state = AsyncValue.data(emptyGoodReviewResult),
+    ),
+  ];
+
+  final emptyImproveOverrides = [
+    ...testServiceOverrides,
+    analysisNotifierProvider.overrideWith(
+      () =>
+          AnalysisNotifier()..state = AsyncValue.data(emptyImproveReviewResult),
+    ),
+  ];
+
+  final emptyBothOverrides = [
+    ...testServiceOverrides,
+    analysisNotifierProvider.overrideWith(
+      () => AnalysisNotifier()..state = AsyncValue.data(emptyBothReviewResult),
+    ),
+  ];
+
   group('ResultPage', () {
-    testWidgets('UI構成要素が表示される', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: testResultOverrides,
-          child: MaterialApp.router(routerConfig: router),
-        ),
-      );
-      await tester.pumpAndSettle();
+    group('正常系テスト', () {
+      testWidgets('UI構成要素が表示される', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: testResultOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
 
-      // メインのテキスト要素
-      expect(find.text('あなたのプレゼンテーションは31点です！'), findsOneWidget);
-      expect(find.text('つまらん！'), findsOneWidget);
+        await tester.pumpAndSettle();
 
-      // ボタン要素
-      expect(find.text('結果をシェア'), findsOneWidget);
-      expect(find.text('別のスライドをアップロード'), findsOneWidget);
+        // メインのテキスト要素
+        expect(find.text('あなたのプレゼンテーションは31点です！'), findsOneWidget);
+        expect(find.text('69人が寝た!'), findsOneWidget);
 
-      // 評価セクション
-      expect(find.text('良い点'), findsOneWidget);
-      expect(find.text('改善提案'), findsOneWidget);
+        // ボタン要素
+        expect(find.text('結果をシェア'), findsOneWidget);
+        expect(find.text('別のスライドをアップロード'), findsOneWidget);
 
-      // 良い点の内容（改行文字で区切られているため、部分文字列で検索）
-      expect(find.textContaining('スライドの構成が分かりやすい'), findsOneWidget);
-      expect(find.textContaining('文字サイズが適切'), findsOneWidget);
-      expect(find.textContaining('色使いが統一されている'), findsOneWidget);
+        // 評価セクション
+        expect(find.text('良い点'), findsOneWidget);
+        expect(find.text('改善提案'), findsOneWidget);
 
-      // 改善提案の内容（改行文字で区切られているため、部分文字列で検索）
-      expect(find.textContaining('アニメーションを追加して動きを出す'), findsOneWidget);
-      expect(find.textContaining('より具体的なデータを提示する'), findsOneWidget);
-      expect(find.textContaining('結論を最初に示す'), findsOneWidget);
+        // 良い点の内容（改行文字で区切られているため、部分文字列で検索）
+        expect(find.textContaining('スライドの構成が分かりやすい'), findsOneWidget);
+        expect(find.textContaining('文字サイズが適切'), findsOneWidget);
+        expect(find.textContaining('色使いが統一されている'), findsOneWidget);
+
+        // 改善提案の内容（改行文字で区切られているため、部分文字列で検索）
+        expect(find.textContaining('アニメーションを追加して動きを出す'), findsOneWidget);
+        expect(find.textContaining('より具体的なデータを提示する'), findsOneWidget);
+        expect(find.textContaining('結論を最初に示す'), findsOneWidget);
+      });
+
+      testWidgets('「結果をシェア」ボタンをタップできる', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: testResultOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final shareButton = find.text('結果をシェア');
+        expect(shareButton, findsOneWidget);
+        await tester.tap(shareButton);
+        await tester.pumpAndSettle();
+
+        // ボタンが正常にタップできることを確認
+        expect(shareButton, findsOneWidget);
+      });
+
+      testWidgets('「別のスライドをアップロード」ボタンをタップすると/へ遷移する', (
+        WidgetTester tester,
+      ) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: testResultOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final uploadButton = find.text('別のスライドをアップロード');
+        expect(uploadButton, findsOneWidget);
+        await tester.tap(uploadButton);
+        await tester.pumpAndSettle();
+
+        expect(router.state.uri.toString(), '/');
+        expect(find.byKey(const Key('start-page')), findsOneWidget);
+      });
     });
 
-    testWidgets('「結果をシェア」ボタンをタップできる', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: testResultOverrides,
-          child: MaterialApp.router(routerConfig: router),
-        ),
-      );
-      await tester.pumpAndSettle();
+    group('点数別判定メッセージテスト', () {
+      testWidgets('高得点（90点以上）で「いいんじゃない？」が表示される', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: highScoreOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      final shareButton = find.text('結果をシェア');
-      expect(shareButton, findsOneWidget);
-      await tester.tap(shareButton);
-      await tester.pumpAndSettle();
+        expect(find.text('あなたのプレゼンテーションは95点です！'), findsOneWidget);
+        expect(find.text('5人が寝た!'), findsOneWidget);
+      });
 
-      // ボタンが正常にタップできることを確認
-      expect(shareButton, findsOneWidget);
+      testWidgets('中得点（75-89点）で「まあまあだけど」が表示される', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: mediumScoreOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('あなたのプレゼンテーションは75点です！'), findsOneWidget);
+        expect(find.text('25人が寝た!'), findsOneWidget);
+      });
+
+      testWidgets('低得点（60-74点）で「がんばれ」が表示される', (WidgetTester tester) async {
+        // 60点のテストデータを作成
+        final sixtyScoreResult = const ReviewResult(
+          point: 60,
+          good: ['良い点'],
+          improve: ['改善点'],
+        );
+
+        final sixtyScoreOverrides = [
+          ...testServiceOverrides,
+          analysisNotifierProvider.overrideWith(
+            () => AnalysisNotifier()..state = AsyncValue.data(sixtyScoreResult),
+          ),
+        ];
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: sixtyScoreOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('あなたのプレゼンテーションは60点です！'), findsOneWidget);
+        expect(find.text('40人が寝た!'), findsOneWidget);
+      });
+
+      testWidgets('最低得点（60点未満）で「つまらん！」が表示される', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: lowScoreOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('あなたのプレゼンテーションは45点です！'), findsOneWidget);
+        expect(find.text('55人が寝た!'), findsOneWidget);
+      });
     });
 
-    testWidgets('「別のスライドをアップロード」ボタンをタップすると/へ遷移する', (WidgetTester tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: testResultOverrides,
-          child: MaterialApp.router(routerConfig: router),
-        ),
-      );
-      await tester.pumpAndSettle();
+    group('エラー状態テスト', () {
+      testWidgets('エラー状態でエラーメッセージが表示される', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: errorOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      final uploadButton = find.text('別のスライドをアップロード');
-      expect(uploadButton, findsOneWidget);
-      await tester.tap(uploadButton);
-      await tester.pumpAndSettle();
+        expect(find.text('分析エラー'), findsOneWidget);
+        expect(find.textContaining('エラーが発生しました: テストエラー'), findsOneWidget);
+        expect(find.text('最初からやり直す'), findsOneWidget);
+      });
 
-      expect(router.state.uri.toString(), '/');
-      expect(find.byKey(const Key('start-page')), findsOneWidget);
+      testWidgets('エラー状態で「最初からやり直す」ボタンをタップすると/へ遷移する', (
+        WidgetTester tester,
+      ) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: errorOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final retryButton = find.text('最初からやり直す');
+        expect(retryButton, findsOneWidget);
+        await tester.tap(retryButton);
+        await tester.pumpAndSettle();
+
+        expect(router.state.uri.toString(), '/');
+        expect(find.byKey(const Key('start-page')), findsOneWidget);
+      });
+    });
+
+    group('ローディング状態テスト', () {
+      testWidgets('ローディング状態でローディングUIが表示される', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: loadingOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('分析中...'), findsOneWidget);
+        expect(find.text('AIがプレゼンテーションを評価しています'), findsOneWidget);
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      });
+    });
+
+    group('null結果テスト', () {
+      testWidgets('分析結果がnullの場合、StartPageに戻る', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: nullResultOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // 一時的にPDFアップロード画面が表示される
+        expect(find.text('PDFをアップロードしてください'), findsOneWidget);
+        expect(find.text('StartPageに戻ります...'), findsOneWidget);
+
+        // 少し待ってからナビゲーションが実行されることを確認
+        await tester.pump(const Duration(milliseconds: 100));
+      });
     });
 
     group('スタイルテスト', () {
@@ -172,6 +442,23 @@ void main() {
         // アップロードアイコンが表示されることを確認
         expect(find.byIcon(Icons.upload_file), findsOneWidget);
       });
+
+      testWidgets('AI分析結果セクションのアイコンが表示される', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: testResultOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // AI分析結果のアイコン
+        expect(find.byIcon(Icons.psychology), findsOneWidget);
+        // 良い点のアイコン
+        expect(find.byIcon(Icons.thumb_up), findsOneWidget);
+        // 改善提案のアイコン
+        expect(find.byIcon(Icons.lightbulb_outline), findsOneWidget);
+      });
     });
 
     group('レイアウトテスト', () {
@@ -201,6 +488,31 @@ void main() {
         expect(find.text('良い点'), findsOneWidget);
         expect(find.text('改善提案'), findsOneWidget);
       });
+
+      testWidgets('AI分析結果セクションが表示される', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: testResultOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('AI分析結果'), findsOneWidget);
+      });
+
+      testWidgets('良い点と改善提案が箇条書きで表示される', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: testResultOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // 箇条書きの記号が表示されることを確認
+        expect(find.text('• '), findsNWidgets(6)); // 良い点3つ + 改善提案3つ
+      });
     });
 
     group('テキストスタイルテスト', () {
@@ -217,7 +529,7 @@ void main() {
         expect(find.text('あなたのプレゼンテーションは31点です！'), findsOneWidget);
       });
 
-      testWidgets('パーセンテージテキストが正しいスタイルで表示される', (WidgetTester tester) async {
+      testWidgets('寝た率テキストが正しいスタイルで表示される', (WidgetTester tester) async {
         await tester.pumpWidget(
           ProviderScope(
             overrides: testResultOverrides,
@@ -226,8 +538,8 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // パーセンテージテキストが表示されることを確認
-        expect(find.text('つまらん！'), findsOneWidget);
+        // 寝た率テキストが表示されることを確認
+        expect(find.text('69人が寝た!'), findsOneWidget);
       });
     });
 
@@ -260,6 +572,114 @@ void main() {
         expect(uploadButton, findsOneWidget);
         await tester.tap(uploadButton);
         await tester.pumpAndSettle();
+      });
+    });
+
+    group('スクロールテスト', () {
+      testWidgets('ページがスクロール可能である', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: testResultOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // SingleChildScrollViewが存在することを確認
+        expect(find.byType(SingleChildScrollView), findsOneWidget);
+      });
+    });
+
+    group('色とテーマテスト', () {
+      testWidgets('背景色が正しく設定されている', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: testResultOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Scaffoldの背景色を確認
+        final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
+        expect(scaffold.backgroundColor, const Color(0xFFF7FAFC));
+      });
+
+      testWidgets('テキストカラーが正しく設定されている', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: testResultOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // メインカラーが使用されていることを確認
+        expect(find.text('あなたのプレゼンテーションは31点です！'), findsOneWidget);
+        expect(find.text('69人が寝た!'), findsOneWidget);
+      });
+    });
+
+    group('アクセシビリティテスト', () {
+      testWidgets('ボタンに適切なセマンティクスが設定されている', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: testResultOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // ボタンがタップ可能であることを確認
+        expect(find.text('結果をシェア'), findsOneWidget);
+        expect(find.text('別のスライドをアップロード'), findsOneWidget);
+      });
+    });
+
+    group('エッジケーステスト', () {
+      testWidgets('良い点が空の場合でも正常に表示される', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: emptyGoodOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // 良い点セクションが表示されないことを確認（空のリストのため）
+        expect(find.text('良い点'), findsNothing);
+        expect(find.text('改善提案'), findsOneWidget);
+        expect(find.text('AI分析結果'), findsOneWidget);
+      });
+
+      testWidgets('改善提案が空の場合でも正常に表示される', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: emptyImproveOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // 改善提案セクションが表示されないことを確認（空のリストのため）
+        expect(find.text('良い点'), findsOneWidget);
+        expect(find.text('改善提案'), findsNothing);
+        expect(find.text('AI分析結果'), findsOneWidget);
+      });
+
+      testWidgets('両方のリストが空の場合でも正常に表示される', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: emptyBothOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // 両方のセクションが表示されないことを確認
+        expect(find.text('良い点'), findsNothing);
+        expect(find.text('改善提案'), findsNothing);
+        expect(find.text('AI分析結果'), findsOneWidget);
       });
     });
   });
