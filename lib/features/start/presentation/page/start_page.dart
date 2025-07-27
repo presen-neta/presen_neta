@@ -29,17 +29,26 @@ class StartPage extends StatelessWidget {
     if (!context.mounted) return;
     if (result != null && result.files.isNotEmpty) {
       final file = result.files.first;
-      String? fileContent;
 
-      // ファイル内容を読み取り
-      if (file.extension == 'txt') {
-        fileContent = await service.readFileContent(file);
-      }
+      try {
+        // PDFファイルの場合（一時的に無効化）
+        if (file.extension == 'pdf') {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('PDFファイルの処理は現在開発中です')),
+            );
+          }
+        } else {
+          // テキストファイルの場合（既存の処理）
+          String? fileContent;
+          if (file.extension == 'txt') {
+            fileContent = await service.readFileContent(file);
+          }
 
-      // ファイル内容をResultPageに渡す（現在はサンプルデータを使用）
-      final sampleContent =
-          fileContent ??
-          '''
+          // ファイル内容をResultPageに渡す（現在はサンプルデータを使用）
+          final sampleContent =
+              fileContent ??
+              '''
 プレゼンテーション内容：
 1. 導入：弊社の新製品について
 2. 問題提起：現在の市場課題
@@ -50,9 +59,17 @@ class StartPage extends StatelessWidget {
 視聴者が退屈に感じる可能性があります。
 ''';
 
-      // グローバルな状態管理でファイル内容を保存（簡易実装）
-      // 実際の実装ではRiverpodやProviderを使用
-      context.go('/result');
+          // グローバルな状態管理でファイル内容を保存（簡易実装）
+          // 実際の実装ではRiverpodやProviderを使用
+          context.go('/result');
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('エラーが発生しました: $e')),
+          );
+        }
+      }
     }
   }
 
