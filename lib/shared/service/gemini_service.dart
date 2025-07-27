@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:convert';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:logger/logger.dart';
 import 'package:presen_neta/shared/config/env_config.dart';
@@ -25,53 +26,8 @@ class GeminiService {
       model: 'gemini-1.5-flash',
       apiKey: key,
       generationConfig: GenerationConfig(temperature: 0.4),
-      tools: [
-        Tool(
-          functionDeclarations: [
-            FunctionDeclaration(
-              'setReview',
-              'スライドの良い点、改善点、点数をまとめて返す',
-              Schema(
-                SchemaType.object,
-                properties: {
-                  'point': Schema(
-                    SchemaType.integer,
-                    description: 'プレゼンの点数（0〜100）',
-                  ),
-                  'good': Schema(
-                    SchemaType.array,
-                    items: Schema(SchemaType.string),
-                    description: '良い点（3つまで）',
-                  ),
-                  'improve': Schema(
-                    SchemaType.array,
-                    items: Schema(SchemaType.string),
-                    description: '改善点（3つまで）',
-                  ),
-                },
-              ),
-            ),
-          ],
-        ),
-      ],
     );
   }
-
-  /// プレゼンテーション分析用のプロンプトテンプレート
-  static const String _presentationAnalysisPrompt = '''
-以下のプレゼンテーション内容を分析し、以下の観点で評価してください：
-
-1. 内容の明確性（0-100点）
-2. 視聴者の興味を引く度合い（0-100点）
-3. 構造の論理性（0-100点）
-4. 視覚的な分かりやすさ（0-100点）
-5. 推定される「寝た率」（0-100%）
-
-改善提案も含めて回答してください。
-
-プレゼンテーション内容：
-{content}
-''';
 
   /// 三輪開人さんの『共感プレゼン』に基づく評価用プロンプト
   static const String _empathyPresentationPrompt = '''
@@ -79,13 +35,14 @@ class GeminiService {
 特に以下の2点を中心に評価してください：
 1. ゴールと聞き手の明確化（誰に、何を、なぜ伝えたいのかが明確か）
 2. スライドの構成と視覚表現（共感を呼ぶストーリー性、余白、言葉の選び方、手書き風要素など）
-レビューの結果、点数（100点満点）、良い点3つ、改善点3つを考えてください。
+レビューの結果、点数（100点満点で非常に厳しくつける）、良い点3つ、改善点3つを考えてください。
 必ず次の形式でJSONとして返答してください：
 {
   "point": 整数,
   "good": ["良い点1", "良い点2", "良い点3"],
   "improve": ["改善点1", "改善点2", "改善点3"]
 }
+JSON以外の説明は不要です。必ず有効なJSON形式で返答してください。
 ''';
 
   late final GenerativeModel _model;
@@ -117,40 +74,90 @@ class GeminiService {
         Content.multi(contentParts),
       ]);
 
-      final functionCalls = response.functionCalls;
-      if (functionCalls != null && functionCalls.isNotEmpty) {
-        final call = functionCalls.firstWhere(
-          (call) => call.name == 'setReview',
-          orElse: () => functionCalls.first,
-        );
+      final responseText = response.text;
+      _logger.d('Geminiレスポンス: $responseText');
 
-        final args = call.args;
-        final point = args['point'] as int?;
-        final goodList =
-            (args['good'] as List<dynamic>?)?.whereType<String>().toList();
-        final improveList =
-            (args['improve'] as List<dynamic>?)?.whereType<String>().toList();
+      if (responseText == null || responseText.isEmpty) {
+        _logger.w('レスポンステキストが空です');
+        return null;
+      }
 
-        if (point != null) {
-          final result = ReviewResult(
-            point: point,
-            good: goodList ?? [],
-            improve: improveList ?? [],
-          );
+      // JSONを抽出して解析
+      final jsonResult = _extractJsonFromResponse(responseText);
+      if (jsonResult == null) {
+        _logger.w('JSONの抽出に失敗しました');
+        return null;
+      }
 
-          _logger.i('複数スライド画像分析完了: ${result.point}点');
-          _logger.d(
-            '良い点: ${result.good.length}個, 改善点: ${result.improve.length}個',
-          );
+      final point = jsonResult['point'] as int?;
+      final goodList =
+          (jsonResult['good'] as List<dynamic>?)?.whereType<String>().toList();
+      final improveList =
+          (jsonResult['improve'] as List<dynamic>?)
+              ?.whereType<String>()
+              .toList();
 
-          return result;
+      if (point == null || point < 0 || point > 100) {
+        _logger.w('無効な点数: $point');
+        return null;
+      }
+
+      final result = ReviewResult(
+        point: point,
+        good: goodList ?? [],
+        improve: improveList ?? [],
+      );
+
+      _logger.i('複数スライド画像分析完了: ${result.point}点');
+      _logger.d(
+        '良い点: ${result.good.length}個, 改善点: ${result.improve.length}個',
+      );
+
+      return result;
+    } catch (e) {
+      _logger.e('複数スライド画像分析エラー: $e');
+      return null;
+    }
+  }
+
+  /// レスポンステキストからJSONを抽出する
+  ///
+  /// [responseText] Geminiからのレスポンステキスト
+  /// 抽出されたJSONオブジェクトを返す。抽出に失敗した場合はnullを返す
+  Map<String, dynamic>? _extractJsonFromResponse(String responseText) {
+    try {
+      // レスポンステキストをクリーンアップ
+      final cleanedText = responseText.trim();
+
+      // JSONブロックを探す（```json で囲まれている場合）
+      final jsonBlockPattern = RegExp(
+        r'```(?:json)?\s*(\{.*?\})\s*```',
+        dotAll: true,
+      );
+      final jsonBlockMatch = jsonBlockPattern.firstMatch(cleanedText);
+
+      if (jsonBlockMatch != null) {
+        final jsonString = jsonBlockMatch.group(1);
+        if (jsonString != null) {
+          return json.decode(jsonString) as Map<String, dynamic>;
         }
       }
 
-      _logger.w('Function Callが見つからないか、無効なレスポンス');
+      // JSONブロックが見つからない場合、テキスト全体をJSONとして解析
+      final jsonPattern = RegExp(r'\{.*\}', dotAll: true);
+      final jsonMatch = jsonPattern.firstMatch(cleanedText);
+
+      if (jsonMatch != null) {
+        final jsonString = jsonMatch.group(0);
+        if (jsonString != null) {
+          return json.decode(jsonString) as Map<String, dynamic>;
+        }
+      }
+
+      _logger.w('JSONパターンが見つかりませんでした');
       return null;
     } catch (e) {
-      _logger.e('複数スライド画像分析エラー: $e');
+      _logger.e('JSON解析エラー: $e');
       return null;
     }
   }

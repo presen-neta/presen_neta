@@ -18,6 +18,7 @@ GeminiService geminiService(Ref ref) {
 class AnalysisNotifier extends _$AnalysisNotifier {
   @override
   Future<ReviewResult?> build() async {
+    // 初期状態はnull（分析結果なし）
     return null;
   }
 
@@ -44,6 +45,7 @@ class AnalysisNotifier extends _$AnalysisNotifier {
 
   /// 分析結果をリセットする
   void reset() {
-    state = const AsyncValue<ReviewResult?>.loading();
+    // 初期状態（null）に戻す
+    state = const AsyncValue<ReviewResult?>.data(null);
   }
 }
