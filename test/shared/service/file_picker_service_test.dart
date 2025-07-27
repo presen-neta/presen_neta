@@ -16,19 +16,48 @@ void main() {
     service = FilePickerService(filePicker: mockFilePicker);
   });
 
-  test('ファイルが正常に選択された場合、FilePickerResultを返す', () async {
-    final result = FilePickerResult([
-      PlatformFile(name: 'test.txt', size: 1),
-    ]);
-    when(mockFilePicker.pickFiles()).thenAnswer((_) async => result);
-    final picked = await service.pickFile();
-    expect(picked, isNotNull);
-    expect(picked!.files.first.name, 'test.txt');
-  });
+  group('FilePickerService', () {
+    test('ファイルが正常に選択された場合、FilePickerResultを返す', () async {
+      final result = FilePickerResult([
+        PlatformFile(name: 'test.txt', size: 1),
+      ]);
+      when(mockFilePicker.pickFiles()).thenAnswer((_) async => result);
+      final picked = await service.pickFile();
+      expect(picked, isNotNull);
+      expect(picked!.files.first.name, 'test.txt');
+    });
 
-  test('ファイル選択がキャンセルされた場合、nullを返す', () async {
-    when(mockFilePicker.pickFiles()).thenAnswer((_) async => null);
-    final picked = await service.pickFile();
-    expect(picked, isNull);
+    test('ファイル選択がキャンセルされた場合、nullを返す', () async {
+      when(mockFilePicker.pickFiles()).thenAnswer((_) async => null);
+      final picked = await service.pickFile();
+      expect(picked, isNull);
+    });
+
+    test('複数ファイルが選択された場合、最初のファイルを返す', () async {
+      final result = FilePickerResult([
+        PlatformFile(name: 'first.txt', size: 1),
+        PlatformFile(name: 'second.txt', size: 2),
+      ]);
+      when(mockFilePicker.pickFiles()).thenAnswer((_) async => result);
+      final picked = await service.pickFile();
+      expect(picked, isNotNull);
+      expect(picked!.files.first.name, 'first.txt');
+    });
+
+    test('空のファイルリストが返された場合、FilePickerResultを返す', () async {
+      const result = FilePickerResult([]);
+      when(mockFilePicker.pickFiles()).thenAnswer((_) async => result);
+      final picked = await service.pickFile();
+      expect(picked, isNotNull);
+      expect(picked!.files, isEmpty);
+    });
+
+    test('pickFilesが例外を投げた場合、例外が伝播する', () async {
+      when(mockFilePicker.pickFiles()).thenThrow(Exception('Test exception'));
+      expect(
+        () => service.pickFile(),
+        throwsA(isA<Exception>()),
+      );
+    });
   });
 }

@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:logger/logger.dart';
 import 'package:presen_neta/features/result/provider/result_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:presen_neta/features/result/presentation/page/result_page_controller.dart';
 
 /// プレゼンテーション分析結果を表示するページ。
 ///
@@ -169,9 +170,21 @@ class ResultPage extends ConsumerWidget {
                           ),
                           elevation: 4,
                         ),
-                        onPressed: () {
-                          SharePlus.instance.share(
-                            ShareParams(text: _getShareMessage(result.point)),
+                        onPressed: () async {
+                          final controller = ResultPageController();
+                          await controller.shareResult(
+                            sleepPercentage: 69,
+                            title: 'つまらん！',
+                            goodPoints: [
+                              'スライドの構成が分かりやすい',
+                              '文字サイズが適切',
+                              '色使いが統一されている',
+                            ],
+                            improvements: [
+                              'アニメーションを追加して動きを出す',
+                              'より具体的なデータを提示する',
+                              '結論を最初に示す',
+                            ],
                           );
                         },
                         icon: const Icon(Icons.share, color: Colors.white),
@@ -221,11 +234,22 @@ class ResultPage extends ConsumerWidget {
                           ),
                           const SizedBox(height: 16),
                           if (result.good.isNotEmpty) ...[
-                            Text(
-                              '良い点:',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.thumb_up,
+                                  color: Color(0xFF00B8D9),
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '良い点',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF00B8D9),
+                                  ),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 4),
                             ...result.good.map(
@@ -251,12 +275,22 @@ class ResultPage extends ConsumerWidget {
                             const SizedBox(height: 12),
                           ],
                           if (result.improve.isNotEmpty) ...[
-                            Text(
-                              '改善点:',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.orange,
-                              ),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.lightbulb_outline,
+                                  color: Color(0xFFFF6B35),
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '改善提案',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFFFF6B35),
+                                  ),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: 4),
                             ...result.improve.map(
