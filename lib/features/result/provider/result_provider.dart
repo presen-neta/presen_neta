@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:presen_neta/shared/models/review_result.dart';
 import 'package:presen_neta/shared/service/gemini_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -14,18 +17,25 @@ GeminiService geminiService(Ref ref) {
 @riverpod
 class AnalysisNotifier extends _$AnalysisNotifier {
   @override
-  Future<String> build() async {
-    return '';
+  Future<ReviewResult?> build() async {
+    return null;
   }
 
-  /// コンテンツを分析する
+  /// スライド画像を分析する
   ///
-  /// [content] 分析対象のコンテンツ
-  Future<void> analyzeContent(String content) async {
-    state = const AsyncValue.loading();
+  /// [imageData] 分析対象の画像データ
+  /// [imageMimeType] 画像のMIMEタイプ（デフォルト: 'image/png'）
+  Future<void> analyzeSlideImage(
+    Uint8List imageData, {
+    String imageMimeType = 'image/png',
+  }) async {
+    state = const AsyncValue<ReviewResult?>.loading();
     try {
       final geminiService = ref.read(geminiServiceProvider);
-      final result = await geminiService.analyzePresentation(content);
+      final result = await geminiService.analyzeSlideImage(
+        imageData,
+        imageMimeType: imageMimeType,
+      );
       state = AsyncValue.data(result);
     } catch (error, stackTrace) {
       state = AsyncValue.error(error, stackTrace);
@@ -34,6 +44,6 @@ class AnalysisNotifier extends _$AnalysisNotifier {
 
   /// 分析結果をリセットする
   void reset() {
-    state = const AsyncValue.loading();
+    state = const AsyncValue<ReviewResult?>.loading();
   }
 }

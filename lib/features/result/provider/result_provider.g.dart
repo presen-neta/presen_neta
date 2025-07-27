@@ -26,14 +26,14 @@ final geminiServiceProvider = AutoDisposeProvider<GeminiService>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef GeminiServiceRef = AutoDisposeProviderRef<GeminiService>;
-String _$analysisNotifierHash() => r'1fa6c61abd62932b21bb6f38a79fa7dbda6b2124';
+String _$analysisNotifierHash() => r'049e52113e07ce27373a27938bb28243562787bb';
 
 /// 分析結果の状態管理プロバイダー
 ///
 /// Copied from [AnalysisNotifier].
 @ProviderFor(AnalysisNotifier)
 final analysisNotifierProvider =
-    AutoDisposeAsyncNotifierProvider<AnalysisNotifier, String>.internal(
+    AutoDisposeAsyncNotifierProvider<AnalysisNotifier, ReviewResult?>.internal(
       AnalysisNotifier.new,
       name: r'analysisNotifierProvider',
       debugGetCreateSourceHash:
@@ -44,6 +44,6 @@ final analysisNotifierProvider =
       allTransitiveDependencies: null,
     );
 
-typedef _$AnalysisNotifier = AutoDisposeAsyncNotifier<String>;
+typedef _$AnalysisNotifier = AutoDisposeAsyncNotifier<ReviewResult?>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
