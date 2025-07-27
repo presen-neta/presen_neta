@@ -4,6 +4,7 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i3;
+import 'dart:typed_data' as _i5;
 
 import 'package:file_picker/file_picker.dart' as _i4;
 import 'package:mockito/mockito.dart' as _i1;
@@ -46,4 +47,12 @@ class MockFilePickerService extends _i1.Mock implements _i2.FilePickerService {
             returnValue: _i3.Future<String?>.value(),
           )
           as _i3.Future<String?>);
+
+  @override
+  _i3.Future<_i5.Uint8List?> readPdfFileContent(_i4.PlatformFile? file) =>
+      (super.noSuchMethod(
+            Invocation.method(#readPdfFileContent, [file]),
+            returnValue: _i3.Future<_i5.Uint8List?>.value(),
+          )
+          as _i3.Future<_i5.Uint8List?>);
 }
