@@ -3,12 +3,14 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i3;
-import 'dart:typed_data' as _i5;
+import 'dart:async' as _i4;
 
-import 'package:file_picker/file_picker.dart' as _i4;
+import 'package:flutter/material.dart' as _i5;
+import 'package:hooks_riverpod/hooks_riverpod.dart' as _i6;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:presen_neta/shared/service/file_picker_service.dart' as _i2;
+import 'package:presen_neta/shared/service/presentation_analysis_service.dart'
+    as _i3;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -24,35 +26,40 @@ import 'package:presen_neta/shared/service/file_picker_service.dart' as _i2;
 // ignore_for_file: camel_case_types
 // ignore_for_file: subtype_of_sealed_class
 
-/// A class which mocks [FilePickerService].
+class _FakeFilePickerService_0 extends _i1.SmartFake
+    implements _i2.FilePickerService {
+  _FakeFilePickerService_0(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
+}
+
+/// A class which mocks [PresentationAnalysisService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockFilePickerService extends _i1.Mock implements _i2.FilePickerService {
-  MockFilePickerService() {
+class MockPresentationAnalysisService extends _i1.Mock
+    implements _i3.PresentationAnalysisService {
+  MockPresentationAnalysisService() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i3.Future<_i4.FilePickerResult?> pickFile() =>
+  _i2.FilePickerService get filePickerService =>
       (super.noSuchMethod(
-            Invocation.method(#pickFile, []),
-            returnValue: _i3.Future<_i4.FilePickerResult?>.value(),
+            Invocation.getter(#filePickerService),
+            returnValue: _FakeFilePickerService_0(
+              this,
+              Invocation.getter(#filePickerService),
+            ),
           )
-          as _i3.Future<_i4.FilePickerResult?>);
+          as _i2.FilePickerService);
 
   @override
-  _i3.Future<String?> readFileContent(_i4.PlatformFile? file) =>
+  _i4.Future<bool> analyzePdfFile(
+    _i5.BuildContext? context,
+    _i6.WidgetRef? ref,
+  ) =>
       (super.noSuchMethod(
-            Invocation.method(#readFileContent, [file]),
-            returnValue: _i3.Future<String?>.value(),
+            Invocation.method(#analyzePdfFile, [context, ref]),
+            returnValue: _i4.Future<bool>.value(false),
           )
-          as _i3.Future<String?>);
-
-  @override
-  _i3.Future<_i5.Uint8List?> readPdfFileContent(_i4.PlatformFile? file) =>
-      (super.noSuchMethod(
-            Invocation.method(#readPdfFileContent, [file]),
-            returnValue: _i3.Future<_i5.Uint8List?>.value(),
-          )
-          as _i3.Future<_i5.Uint8List?>);
+          as _i4.Future<bool>);
 }
