@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:logger/logger.dart';
 import 'package:presen_neta/shared/config/env_config.dart';
@@ -20,8 +21,38 @@ class GeminiService {
 
     _logger.i('GeminiService初期化完了');
     _model = GenerativeModel(
-      model: 'gemini-2.5-pro',
+      model: 'gemini-1.5-flash',
       apiKey: key,
+      generationConfig: GenerationConfig(temperature: 0.4),
+      tools: [
+        Tool(
+          functionDeclarations: [
+            FunctionDeclaration(
+              'setReview',
+              'スライドの良い点、改善点、点数をまとめて返す',
+              Schema(
+                SchemaType.object,
+                properties: {
+                  'point': Schema(
+                    SchemaType.integer,
+                    description: 'プレゼンの点数（0〜100）',
+                  ),
+                  'good': Schema(
+                    SchemaType.array,
+                    items: Schema(SchemaType.string),
+                    description: '良い点（3つまで）',
+                  ),
+                  'improve': Schema(
+                    SchemaType.array,
+                    items: Schema(SchemaType.string),
+                    description: '改善点（3つまで）',
+                  ),
+                },
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -40,6 +71,22 @@ class GeminiService {
 プレゼンテーション内容：
 {content}
 ''';
+
+  /// 三輪開人さんの『共感プレゼン』に基づく評価用プロンプト
+  static const String _empathyPresentationPrompt = '''
+次のスライド資料を、三輪開人さんの『共感プレゼン』の考え方に基づいてレビューしてください。
+特に以下の2点を中心に評価してください：
+1. ゴールと聞き手の明確化（誰に、何を、なぜ伝えたいのかが明確か）
+2. スライドの構成と視覚表現（共感を呼ぶストーリー性、余白、言葉の選び方、手書き風要素など）
+レビューの結果、点数（100点満点）、良い点3つ、改善点3つを考えてください。
+必ず次の形式でJSONとして返答してください：
+{
+  "point": 整数,
+  "good": ["良い点1", "良い点2", "良い点3"],
+  "improve": ["改善点1", "改善点2", "改善点3"]
+}
+''';
+
   late final GenerativeModel _model;
   final Logger _logger = Logger();
 
@@ -70,6 +117,64 @@ class GeminiService {
     }
   }
 
+  /// スライド画像を分析して構造化された評価結果を取得する
+  ///
+  /// [imageData] 分析対象の画像データ（Uint8List）
+  /// [imageMimeType] 画像のMIMEタイプ（デフォルト: 'image/png'）
+  /// 構造化された評価結果を返す
+  Future<ReviewResult?> analyzeSlideImage(
+    Uint8List imageData, {
+    String imageMimeType = 'image/png',
+  }) async {
+    try {
+      _logger.i('スライド画像分析開始');
+      _logger.d('画像サイズ: ${imageData.length}バイト');
+
+      final response = await _model.generateContent([
+        Content.multi([
+          TextPart(_empathyPresentationPrompt),
+          DataPart(imageMimeType, imageData),
+        ]),
+      ]);
+
+      final functionCalls = response.functionCalls;
+      if (functionCalls != null && functionCalls.isNotEmpty) {
+        final call = functionCalls.firstWhere(
+          (call) => call.name == 'setReview',
+          orElse: () => functionCalls.first,
+        );
+
+        final args = call.args;
+        final point = args['point'] as int?;
+        final goodList =
+            (args['good'] as List<dynamic>?)?.whereType<String>().toList();
+        final improveList =
+            (args['improve'] as List<dynamic>?)?.whereType<String>().toList();
+
+        if (point != null) {
+          final result = ReviewResult(
+            point: point,
+            good: goodList ?? [],
+            improve: improveList ?? [],
+          );
+
+          _logger.i('スライド画像分析完了: ${result.point}点');
+          _logger.d(
+            '良い点: ${result.good.length}個, 改善点: ${result.improve.length}個',
+          );
+
+          return result;
+        }
+      }
+
+      _logger.w('Function Callが見つからないか、無効なレスポンス');
+      return null;
+    } catch (e) {
+      _logger.e('スライド画像分析エラー: $e');
+      return null;
+    }
+  }
+
   /// トークン数をカウントする
   ///
   /// [content] カウント対象のコンテンツ
@@ -87,5 +192,55 @@ class GeminiService {
       _logger.e('トークン数カウントエラー: $e');
       return 0;
     }
+  }
+}
+
+/// プレゼンテーション評価結果を表すクラス
+class ReviewResult {
+  /// プレゼンテーションの点数（0-100）
+  final int point;
+
+  /// 良い点のリスト
+  final List<String> good;
+
+  /// 改善点のリスト
+  final List<String> improve;
+
+  /// ReviewResultのコンストラクタ
+  ReviewResult({
+    required this.point,
+    required this.good,
+    required this.improve,
+  });
+
+  /// MapからReviewResultを作成するファクトリメソッド
+  ///
+  /// [map] 変換元のMap
+  /// ReviewResultインスタンスを返す
+  factory ReviewResult.fromMap(Map<String, Object?> map) {
+    return ReviewResult(
+      point: map['point'] as int,
+      good: (map['good'] as List<dynamic>?)?.whereType<String>().toList() ?? [],
+      improve:
+          (map['improve'] as List<dynamic>?)?.whereType<String>().toList() ??
+          [],
+    );
+  }
+
+  /// 寝た率を計算する
+  ///
+  /// 100点から点数を引いた値を返す
+  int get sleepRate => 100 - point;
+
+  /// Mapに変換する
+  ///
+  /// 変換後のMapを返す
+  Map<String, dynamic> toMap() {
+    return {
+      'point': point,
+      'good': good,
+      'improve': improve,
+      'sleepRate': sleepRate,
+    };
   }
 }
