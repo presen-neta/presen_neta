@@ -79,7 +79,7 @@ class PresentationAnalysisService
       _logger.i('PDFファイル読み取り完了: ${pdfData.length}バイト');
 
       // PDFを複数のPNGに変換
-      final pngImages = await _convertPdfToPngImages(pdfData);
+      final pngImages = await convertPdfToPngImages(pdfData);
       if (pngImages.isEmpty) {
         _logger.e('PDFの変換に失敗しました');
         if (context.mounted) {
@@ -110,7 +110,8 @@ class PresentationAnalysisService
   ///
   /// [pdfData] 変換対象のPDFデータ
   /// 変換されたPNG画像のリストを返す。変換に失敗した場合は空のリストを返す。
-  Future<List<Uint8List>> _convertPdfToPngImages(Uint8List pdfData) async {
+  @override
+  Future<List<Uint8List>> convertPdfToPngImages(Uint8List pdfData) async {
     try {
       _logger.d('PDF変換開始');
       final pdfDocument = await PdfDocument.openData(pdfData);
