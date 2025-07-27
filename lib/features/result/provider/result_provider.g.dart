@@ -6,27 +6,7 @@ part of 'result_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$geminiServiceHash() => r'7468f5154ee604120046e70ddffe71b15ca8fdc3';
-
-/// GeminiServiceのプロバイダー
-///
-/// Copied from [geminiService].
-@ProviderFor(geminiService)
-final geminiServiceProvider = AutoDisposeProvider<GeminiService>.internal(
-  geminiService,
-  name: r'geminiServiceProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product')
-          ? null
-          : _$geminiServiceHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef GeminiServiceRef = AutoDisposeProviderRef<GeminiService>;
-String _$analysisNotifierHash() => r'5620295fbec0efb7b804e890ec945c61640857dc';
+String _$analysisNotifierHash() => r'2e4fd15f85645c50d54d07e9446b908c8a2279f8';
 
 /// 分析結果の状態管理プロバイダー
 ///

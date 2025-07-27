@@ -12,7 +12,7 @@ import '../providers/test_service_providers.dart';
 void main() {
   group('Service Providers', () {
     test('FilePickerServiceプロバイダーが正しく動作する', () {
-      final container = ProviderContainer();
+      final container = ProviderContainer(overrides: testServiceOverrides);
       addTearDown(container.dispose);
 
       final service = container.read(filePickerServiceProvider);
@@ -20,7 +20,7 @@ void main() {
     });
 
     test('GeminiServiceプロバイダーが正しく動作する', () {
-      final container = ProviderContainer();
+      final container = ProviderContainer(overrides: testServiceOverrides);
       addTearDown(container.dispose);
 
       final service = container.read(geminiServiceProvider);
@@ -28,7 +28,7 @@ void main() {
     });
 
     test('PresentationAnalysisServiceプロバイダーが正しく動作する', () {
-      final container = ProviderContainer();
+      final container = ProviderContainer(overrides: testServiceOverrides);
       addTearDown(container.dispose);
 
       final service = container.read(presentationAnalysisServiceProvider);

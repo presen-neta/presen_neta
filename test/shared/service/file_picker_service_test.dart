@@ -19,41 +19,116 @@ void main() {
   group('FilePickerService', () {
     test('ファイルが正常に選択された場合、FilePickerResultを返す', () async {
       final result = FilePickerResult([
-        PlatformFile(name: 'test.txt', size: 1),
+        PlatformFile(name: 'test.pdf', size: 1),
       ]);
-      when(mockFilePicker.pickFiles()).thenAnswer((_) async => result);
+      when(
+        mockFilePicker.pickFiles(
+          dialogTitle: anyNamed('dialogTitle'),
+          initialDirectory: anyNamed('initialDirectory'),
+          type: anyNamed('type'),
+          allowedExtensions: anyNamed('allowedExtensions'),
+          onFileLoading: anyNamed('onFileLoading'),
+          allowCompression: anyNamed('allowCompression'),
+          compressionQuality: anyNamed('compressionQuality'),
+          allowMultiple: anyNamed('allowMultiple'),
+          withData: anyNamed('withData'),
+          withReadStream: anyNamed('withReadStream'),
+          lockParentWindow: anyNamed('lockParentWindow'),
+          readSequential: anyNamed('readSequential'),
+        ),
+      ).thenAnswer((_) async => result);
       final picked = await service.pickFile();
       expect(picked, isNotNull);
-      expect(picked!.files.first.name, 'test.txt');
+      expect(picked!.files.first.name, 'test.pdf');
     });
 
     test('ファイル選択がキャンセルされた場合、nullを返す', () async {
-      when(mockFilePicker.pickFiles()).thenAnswer((_) async => null);
+      when(
+        mockFilePicker.pickFiles(
+          dialogTitle: anyNamed('dialogTitle'),
+          initialDirectory: anyNamed('initialDirectory'),
+          type: anyNamed('type'),
+          allowedExtensions: anyNamed('allowedExtensions'),
+          onFileLoading: anyNamed('onFileLoading'),
+          allowCompression: anyNamed('allowCompression'),
+          compressionQuality: anyNamed('compressionQuality'),
+          allowMultiple: anyNamed('allowMultiple'),
+          withData: anyNamed('withData'),
+          withReadStream: anyNamed('withReadStream'),
+          lockParentWindow: anyNamed('lockParentWindow'),
+          readSequential: anyNamed('readSequential'),
+        ),
+      ).thenAnswer((_) async => null);
       final picked = await service.pickFile();
       expect(picked, isNull);
     });
 
     test('複数ファイルが選択された場合、最初のファイルを返す', () async {
       final result = FilePickerResult([
-        PlatformFile(name: 'first.txt', size: 1),
-        PlatformFile(name: 'second.txt', size: 2),
+        PlatformFile(name: 'first.pdf', size: 1),
+        PlatformFile(name: 'second.pdf', size: 2),
       ]);
-      when(mockFilePicker.pickFiles()).thenAnswer((_) async => result);
+      when(
+        mockFilePicker.pickFiles(
+          dialogTitle: anyNamed('dialogTitle'),
+          initialDirectory: anyNamed('initialDirectory'),
+          type: anyNamed('type'),
+          allowedExtensions: anyNamed('allowedExtensions'),
+          onFileLoading: anyNamed('onFileLoading'),
+          allowCompression: anyNamed('allowCompression'),
+          compressionQuality: anyNamed('compressionQuality'),
+          allowMultiple: anyNamed('allowMultiple'),
+          withData: anyNamed('withData'),
+          withReadStream: anyNamed('withReadStream'),
+          lockParentWindow: anyNamed('lockParentWindow'),
+          readSequential: anyNamed('readSequential'),
+        ),
+      ).thenAnswer((_) async => result);
       final picked = await service.pickFile();
       expect(picked, isNotNull);
-      expect(picked!.files.first.name, 'first.txt');
+      expect(picked!.files.first.name, 'first.pdf');
     });
 
     test('空のファイルリストが返された場合、FilePickerResultを返す', () async {
       const result = FilePickerResult([]);
-      when(mockFilePicker.pickFiles()).thenAnswer((_) async => result);
+      when(
+        mockFilePicker.pickFiles(
+          dialogTitle: anyNamed('dialogTitle'),
+          initialDirectory: anyNamed('initialDirectory'),
+          type: anyNamed('type'),
+          allowedExtensions: anyNamed('allowedExtensions'),
+          onFileLoading: anyNamed('onFileLoading'),
+          allowCompression: anyNamed('allowCompression'),
+          compressionQuality: anyNamed('compressionQuality'),
+          allowMultiple: anyNamed('allowMultiple'),
+          withData: anyNamed('withData'),
+          withReadStream: anyNamed('withReadStream'),
+          lockParentWindow: anyNamed('lockParentWindow'),
+          readSequential: anyNamed('readSequential'),
+        ),
+      ).thenAnswer((_) async => result);
       final picked = await service.pickFile();
       expect(picked, isNotNull);
       expect(picked!.files, isEmpty);
     });
 
     test('pickFilesが例外を投げた場合、例外が伝播する', () async {
-      when(mockFilePicker.pickFiles()).thenThrow(Exception('Test exception'));
+      when(
+        mockFilePicker.pickFiles(
+          dialogTitle: anyNamed('dialogTitle'),
+          initialDirectory: anyNamed('initialDirectory'),
+          type: anyNamed('type'),
+          allowedExtensions: anyNamed('allowedExtensions'),
+          onFileLoading: anyNamed('onFileLoading'),
+          allowCompression: anyNamed('allowCompression'),
+          compressionQuality: anyNamed('compressionQuality'),
+          allowMultiple: anyNamed('allowMultiple'),
+          withData: anyNamed('withData'),
+          withReadStream: anyNamed('withReadStream'),
+          lockParentWindow: anyNamed('lockParentWindow'),
+          readSequential: anyNamed('readSequential'),
+        ),
+      ).thenThrow(Exception('Test exception'));
       expect(
         () => service.pickFile(),
         throwsA(isA<Exception>()),

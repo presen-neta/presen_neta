@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:presen_neta/features/start/presentation/page/start_page.dart';
+import 'package:presen_neta/app/app_router/app_router.dart';
+import '../../../../shared/providers/test_service_providers.dart';
 import '../../../../shared/service/mocks/mock_presentation_analysis_service.dart';
 
 /// StartPageのテストクラス。
@@ -19,8 +20,9 @@ void main() {
       // StartPageをビルド
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(
-            home: StartPage(service: mockService),
+          overrides: testServiceOverrides,
+          child: MaterialApp.router(
+            routerConfig: appRouter,
           ),
         ),
       );
@@ -38,8 +40,9 @@ void main() {
       // StartPageをビルド
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(
-            home: StartPage(service: mockService),
+          overrides: testServiceOverrides,
+          child: MaterialApp.router(
+            routerConfig: appRouter,
           ),
         ),
       );
@@ -64,8 +67,9 @@ void main() {
       // StartPageをビルド
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(
-            home: StartPage(service: mockService),
+          overrides: testServiceOverrides,
+          child: MaterialApp.router(
+            routerConfig: appRouter,
           ),
         ),
       );

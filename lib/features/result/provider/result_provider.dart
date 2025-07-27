@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:presen_neta/shared/models/review_result.dart';
 import 'package:presen_neta/shared/providers/service_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
