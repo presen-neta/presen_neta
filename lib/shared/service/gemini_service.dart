@@ -91,33 +91,6 @@ class GeminiService {
   late final GenerativeModel _model;
   final Logger _logger = Logger();
 
-  /// プレゼンテーション内容を分析する
-  ///
-  /// [content] 分析対象のプレゼンテーション内容
-  /// 分析結果の文字列を返す
-  Future<String> analyzePresentation(String content) async {
-    try {
-      _logger.i('プレゼンテーション分析開始');
-      _logger.d('分析対象コンテンツ: ${content.length}文字');
-
-      final prompt = Content.text(
-        _presentationAnalysisPrompt.replaceAll('{content}', content),
-      );
-
-      final response = await _model.generateContent([prompt]);
-      final result = response.text ?? '分析に失敗しました';
-
-      _logger.i('プレゼンテーション分析完了');
-      _logger.d('分析結果: ${result.length}文字');
-
-      return result;
-    } catch (e) {
-      final errorMessage = 'エラーが発生しました: $e';
-      _logger.e('プレゼンテーション分析エラー: $e');
-      return errorMessage;
-    }
-  }
-
   /// スライド画像を分析して構造化された評価結果を取得する
   ///
   /// [imageData] 分析対象の画像データ（Uint8List）
