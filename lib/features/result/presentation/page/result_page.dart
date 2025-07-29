@@ -131,15 +131,6 @@ class ResultPage extends ConsumerWidget {
                     ),
                     const SizedBox(height: 28),
                     Text(
-                      'あなたのプレゼンテーションは${result.point}点です！',
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF00B8D9),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
                       _getSleepRateMessage(result.point),
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
