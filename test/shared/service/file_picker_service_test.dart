@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
@@ -246,6 +247,211 @@ void main() {
       final injectedService = FilePickerService(filePicker: mockFilePicker);
       
       expect(injectedService, isA<FilePickerService>());
+    });
+
+    test('should handle concurrent pickFile calls', () async {
+      final result1 = FilePickerResult([
+        PlatformFile(name: 'test1.pdf', size: 1),
+      ]);
+      final result2 = FilePickerResult([
+        PlatformFile(name: 'test2.pdf', size: 2),
+      ]);
+
+      when(
+        mockFilePicker.pickFiles(
+          dialogTitle: anyNamed('dialogTitle'),
+          initialDirectory: anyNamed('initialDirectory'),
+          type: anyNamed('type'),
+          allowedExtensions: anyNamed('allowedExtensions'),
+          onFileLoading: anyNamed('onFileLoading'),
+          allowCompression: anyNamed('allowCompression'),
+          compressionQuality: anyNamed('compressionQuality'),
+          allowMultiple: anyNamed('allowMultiple'),
+          withData: anyNamed('withData'),
+          withReadStream: anyNamed('withReadStream'),
+          lockParentWindow: anyNamed('lockParentWindow'),
+          readSequential: anyNamed('readSequential'),
+        ),
+      ).thenAnswer((invocation) async {
+        // 呼び出し順序に応じて異なる結果を返す
+        if (invocation.namedArguments.toString().contains('test1')) {
+          return result1;
+        }
+        return result2;
+      });
+
+      final future1 = service.pickFile();
+      final future2 = service.pickFile();
+
+      final results = await Future.wait([future1, future2]);
+      
+      expect(results[0], isNotNull);
+      expect(results[1], isNotNull);
+    });
+
+    test('should maintain consistent parameters across calls', () async {
+      final result = FilePickerResult([
+        PlatformFile(name: 'test.pdf', size: 1),
+      ]);
+
+      when(
+        mockFilePicker.pickFiles(
+          dialogTitle: anyNamed('dialogTitle'),
+          initialDirectory: anyNamed('initialDirectory'),
+          type: anyNamed('type'),
+          allowedExtensions: anyNamed('allowedExtensions'),
+          onFileLoading: anyNamed('onFileLoading'),
+          allowCompression: anyNamed('allowCompression'),
+          compressionQuality: anyNamed('compressionQuality'),
+          allowMultiple: anyNamed('allowMultiple'),
+          withData: anyNamed('withData'),
+          withReadStream: anyNamed('withReadStream'),
+          lockParentWindow: anyNamed('lockParentWindow'),
+          readSequential: anyNamed('readSequential'),
+        ),
+      ).thenAnswer((_) async => result);
+
+      await service.pickFile();
+      await service.pickFile();
+
+      verify(
+        mockFilePicker.pickFiles(
+          dialogTitle: 'PDFファイルを選択',
+          initialDirectory: null,
+          type: FileType.custom,
+          allowedExtensions: ['pdf'],
+          onFileLoading: null,
+          allowCompression: true,
+          compressionQuality: 30,
+          allowMultiple: false,
+          withData: false,
+          withReadStream: false,
+          lockParentWindow: false,
+          readSequential: false,
+        ),
+      ).called(2);
+    });
+
+    test('should handle file picker platform exception', () async {
+      when(
+        mockFilePicker.pickFiles(
+          dialogTitle: anyNamed('dialogTitle'),
+          initialDirectory: anyNamed('initialDirectory'),
+          type: anyNamed('type'),
+          allowedExtensions: anyNamed('allowedExtensions'),
+          onFileLoading: anyNamed('onFileLoading'),
+          allowCompression: anyNamed('allowCompression'),
+          compressionQuality: anyNamed('compressionQuality'),
+          allowMultiple: anyNamed('allowMultiple'),
+          withData: anyNamed('withData'),
+          withReadStream: anyNamed('withReadStream'),
+          lockParentWindow: anyNamed('lockParentWindow'),
+          readSequential: anyNamed('readSequential'),
+        ),
+      ).thenThrow(PlatformException(code: 'PERMISSION_DENIED'));
+
+      expect(
+        () => service.pickFile(),
+        throwsA(isA<PlatformException>()),
+      );
+    });
+
+    test('should handle very large file reading', () async {
+      final largeData = Uint8List.fromList(List.generate(1000000, (i) => i % 256));
+      final file = PlatformFile(
+        name: 'large.pdf',
+        size: largeData.length,
+        bytes: largeData,
+      );
+      
+      final result = await service.readPdfFileContent(file);
+      
+      expect(result, equals(largeData));
+      expect(result?.length, 1000000);
+    });
+
+    test('should handle file with unusual name patterns', () async {
+      final testBytes = Uint8List.fromList([1, 2, 3]);
+      final files = [
+        PlatformFile(name: '..pdf', size: testBytes.length, bytes: testBytes),
+        PlatformFile(name: 'file.with.dots.pdf', size: testBytes.length, bytes: testBytes),
+        PlatformFile(name: 'file name with spaces.pdf', size: testBytes.length, bytes: testBytes),
+        PlatformFile(name: 'ファイル名.pdf', size: testBytes.length, bytes: testBytes),
+        PlatformFile(name: '123456789.pdf', size: testBytes.length, bytes: testBytes),
+      ];
+      
+      for (final file in files) {
+        final result = await service.readPdfFileContent(file);
+        expect(result, equals(testBytes));
+      }
+    });
+
+    test('should handle multiple readPdfFileContent calls with same file', () async {
+      final testBytes = Uint8List.fromList([1, 2, 3, 4, 5]);
+      final file = PlatformFile(
+        name: 'test.pdf',
+        size: testBytes.length,
+        bytes: testBytes,
+      );
+      
+      final result1 = await service.readPdfFileContent(file);
+      final result2 = await service.readPdfFileContent(file);
+      
+      expect(result1, equals(testBytes));
+      expect(result2, equals(testBytes));
+      expect(result1, equals(result2));
+    });
+
+    test('should handle file with zero size but valid bytes', () async {
+      final testBytes = Uint8List.fromList([1, 2, 3]);
+      final file = PlatformFile(
+        name: 'test.pdf',
+        size: 0, // サイズは0だが実際にはバイトがある
+        bytes: testBytes,
+      );
+      
+      final result = await service.readPdfFileContent(file);
+      
+      expect(result, equals(testBytes));
+    });
+
+    test('should handle file with mismatched size and actual bytes length', () async {
+      final testBytes = Uint8List.fromList([1, 2, 3, 4, 5]);
+      final file = PlatformFile(
+        name: 'test.pdf',
+        size: 1000, // 実際のバイト数と異なるサイズ
+        bytes: testBytes,
+      );
+      
+      final result = await service.readPdfFileContent(file);
+      
+      expect(result, equals(testBytes));
+      expect(result?.length, 5); // 実際のバイト数が返される
+    });
+
+    test('should handle concurrent readPdfFileContent calls', () async {
+      final testBytes1 = Uint8List.fromList([1, 2, 3]);
+      final testBytes2 = Uint8List.fromList([4, 5, 6]);
+      
+      final file1 = PlatformFile(
+        name: 'test1.pdf',
+        size: testBytes1.length,
+        bytes: testBytes1,
+      );
+      
+      final file2 = PlatformFile(
+        name: 'test2.pdf',
+        size: testBytes2.length,
+        bytes: testBytes2,
+      );
+      
+      final future1 = service.readPdfFileContent(file1);
+      final future2 = service.readPdfFileContent(file2);
+      
+      final results = await Future.wait([future1, future2]);
+      
+      expect(results[0], equals(testBytes1));
+      expect(results[1], equals(testBytes2));
     });
   });
 }

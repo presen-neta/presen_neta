@@ -39,8 +39,8 @@ class TestAnalysisNotifier extends AnalysisNotifier {
 class TestLoadingAnalysisNotifier extends AnalysisNotifier {
   @override
   Future<ReviewResult?> build() async {
-    // 永続的にローディング状態を保つために無限に待機
-    await Future.delayed(const Duration(hours: 1));
+    // ローディング状態を維持するため、十分な時間待機
+    await Future.delayed(const Duration(seconds: 1));
     return null;
   }
 
@@ -48,14 +48,9 @@ class TestLoadingAnalysisNotifier extends AnalysisNotifier {
   Future<void> analyzeMultipleSlideImages(
     List<Uint8List> imageDataList, {
     String imageMimeType = 'image/png',
-  }) async {
-    // テスト用の実装
-  }
-
+  }) async {}
   @override
-  void reset() {
-    // テスト用の実装
-  }
+  void reset() {}
 }
 
 /// テスト用のエラー状態のAnalysisNotifier
@@ -307,6 +302,9 @@ void main() {
 
         final uploadButton = find.text('別のスライドをアップロード');
         expect(uploadButton, findsOneWidget);
+
+        // ボタンが画面外にある場合はスクロールしてからタップ
+        await tester.ensureVisible(uploadButton);
         await tester.tap(uploadButton);
         await tester.pumpAndSettle();
 
@@ -390,7 +388,10 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('分析エラー'), findsOneWidget);
-        expect(find.textContaining('エラーが発生しました: Exception: テストエラー'), findsOneWidget);
+        expect(
+          find.textContaining('エラーが発生しました: Exception: テストエラー'),
+          findsOneWidget,
+        );
         expect(find.text('最初からやり直す'), findsOneWidget);
       });
 
@@ -423,8 +424,7 @@ void main() {
             child: MaterialApp.router(routerConfig: router),
           ),
         );
-        await tester.pumpAndSettle();
-
+        await tester.pump(const Duration(milliseconds: 100));
         expect(find.text('分析中...'), findsOneWidget);
         expect(find.text('AIがプレゼンテーションを評価しています'), findsOneWidget);
         expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -439,14 +439,11 @@ void main() {
             child: MaterialApp.router(routerConfig: router),
           ),
         );
-        await tester.pumpAndSettle();
-
-        // 一時的にPDFアップロード画面が表示される
+        await tester.pump();
         expect(find.text('PDFをアップロードしてください'), findsOneWidget);
         expect(find.text('StartPageに戻ります...'), findsOneWidget);
-
-        // 少し待ってからナビゲーションが実行されることを確認
-        await tester.pump(const Duration(milliseconds: 100));
+        await tester.pumpAndSettle();
+        expect(router.state.uri.toString(), '/');
       });
     });
 
@@ -630,6 +627,9 @@ void main() {
 
         final uploadButton = find.text('別のスライドをアップロード');
         expect(uploadButton, findsOneWidget);
+
+        // ボタンが画面外にある場合はスクロールしてからタップ
+        await tester.ensureVisible(uploadButton);
         await tester.tap(uploadButton);
         await tester.pumpAndSettle();
       });
