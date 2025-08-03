@@ -12,7 +12,7 @@ import 'package:presen_neta/features/result/provider/result_provider.dart';
 
 import 'presentation_analysis_service_test.mocks.dart';
 
-@GenerateMocks([FilePickerService])
+@GenerateMocks([FilePickerService, WidgetRef])
 void main() {
   late MockFilePickerService mockFilePickerService;
   late PresentationAnalysisService service;
@@ -74,6 +74,135 @@ void main() {
   });
 
   group('PresentationAnalysisService', () {
+    testWidgets('analyzePdfFile should return false when no file is selected', (tester) async {
+      when(mockFilePickerService.pickFile()).thenAnswer((_) async => null);
+      
+      await tester.pumpWidget(ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: Consumer(
+              builder: (context, ref, _) {
+                return Builder(
+                  builder: (BuildContext context) {
+                    return ElevatedButton(
+                      onPressed: () async {
+                        final result = await service.analyzePdfFile(context, ref);
+                        expect(result, false);
+                      },
+                      child: const Text('Test'),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      ));
+      
+      await tester.tap(find.byType(ElevatedButton));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('analyzePdfFile should return false when empty file list', (tester) async {
+      when(mockFilePickerService.pickFile())
+          .thenAnswer((_) async => FilePickerResult([]));
+      
+      await tester.pumpWidget(ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: Consumer(
+              builder: (context, ref, _) {
+                return Builder(
+                  builder: (BuildContext context) {
+                    return ElevatedButton(
+                      onPressed: () async {
+                        final result = await service.analyzePdfFile(context, ref);
+                        expect(result, false);
+                      },
+                      child: const Text('Test'),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      ));
+      
+      await tester.tap(find.byType(ElevatedButton));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('analyzePdfFile should return false for non-PDF files', (tester) async {
+      final file = PlatformFile(name: 'test.txt', size: 1);
+      when(mockFilePickerService.pickFile())
+          .thenAnswer((_) async => FilePickerResult([file]));
+      
+      await tester.pumpWidget(ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: Consumer(
+              builder: (context, ref, _) {
+                return Builder(
+                  builder: (BuildContext context) {
+                    return ElevatedButton(
+                      onPressed: () async {
+                        final result = await service.analyzePdfFile(context, ref);
+                        expect(result, false);
+                      },
+                      child: const Text('Test'),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      ));
+      
+      await tester.tap(find.byType(ElevatedButton));
+      await tester.pumpAndSettle();
+      
+      // Check if error snackbar is shown
+      expect(find.text('PDFファイルのみ対応しています'), findsOneWidget);
+    });
+
+    testWidgets('analyzePdfFile should return false when PDF reading fails', (tester) async {
+      final file = PlatformFile(name: 'test.pdf', size: 1, path: 'test.pdf');
+      when(mockFilePickerService.pickFile())
+          .thenAnswer((_) async => FilePickerResult([file]));
+      when(mockFilePickerService.readPdfFileContent(any))
+          .thenAnswer((_) async => null);
+      
+      await tester.pumpWidget(ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: Consumer(
+              builder: (context, ref, _) {
+                return Builder(
+                  builder: (BuildContext context) {
+                    return ElevatedButton(
+                      onPressed: () async {
+                        final result = await service.analyzePdfFile(context, ref);
+                        expect(result, false);
+                      },
+                      child: const Text('Test'),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      ));
+      
+      await tester.tap(find.byType(ElevatedButton));
+      await tester.pumpAndSettle();
+      
+      // Check if error snackbar is shown
+      expect(find.text('PDFファイルの読み取りに失敗しました'), findsOneWidget);
+    });
+
     test('should handle file picker returning null', () async {
       when(mockFilePickerService.pickFile()).thenAnswer((_) async => null);
       

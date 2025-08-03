@@ -212,6 +212,110 @@ void main() {
 
         verify(mockShareService.share(any)).called(1);
       });
+
+      test('should handle share service failure gracefully', () async {
+        final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
+        final tempDirPath = '/tmp/test';
+        
+        final controller = ResultPageController(
+          imageGenerator: mockImageGenerator,
+          shareService: mockShareService,
+          getTempDir: () async => mockTempDir,
+        );
+        
+        when(mockImageGenerator.generateResultImage(
+          sleepPercentage: sleepPercentage,
+          title: title,
+          goodPoints: goodPoints,
+          improvements: improvements,
+        )).thenAnswer((_) async => imageBytes);
+        
+        when(mockTempDir.path).thenReturn(tempDirPath);
+        when(mockShareService.share(any)).thenThrow(Exception('Share failed'));
+
+        // Should not throw exception
+        await controller.shareResult(
+          sleepPercentage: sleepPercentage,
+          title: title,
+          goodPoints: goodPoints,
+          improvements: improvements,
+        );
+
+        verify(mockShareService.share(any)).called(1);
+      });
+
+      test('should handle 100 sleep percentage', () async {
+        final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
+        final tempDirPath = '/tmp/test';
+        
+        final controller = ResultPageController(
+          imageGenerator: mockImageGenerator,
+          shareService: mockShareService,
+          getTempDir: () async => mockTempDir,
+        );
+        
+        when(mockImageGenerator.generateResultImage(
+          sleepPercentage: 100,
+          title: title,
+          goodPoints: goodPoints,
+          improvements: improvements,
+        )).thenAnswer((_) async => imageBytes);
+        
+        when(mockTempDir.path).thenReturn(tempDirPath);
+        when(mockShareService.share(any)).thenAnswer((_) async => ShareResult('', ShareResultStatus.success));
+
+        await controller.shareResult(
+          sleepPercentage: 100,
+          title: title,
+          goodPoints: goodPoints,
+          improvements: improvements,
+        );
+
+        verify(mockImageGenerator.generateResultImage(
+          sleepPercentage: 100,
+          title: title,
+          goodPoints: goodPoints,
+          improvements: improvements,
+        )).called(1);
+      });
+
+      test('should handle long title and lists', () async {
+        final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
+        final tempDirPath = '/tmp/test';
+        final longTitle = 'A' * 1000; // Very long title
+        final longGoodPoints = List.generate(100, (i) => 'Good point $i');
+        final longImprovements = List.generate(100, (i) => 'Improvement $i');
+        
+        final controller = ResultPageController(
+          imageGenerator: mockImageGenerator,
+          shareService: mockShareService,
+          getTempDir: () async => mockTempDir,
+        );
+        
+        when(mockImageGenerator.generateResultImage(
+          sleepPercentage: sleepPercentage,
+          title: longTitle,
+          goodPoints: longGoodPoints,
+          improvements: longImprovements,
+        )).thenAnswer((_) async => imageBytes);
+        
+        when(mockTempDir.path).thenReturn(tempDirPath);
+        when(mockShareService.share(any)).thenAnswer((_) async => ShareResult('', ShareResultStatus.success));
+
+        await controller.shareResult(
+          sleepPercentage: sleepPercentage,
+          title: longTitle,
+          goodPoints: longGoodPoints,
+          improvements: longImprovements,
+        );
+
+        verify(mockImageGenerator.generateResultImage(
+          sleepPercentage: sleepPercentage,
+          title: longTitle,
+          goodPoints: longGoodPoints,
+          improvements: longImprovements,
+        )).called(1);
+      });
     });
   });
 }

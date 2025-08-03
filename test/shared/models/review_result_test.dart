@@ -122,5 +122,44 @@ void main() {
 
       expect(copied, original);
     });
+
+    test('should provide proper toString representation', () {
+      const reviewResult = ReviewResult(
+        point: 85,
+        good: ['良い点1', '良い点2'],
+        improve: ['改善点1', '改善点2'],
+      );
+
+      final stringRepresentation = reviewResult.toString();
+      
+      expect(stringRepresentation, contains('ReviewResult'));
+      expect(stringRepresentation, contains('85'));
+      expect(stringRepresentation, contains('良い点1'));
+      expect(stringRepresentation, contains('改善点1'));
+    });
+
+    test('should handle edge case values', () {
+      const reviewResult = ReviewResult(
+        point: 0,
+        good: [],
+        improve: [],
+      );
+
+      expect(reviewResult.point, 0);
+      expect(reviewResult.good, isEmpty);
+      expect(reviewResult.improve, isEmpty);
+    });
+
+    test('should handle maximum values', () {
+      const reviewResult = ReviewResult(
+        point: 100,
+        good: ['最高の評価'],
+        improve: ['完璧です'],
+      );
+
+      expect(reviewResult.point, 100);
+      expect(reviewResult.good, ['最高の評価']);
+      expect(reviewResult.improve, ['完璧です']);
+    });
   });
 }

@@ -1,9 +1,12 @@
 import 'dart:typed_data';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:presen_neta/shared/service/image_generator_service.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  
   group('ImageGeneratorService', () {
     late ImageGeneratorService service;
 
@@ -11,11 +14,26 @@ void main() {
       service = const ImageGeneratorService();
     });
 
+    setUpAll(() {
+      // テスト環境でアセットローダーを設定
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMessageHandler('flutter/assets', (message) async {
+        // アセットファイルが見つからない場合は空のデータを返す
+        return Uint8List(0).buffer.asByteData();
+      });
+    });
+
+    tearDownAll(() {
+      // モックをクリア
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMessageHandler('flutter/assets', null);
+    });
+
     test('should create instance successfully', () {
       expect(service, isA<ImageGeneratorService>());
     });
 
-    testWidgets('should generate result image with basic parameters', (tester) async {
+    test('should generate result image with basic parameters', () async {
       const sleepPercentage = 60;
       const title = 'Test Presentation';
       const goodPoints = ['Good point 1', 'Good point 2'];
@@ -32,7 +50,7 @@ void main() {
       expect(result.isNotEmpty, true);
     });
 
-    testWidgets('should generate result image with zero sleep percentage', (tester) async {
+    test('should generate result image with zero sleep percentage', () async {
       const sleepPercentage = 0;
       const title = 'Perfect Presentation';
       const goodPoints = ['Excellent engagement'];
@@ -49,7 +67,7 @@ void main() {
       expect(result.isNotEmpty, true);
     });
 
-    testWidgets('should generate result image with 100 sleep percentage', (tester) async {
+    test('should generate result image with 100 sleep percentage', () async {
       const sleepPercentage = 100;
       const title = 'Boring Presentation';
       const goodPoints = ['It ended'];
@@ -66,7 +84,7 @@ void main() {
       expect(result.isNotEmpty, true);
     });
 
-    testWidgets('should generate result image with empty lists', (tester) async {
+    test('should generate result image with empty lists', () async {
       const sleepPercentage = 50;
       const title = 'Minimal Presentation';
       const goodPoints = <String>[];
@@ -83,7 +101,7 @@ void main() {
       expect(result.isNotEmpty, true);
     });
 
-    testWidgets('should generate result image with long title', (tester) async {
+    test('should generate result image with long title', () async {
       const sleepPercentage = 30;
       const title = 'This is a very long presentation title that might need to be wrapped or truncated in the generated image';
       const goodPoints = ['Good point'];
@@ -100,7 +118,7 @@ void main() {
       expect(result.isNotEmpty, true);
     });
 
-    testWidgets('should generate result image with many good points', (tester) async {
+    test('should generate result image with many good points', () async {
       const sleepPercentage = 25;
       const title = 'Great Presentation';
       const goodPoints = [
@@ -126,7 +144,7 @@ void main() {
       expect(result.isNotEmpty, true);
     });
 
-    testWidgets('should generate result image with many improvements', (tester) async {
+    test('should generate result image with many improvements', () async {
       const sleepPercentage = 75;
       const title = 'Needs Work Presentation';
       const goodPoints = ['One good point'];
@@ -152,7 +170,7 @@ void main() {
       expect(result.isNotEmpty, true);
     });
 
-    testWidgets('should generate result image with empty title', (tester) async {
+    test('should generate result image with empty title', () async {
       const sleepPercentage = 40;
       const title = '';
       const goodPoints = ['Some good point'];
@@ -169,7 +187,7 @@ void main() {
       expect(result.isNotEmpty, true);
     });
 
-    testWidgets('should generate result image with Japanese text', (tester) async {
+    test('should generate result image with Japanese text', () async {
       const sleepPercentage = 45;
       const title = 'プレゼンテーション分析結果';
       const goodPoints = [
@@ -194,7 +212,7 @@ void main() {
       expect(result.isNotEmpty, true);
     });
 
-    testWidgets('should generate result image with special characters', (tester) async {
+    test('should generate result image with special characters', () async {
       const sleepPercentage = 55;
       const title = 'Test: Presentation Analysis (2024) #1!';
       const goodPoints = ['Good: Point #1', 'Another & Better Point'];
@@ -211,7 +229,7 @@ void main() {
       expect(result.isNotEmpty, true);
     });
 
-    testWidgets('should generate consistent image size', (tester) async {
+    test('should generate consistent image size', () async {
       const sleepPercentage = 35;
       const title = 'Size Test';
       const goodPoints = ['Test'];
