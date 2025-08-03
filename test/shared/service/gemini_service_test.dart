@@ -202,4 +202,90 @@ void main() {
       });
     });
   });
+
+  group('Real GeminiService', () {
+    test('should throw exception when API key is empty', () {
+      expect(
+        () => GeminiService(apiKey: ''),
+        throwsException,
+      );
+    });
+
+    test('should throw exception when API key is placeholder', () {
+      expect(
+        () => GeminiService(apiKey: 'your_gemini_api_key_here'),
+        throwsException,
+      );
+    });
+
+    test('should initialize with valid API key format', () {
+      expect(
+        () => GeminiService(apiKey: 'test_valid_key_format'),
+        returnsNormally,
+      );
+    });
+
+    test('should handle API errors gracefully in analyzeMultipleSlideImages', () async {
+      final service = GeminiService(apiKey: 'test_key_for_coverage');
+      
+      final imageData = Uint8List.fromList([1, 2, 3, 4]);
+      final result = await service.analyzeMultipleSlideImages([imageData]);
+      
+      // With invalid API key, should return null due to error handling
+      expect(result, isNull);
+    });
+
+    test('should handle API errors gracefully in countTokens', () async {
+      final service = GeminiService(apiKey: 'test_key_for_coverage');
+      
+      final tokenCount = await service.countTokens('test content');
+      
+      // With invalid API key, should return 0 due to error handling
+      expect(tokenCount, 0);
+    });
+
+    test('should handle empty content in countTokens', () async {
+      final service = GeminiService(apiKey: 'test_key_for_coverage');
+      
+      final tokenCount = await service.countTokens('');
+      
+      // Should return 0 for empty content
+      expect(tokenCount, 0);
+    });
+
+    test('should handle multiple images in API call', () async {
+      final service = GeminiService(apiKey: 'test_key_for_coverage');
+      
+      final imageData1 = Uint8List.fromList([1, 2, 3, 4]);
+      final imageData2 = Uint8List.fromList([5, 6, 7, 8]);
+      
+      final result = await service.analyzeMultipleSlideImages([imageData1, imageData2]);
+      
+      // Should return null due to invalid API key
+      expect(result, isNull);
+    });
+
+    test('should handle custom MIME type parameter', () async {
+      final service = GeminiService(apiKey: 'test_key_for_coverage');
+      
+      final imageData = Uint8List.fromList([1, 2, 3, 4]);
+      
+      final result = await service.analyzeMultipleSlideImages(
+        [imageData],
+        imageMimeType: 'image/jpeg',
+      );
+      
+      // Should return null due to invalid API key
+      expect(result, isNull);
+    });
+
+    test('should handle empty image list', () async {
+      final service = GeminiService(apiKey: 'test_key_for_coverage');
+      
+      final result = await service.analyzeMultipleSlideImages([]);
+      
+      // Should return null due to error or empty result
+      expect(result, isNull);
+    });
+  });
 }
