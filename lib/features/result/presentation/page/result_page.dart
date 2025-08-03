@@ -47,24 +47,40 @@ class ResultPage extends ConsumerWidget {
     // 分析状態を監視
     final analysisState = ref.watch(analysisNotifierProvider);
 
-    _logger.d('ResultPage - 分析状態: $analysisState');
+    try {
+      _logger.d('ResultPage - 分析状態: $analysisState');
+    } catch (e) {
+      print('ResultPage - 分析状態: $analysisState');
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7FAFC),
       body: SafeArea(
         child: analysisState.when(
           data: (result) {
-            _logger.d('ResultPage - data状態: result=${result?.point ?? 'null'}');
+            try {
+              _logger.d('ResultPage - data状態: result=${result?.point ?? 'null'}');
+            } catch (e) {
+              print('ResultPage - data状態: result=${result?.point ?? 'null'}');
+            }
             if (result == null) {
               // 分析結果がない場合はStartPageに戻る
-              _logger.i('ResultPage - 分析結果なし、StartPageに戻る');
+              try {
+                _logger.i('ResultPage - 分析結果なし、StartPageに戻る');
+              } catch (e) {
+                print('ResultPage - 分析結果なし、StartPageに戻る');
+              }
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (context.mounted) {
                   // 安全にナビゲーション
                   try {
                     context.go('/');
                   } on Exception catch (e) {
-                    _logger.e('ResultPage - ナビゲーションエラー: $e');
+                    try {
+                      _logger.e('ResultPage - ナビゲーションエラー: $e');
+                    } catch (logError) {
+                      print('ResultPage - ナビゲーションエラー: $e');
+                    }
                   }
                 }
               });
@@ -328,7 +344,11 @@ class ResultPage extends ConsumerWidget {
             );
           },
           loading: () {
-            _logger.d('ResultPage - loading状態');
+            try {
+              _logger.d('ResultPage - loading状態');
+            } catch (e) {
+              print('ResultPage - loading状態');
+            }
             return const Scaffold(
               backgroundColor: Color(0xFFF7FAFC),
               body: SafeArea(
@@ -363,7 +383,12 @@ class ResultPage extends ConsumerWidget {
             );
           },
           error: (error, stack) {
-            _logger.e('ResultPage - error状態: $error');
+            try {
+              _logger.e('ResultPage - error状態: $error');
+            } catch (e) {
+              // テスト環境でLoggerが初期化されていない場合をハンドリング
+              print('ResultPage - error状態: $error');
+            }
             return Scaffold(
               backgroundColor: const Color(0xFFF7FAFC),
               body: SafeArea(

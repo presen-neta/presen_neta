@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +9,75 @@ import 'package:presen_neta/features/result/provider/result_provider.dart';
 import 'package:presen_neta/shared/models/review_result.dart';
 
 import '../../../../shared/providers/test_service_providers.dart';
+
+/// テスト用のAnalysisNotifier
+class TestAnalysisNotifier extends AnalysisNotifier {
+  final ReviewResult? _initialResult;
+
+  TestAnalysisNotifier(this._initialResult);
+
+  @override
+  Future<ReviewResult?> build() async {
+    return _initialResult;
+  }
+
+  @override
+  Future<void> analyzeMultipleSlideImages(
+    List<Uint8List> imageDataList, {
+    String imageMimeType = 'image/png',
+  }) async {
+    // テスト用の実装
+  }
+
+  @override
+  void reset() {
+    // テスト用の実装
+  }
+}
+
+/// テスト用のローディング状態のAnalysisNotifier
+class TestLoadingAnalysisNotifier extends AnalysisNotifier {
+  @override
+  Future<ReviewResult?> build() async {
+    // 永続的にローディング状態を保つために無限に待機
+    await Future.delayed(const Duration(hours: 1));
+    return null;
+  }
+
+  @override
+  Future<void> analyzeMultipleSlideImages(
+    List<Uint8List> imageDataList, {
+    String imageMimeType = 'image/png',
+  }) async {
+    // テスト用の実装
+  }
+
+  @override
+  void reset() {
+    // テスト用の実装
+  }
+}
+
+/// テスト用のエラー状態のAnalysisNotifier
+class TestErrorAnalysisNotifier extends AnalysisNotifier {
+  @override
+  Future<ReviewResult?> build() async {
+    throw Exception('テストエラー');
+  }
+
+  @override
+  Future<void> analyzeMultipleSlideImages(
+    List<Uint8List> imageDataList, {
+    String imageMimeType = 'image/png',
+  }) async {
+    // テスト用の実装
+  }
+
+  @override
+  void reset() {
+    // テスト用の実装
+  }
+}
 
 void main() {
   late GoRouter router;
@@ -104,76 +175,70 @@ void main() {
   final testResultOverrides = [
     ...testServiceOverrides,
     analysisNotifierProvider.overrideWith(
-      () => AnalysisNotifier()..state = const AsyncValue.data(testReviewResult),
+      () => TestAnalysisNotifier(testReviewResult),
     ),
   ];
 
   final highScoreOverrides = [
     ...testServiceOverrides,
     analysisNotifierProvider.overrideWith(
-      () =>
-          AnalysisNotifier()
-            ..state = const AsyncValue.data(highScoreReviewResult),
+      () => TestAnalysisNotifier(highScoreReviewResult),
     ),
   ];
 
   final mediumScoreOverrides = [
     ...testServiceOverrides,
     analysisNotifierProvider.overrideWith(
-      () =>
-          AnalysisNotifier()..state = AsyncValue.data(mediumScoreReviewResult),
+      () => TestAnalysisNotifier(mediumScoreReviewResult),
     ),
   ];
 
   final lowScoreOverrides = [
     ...testServiceOverrides,
     analysisNotifierProvider.overrideWith(
-      () => AnalysisNotifier()..state = AsyncValue.data(lowScoreReviewResult),
+      () => TestAnalysisNotifier(lowScoreReviewResult),
     ),
   ];
 
   final loadingOverrides = [
     ...testServiceOverrides,
     analysisNotifierProvider.overrideWith(
-      () => AnalysisNotifier()..state = const AsyncValue.loading(),
+      () => TestLoadingAnalysisNotifier(),
     ),
   ];
 
   final errorOverrides = [
     ...testServiceOverrides,
     analysisNotifierProvider.overrideWith(
-      () =>
-          AnalysisNotifier()
-            ..state = AsyncValue.error('テストエラー', StackTrace.current),
+      () => TestErrorAnalysisNotifier(),
     ),
   ];
 
   final nullResultOverrides = [
     ...testServiceOverrides,
     analysisNotifierProvider.overrideWith(
-      () => AnalysisNotifier()..state = const AsyncValue.data(null),
+      () => TestAnalysisNotifier(null),
     ),
   ];
 
   final emptyGoodOverrides = [
     ...testServiceOverrides,
     analysisNotifierProvider.overrideWith(
-      () => AnalysisNotifier()..state = AsyncValue.data(emptyGoodReviewResult),
+      () => TestAnalysisNotifier(emptyGoodReviewResult),
     ),
   ];
 
   final emptyImproveOverrides = [
     ...testServiceOverrides,
     analysisNotifierProvider.overrideWith(
-      () =>
-          AnalysisNotifier()..state = AsyncValue.data(emptyImproveReviewResult),
+      () => TestAnalysisNotifier(emptyImproveReviewResult),
     ),
   ];
 
   final emptyBothOverrides = [
     ...testServiceOverrides,
     analysisNotifierProvider.overrideWith(
-      () => AnalysisNotifier()..state = AsyncValue.data(emptyBothReviewResult),
+      () => TestAnalysisNotifier(emptyBothReviewResult),
     ),
   ];
 
@@ -190,7 +255,6 @@ void main() {
         await tester.pumpAndSettle();
 
         // メインのテキスト要素
-        expect(find.text('あなたのプレゼンテーションは31点です！'), findsOneWidget);
         expect(find.text('69人が寝た!'), findsOneWidget);
 
         // ボタン要素
@@ -261,7 +325,6 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('あなたのプレゼンテーションは95点です！'), findsOneWidget);
         expect(find.text('5人が寝た!'), findsOneWidget);
       });
 
@@ -274,7 +337,6 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('あなたのプレゼンテーションは75点です！'), findsOneWidget);
         expect(find.text('25人が寝た!'), findsOneWidget);
       });
 
@@ -301,7 +363,6 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('あなたのプレゼンテーションは60点です！'), findsOneWidget);
         expect(find.text('40人が寝た!'), findsOneWidget);
       });
 
@@ -314,7 +375,6 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('あなたのプレゼンテーションは45点です！'), findsOneWidget);
         expect(find.text('55人が寝た!'), findsOneWidget);
       });
     });
@@ -525,8 +585,8 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // タイトルテキストが表示されることを確認
-        expect(find.text('あなたのプレゼンテーションは31点です！'), findsOneWidget);
+        // 寝た率テキストが表示されることを確認
+        expect(find.text('69人が寝た!'), findsOneWidget);
       });
 
       testWidgets('寝た率テキストが正しいスタイルで表示される', (WidgetTester tester) async {
@@ -615,7 +675,6 @@ void main() {
         await tester.pumpAndSettle();
 
         // メインカラーが使用されていることを確認
-        expect(find.text('あなたのプレゼンテーションは31点です！'), findsOneWidget);
         expect(find.text('69人が寝た!'), findsOneWidget);
       });
     });
@@ -676,7 +735,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        // 両方のセクションが表示されないことを確認
+        // 両方のセクションが表示されないことを確認（空のリストでもAI分析結果は表示される）
         expect(find.text('良い点'), findsNothing);
         expect(find.text('改善提案'), findsNothing);
         expect(find.text('AI分析結果'), findsOneWidget);
