@@ -31,7 +31,7 @@ void main() {
       expect(controller, isA<ResultPageController>());
     });
 
-    test('should create with custom services when provided', () {
+    test('カスタムサービスでインスタンス化される', () {
       final controller = ResultPageController(
         imageGenerator: mockImageGenerator,
         shareService: mockShareService,
@@ -47,7 +47,7 @@ void main() {
       const goodPoints = ['Good point 1', 'Good point 2'];
       const improvements = ['Improvement 1', 'Improvement 2'];
 
-      test('should share with image when image generation succeeds', () async {
+      test('画像生成が成功した場合に画像付きでシェアする', () async {
         final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
         final tempDirPath = 'assets';
 
@@ -90,7 +90,7 @@ void main() {
         verify(mockShareService.share(any)).called(1);
       });
 
-      test('should share text only when image generation fails', () async {
+      test('画像生成が失敗した場合にテキストのみでシェアする', () async {
         final controller = ResultPageController(
           imageGenerator: mockImageGenerator,
           shareService: mockShareService,
@@ -129,7 +129,7 @@ void main() {
         verify(mockShareService.share(any)).called(1);
       });
 
-      test('should handle empty lists', () async {
+      test('空のリストを処理する', () async {
         final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
         final tempDirPath = 'assets';
 
@@ -170,7 +170,7 @@ void main() {
         ).called(1);
       });
 
-      test('should handle zero sleep percentage', () async {
+      test('睡眠パーセンテージが0の場合を処理する', () async {
         final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
         final tempDirPath = 'assets';
 
@@ -211,7 +211,7 @@ void main() {
         ).called(1);
       });
 
-      test('should handle directory access error', () async {
+      test('ディレクトリアクセスエラーを処理する', () async {
         final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
 
         final controller = ResultPageController(
@@ -243,7 +243,7 @@ void main() {
         verify(mockShareService.share(any)).called(1);
       });
 
-      test('should handle share service failure gracefully', () async {
+      test('シェアサービスの失敗を適切に処理する', () async {
         final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
         final tempDirPath = 'assets';
 
@@ -274,7 +274,7 @@ void main() {
           return ShareResult('', ShareResultStatus.success);
         });
 
-        // Should not throw exception
+        // 例外が発生しないことを確認
         await controller.shareResult(
           sleepPercentage: sleepPercentage,
           title: title,
@@ -286,7 +286,7 @@ void main() {
         verify(mockShareService.share(any)).called(2);
       });
 
-      test('should handle 100 sleep percentage', () async {
+      test('睡眠パーセンテージが100の場合を処理する', () async {
         final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
         final tempDirPath = 'assets';
 
@@ -327,10 +327,10 @@ void main() {
         ).called(1);
       });
 
-      test('should handle long title and lists', () async {
+      test('長いタイトルとリストを処理する', () async {
         final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
         final tempDirPath = 'assets';
-        final longTitle = 'A' * 1000; // Very long title
+        final longTitle = 'A' * 1000; // 非常に長いタイトル
         final longGoodPoints = List.generate(100, (i) => 'Good point $i');
         final longImprovements = List.generate(100, (i) => 'Improvement $i');
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -10,7 +11,7 @@ import 'package:presen_neta/shared/models/review_result.dart';
 
 import '../../../../shared/providers/test_service_providers.dart';
 
-/// テスト用のAnalysisNotifier
+/// テスト用のAnalysisNotifier。
 class TestAnalysisNotifier extends AnalysisNotifier {
   final ReviewResult? _initialResult;
 
@@ -35,13 +36,13 @@ class TestAnalysisNotifier extends AnalysisNotifier {
   }
 }
 
-/// テスト用のローディング状態のAnalysisNotifier
+/// テスト用のローディング状態のAnalysisNotifier。
 class TestLoadingAnalysisNotifier extends AnalysisNotifier {
   @override
   Future<ReviewResult?> build() async {
-    // ローディング状態を維持するため、十分な時間待機
-    await Future.delayed(const Duration(seconds: 1));
-    return null;
+    // ローディング状態を維持するため、完了しないCompleterを使用
+    final completer = Completer<ReviewResult?>();
+    return completer.future;
   }
 
   @override
@@ -53,7 +54,7 @@ class TestLoadingAnalysisNotifier extends AnalysisNotifier {
   void reset() {}
 }
 
-/// テスト用のエラー状態のAnalysisNotifier
+/// テスト用のエラー状態のAnalysisNotifier。
 class TestErrorAnalysisNotifier extends AnalysisNotifier {
   @override
   Future<ReviewResult?> build() async {
