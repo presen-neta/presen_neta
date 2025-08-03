@@ -351,7 +351,7 @@ void main() {
         final sixtyScoreOverrides = [
           ...testServiceOverrides,
           analysisNotifierProvider.overrideWith(
-            () => AnalysisNotifier()..state = AsyncValue.data(sixtyScoreResult),
+            () => TestAnalysisNotifier(sixtyScoreResult),
           ),
         ];
 
@@ -390,7 +390,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('分析エラー'), findsOneWidget);
-        expect(find.textContaining('エラーが発生しました: テストエラー'), findsOneWidget);
+        expect(find.textContaining('エラーが発生しました: Exception: テストエラー'), findsOneWidget);
         expect(find.text('最初からやり直す'), findsOneWidget);
       });
 

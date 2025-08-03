@@ -12,7 +12,7 @@ class MockPresentationAnalysisService extends Mock
   bool shouldSucceed = true;
 
   /// 分析処理の遅延時間（ミリ秒）。
-  int delayMilliseconds = 1000;
+  int delayMilliseconds = 0;
 
   @override
   Future<bool> analyzePdfFile(BuildContext context, WidgetRef ref) async {
