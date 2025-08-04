@@ -406,6 +406,43 @@ void main() {
 
         expect(find.text('55人が寝た!'), findsOneWidget);
       });
+
+      testWidgets('境界値テスト - 90点ちょうどで「いいんじゃない？」が表示される', (WidgetTester tester) async {
+        final ninetyScoreResult = const ReviewResult(
+          point: 90,
+          good: ['良い点'],
+          improve: ['改善点'],
+        );
+
+        final ninetyScoreOverrides = [
+          ...testServiceOverrides,
+          analysisNotifierProvider.overrideWith(
+            () => TestAnalysisNotifier(ninetyScoreResult),
+          ),
+        ];
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: ninetyScoreOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('10人が寝た!'), findsOneWidget);
+      });
+
+      testWidgets('境界値テスト - 75点ちょうどで「まあまあだけど」が表示される', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: mediumScoreOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('25人が寝た!'), findsOneWidget);
+      });
     });
 
     group('エラー状態テスト', () {
@@ -770,6 +807,26 @@ void main() {
         expect(find.text('良い点'), findsNothing);
         expect(find.text('改善提案'), findsNothing);
         expect(find.text('AI分析結果'), findsOneWidget);
+      });
+    });
+
+
+    group('特殊条件テスト', () {
+      testWidgets('null結果からのナビゲーション処理', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: nullResultOverrides,
+            child: MaterialApp.router(routerConfig: router),
+          ),
+        );
+        await tester.pump();
+
+        expect(find.text('PDFをアップロードしてください'), findsOneWidget);
+        expect(find.text('StartPageに戻ります...'), findsOneWidget);
+        
+        // PostFrameCallbackの実行を待つ
+        await tester.pumpAndSettle();
+        expect(router.state.uri.toString(), '/');
       });
     });
   });
