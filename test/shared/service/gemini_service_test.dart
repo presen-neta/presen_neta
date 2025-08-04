@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -34,30 +35,43 @@ class TestGeminiService implements GeminiServiceInterface {
       throw FormatException('Invalid JSON');
     }
 
-    // Parse the mock response
-    final Map<String, dynamic> jsonData;
+    // Parse the mock response more realistically
     try {
-      jsonData = {
-        'point': 85,
-        'good': ['スライドの構成が分かりやすい', '視覚的に魅力的'],
-        'improve': ['より詳細な説明が必要', 'フォントサイズを大きく']
-      };
+      Map<String, dynamic> jsonData;
       
-      // Override with specific test values if provided
-      if (response.contains('"point": 75')) {
-        jsonData['point'] = 75;
-        jsonData['good'] = ['複数スライドの一貫性'];
-        jsonData['improve'] = ['スライド間のつながりを改善'];
-      } else if (response.contains('"point": 80')) {
-        jsonData['point'] = 80;
-        jsonData['good'] = ['テスト'];
-        jsonData['improve'] = ['テスト'];
+      if (response.contains('{') && response.contains('}')) {
+        // Try to parse actual JSON from response
+        final jsonMatch = RegExp(r'\{.*\}', dotAll: true).firstMatch(response);
+        if (jsonMatch != null) {
+          final jsonString = jsonMatch.group(0)!;
+          jsonData = json.decode(jsonString) as Map<String, dynamic>;
+        } else {
+          throw FormatException('No JSON found in response');
+        }
+      } else {
+        // Fallback for simple test cases
+        jsonData = {
+          'point': 85,
+          'good': ['スライドの構成が分かりやすい', '視覚的に魅力的'],
+          'improve': ['より詳細な説明が必要', 'フォントサイズを大きく']
+        };
+        
+        // Override with specific test values if provided
+        if (response.contains('"point": 75')) {
+          jsonData['point'] = 75;
+          jsonData['good'] = ['複数スライドの一貫性'];
+          jsonData['improve'] = ['スライド間のつながりを改善'];
+        } else if (response.contains('"point": 80')) {
+          jsonData['point'] = 80;
+          jsonData['good'] = ['テスト'];
+          jsonData['improve'] = ['テスト'];
+        }
       }
+
+      return ReviewResult.fromJson(jsonData);
     } catch (e) {
       throw FormatException('Failed to parse JSON: $e');
     }
-
-    return ReviewResult.fromJson(jsonData);
   }
 
   @override
@@ -207,14 +221,14 @@ void main() {
     test('should throw exception when API key is empty', () {
       expect(
         () => GeminiService(apiKey: ''),
-        throwsException,
+        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('API key not valid'))),
       );
     });
 
     test('should throw exception when API key is placeholder', () {
       expect(
         () => GeminiService(apiKey: 'your_gemini_api_key_here'),
-        throwsException,
+        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('API key not valid'))),
       );
     });
 
@@ -233,6 +247,201 @@ void main() {
       
       // With invalid API key, should return null due to error handling
       expect(result, isNull);
+    });
+
+    test('should handle empty image list in analyzeMultipleSlideImages', () async {
+      final service = GeminiService(apiKey: 'test_key_for_coverage');
+      
+      final result = await service.analyzeMultipleSlideImages([]);
+      
+      expect(result, isNull);
+    });
+
+    test('should handle valid JSON parsing from response', () async {
+      final service = TestGeminiService();
+      service.mockResponse = '''
+{
+  "point": 85,
+  "good": ["Test good point"],
+  "improve": ["Test improvement"]
+}
+''';
+      
+      final imageData = Uint8List.fromList([1, 2, 3, 4]);
+      final result = await service.analyzeMultipleSlideImages([imageData]);
+      
+      expect(result?.point, 85);
+      expect(result?.good, contains("Test good point"));
+      expect(result?.improve, contains("Test improvement"));
+    });
+
+    test('should handle invalid point values', () async {
+      final service = TestGeminiService();
+      service.mockResponse = '''
+{
+  "point": -10,
+  "good": ["Test"],
+  "improve": ["Test"]
+}
+''';
+      
+      final imageData = Uint8List.fromList([1, 2, 3, 4]);
+      final result = await service.analyzeMultipleSlideImages([imageData]);
+      
+      expect(result, isNull);
+    });
+
+    test('should handle point values over 100', () async {
+      final service = TestGeminiService();
+      service.mockResponse = '''
+{
+  "point": 150,
+  "good": ["Test"],
+  "improve": ["Test"]
+}
+''';
+      
+      final imageData = Uint8List.fromList([1, 2, 3, 4]);
+      final result = await service.analyzeMultipleSlideImages([imageData]);
+      
+      expect(result, isNull);
+    });
+
+    test('should handle missing point field', () async {
+      final service = TestGeminiService();
+      service.mockResponse = '''
+{
+  "good": ["Test"],
+  "improve": ["Test"]
+}
+''';
+      
+      final imageData = Uint8List.fromList([1, 2, 3, 4]);
+      final result = await service.analyzeMultipleSlideImages([imageData]);
+      
+      expect(result, isNull);
+    });
+
+    test('should handle non-string values in good array', () async {
+      final service = TestGeminiService();
+      service.mockResponse = '''
+{
+  "point": 80,
+  "good": ["Valid string", 123, null, "Another string"],
+  "improve": ["Test"]
+}
+''';
+      
+      final imageData = Uint8List.fromList([1, 2, 3, 4]);
+      final result = await service.analyzeMultipleSlideImages([imageData]);
+      
+      expect(result?.point, 80);
+      expect(result?.good, ["Valid string", "Another string"]);
+    });
+
+    test('should handle non-string values in improve array', () async {
+      final service = TestGeminiService();
+      service.mockResponse = '''
+{
+  "point": 70,
+  "good": ["Test"],
+  "improve": ["Valid improvement", 456, null, "Another improvement"]
+}
+''';
+      
+      final imageData = Uint8List.fromList([1, 2, 3, 4]);
+      final result = await service.analyzeMultipleSlideImages([imageData]);
+      
+      expect(result?.point, 70);
+      expect(result?.improve, ["Valid improvement", "Another improvement"]);
+    });
+
+    test('should handle null good and improve arrays', () async {
+      final service = TestGeminiService();
+      service.mockResponse = '''
+{
+  "point": 60,
+  "good": null,
+  "improve": null
+}
+''';
+      
+      final imageData = Uint8List.fromList([1, 2, 3, 4]);
+      final result = await service.analyzeMultipleSlideImages([imageData]);
+      
+      expect(result?.point, 60);
+      expect(result?.good, isEmpty);
+      expect(result?.improve, isEmpty);
+    });
+
+    test('should handle JSON with markdown code blocks', () async {
+      final service = TestGeminiService();
+      service.mockResponse = '''
+```json
+{
+  "point": 88,
+  "good": ["Code block test"],
+  "improve": ["Another test"]
+}
+```
+''';
+      
+      final imageData = Uint8List.fromList([1, 2, 3, 4]);
+      final result = await service.analyzeMultipleSlideImages([imageData]);
+      
+      expect(result?.point, 88);
+      expect(result?.good, contains("Code block test"));
+    });
+
+    test('should handle response with extra text around JSON', () async {
+      final service = TestGeminiService();
+      service.mockResponse = '''
+Here's the analysis result:
+
+{
+  "point": 92,
+  "good": ["Extra text test"],
+  "improve": ["Surrounded by text"]
+}
+
+Additional explanation follows.
+''';
+      
+      final imageData = Uint8List.fromList([1, 2, 3, 4]);
+      final result = await service.analyzeMultipleSlideImages([imageData]);
+      
+      expect(result?.point, 92);
+      expect(result?.good, contains("Extra text test"));
+    });
+
+    test('should handle response with no JSON pattern', () async {
+      final service = TestGeminiService();
+      service.mockResponse = 'This is just plain text without any JSON structure';
+      
+      final imageData = Uint8List.fromList([1, 2, 3, 4]);
+      
+      expect(
+        () => service.analyzeMultipleSlideImages([imageData]),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
+    test('should handle malformed JSON structure', () async {
+      final service = TestGeminiService();
+      service.mockResponse = '''
+{
+  "point": 75,
+  "good": ["Malformed",
+  "improve": "Missing closing bracket for good array"
+}
+''';
+      
+      final imageData = Uint8List.fromList([1, 2, 3, 4]);
+      
+      expect(
+        () => service.analyzeMultipleSlideImages([imageData]),
+        throwsA(isA<FormatException>()),
+      );
     });
 
     test('should handle API errors gracefully in countTokens', () async {
@@ -402,8 +611,7 @@ void main() {
 
     test('should handle JSON parsing edge cases', () async {
       final service = TestGeminiService();
-      service.shouldThrowError = true;
-      service.errorMessage = 'Empty image list';
+      // Don't set shouldThrowError = true, let the natural ArgumentError for empty list be thrown
       
       // 空の画像リストの場合の例外処理
       expect(
@@ -416,13 +624,13 @@ void main() {
       // 空文字列のAPIキー
       expect(
         () => GeminiService(apiKey: ''),
-        throwsException,
+        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('API key not valid'))),
       );
       
       // プレースホルダーのAPIキー
       expect(
         () => GeminiService(apiKey: 'your_gemini_api_key_here'),
-        throwsException,
+        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('API key not valid'))),
       );
       
       // 非常に短いAPIキー（実際には短いキーも受け入れられる場合がある）
