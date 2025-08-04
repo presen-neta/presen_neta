@@ -12,7 +12,7 @@ class TestGeminiService implements GeminiServiceInterface {
   String? errorMessage;
 
   @override
-  Future<ReviewResult> analyzeMultipleSlideImages(
+  Future<ReviewResult?> analyzeMultipleSlideImages(
     List<Uint8List> imageDataList, {
     String imageMimeType = 'image/png',
   }) async {
@@ -95,7 +95,7 @@ void main() {
 
         // Assert
         expect(result, isA<ReviewResult>());
-        expect(result.point, 85);
+        expect(result!.point, 85);
         expect(result.good, contains("スライドの構成が分かりやすい"));
         expect(result.improve, contains("より詳細な説明が必要"));
       });
@@ -160,7 +160,7 @@ void main() {
         final result = await geminiService.analyzeMultipleSlideImages(imageDataList);
 
         // Assert
-        expect(result.point, 75);
+        expect(result!.point, 75);
         expect(result.good, contains("複数スライドの一貫性"));
         expect(result.improve, contains("スライド間のつながりを改善"));
       });
@@ -185,7 +185,7 @@ void main() {
         );
 
         // Assert
-        expect(result.point, 80);
+        expect(result!.point, 80);
         expect(result.good, contains("テスト"));
         expect(result.improve, contains("テスト"));
       });
@@ -465,7 +465,7 @@ void main() {
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
       
       // 連続してAPIを呼び出し（レート制限をテスト）
-      final results = <ReviewResult>[];
+      final results = <ReviewResult?>[];
       for (int i = 0; i < 10; i++) {
         final result = await service.analyzeMultipleSlideImages([imageData]);
         results.add(result);
@@ -473,7 +473,7 @@ void main() {
       
       // 全て同じ結果が返ることを確認
       for (final result in results) {
-        expect(result.point, 80);
+        expect(result!.point, 80);
       }
     });
 
@@ -495,7 +495,7 @@ void main() {
       final result = await service.analyzeMultipleSlideImages(manySmallImages);
       
       // メモリプレッシャーに対応してデータが処理される
-      expect(result.point, 75);
+      expect(result!.point, 75);
       expect(result.good, contains('複数スライドの一貫性'));
     });
 
@@ -517,8 +517,8 @@ void main() {
       final result3 = await service.analyzeMultipleSlideImages([imageData]);
       
       // 一貫して同じ結果が返ることを確認
-      expect(result1.point, result2.point);
-      expect(result2.point, result3.point);
+      expect(result1!.point, result2!.point);
+      expect(result2.point, result3!.point);
       expect(result1.point, 80);
     });
   });
