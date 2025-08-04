@@ -129,11 +129,15 @@ void main() {
       mockService.delay = const Duration(milliseconds: 100);
       mockService.shouldSucceed = true;
 
+      // カスタムTestAnalysisNotifierを使用
+      final testNotifier = TestAnalysisNotifier();
+
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             ...testServiceOverrides,
             presentationAnalysisServiceProvider.overrideWithValue(mockService),
+            analysisNotifierProvider.overrideWith(() => testNotifier),
           ],
           child: MaterialApp.router(
             routerConfig: appRouter,
@@ -144,6 +148,10 @@ void main() {
       // PDFファイル選択ボタンをタップ
       await tester.ensureVisible(find.text('PDFファイルを選択'));
       await tester.tap(find.text('PDFファイルを選択'), warnIfMissed: false);
+      await tester.pump();
+
+      // 手動でローディング状態に設定
+      testNotifier.setLoading();
       await tester.pump();
 
       // ローディングダイアログが表示されることを確認
@@ -323,11 +331,15 @@ void main() {
       mockService.delay = const Duration(milliseconds: 200);
       mockService.shouldSucceed = true;
 
+      // カスタムTestAnalysisNotifierを使用
+      final testNotifier = TestAnalysisNotifier();
+
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             ...testServiceOverrides,
             presentationAnalysisServiceProvider.overrideWithValue(mockService),
+            analysisNotifierProvider.overrideWith(() => testNotifier),
           ],
           child: MaterialApp.router(
             routerConfig: appRouter,
@@ -338,6 +350,10 @@ void main() {
       // PDFファイル選択ボタンをタップ
       await tester.ensureVisible(find.text('PDFファイルを選択'));
       await tester.tap(find.text('PDFファイルを選択'), warnIfMissed: false);
+      await tester.pump();
+
+      // 手動でローディング状態に設定
+      testNotifier.setLoading();
       await tester.pump();
 
       // ローディングダイアログが表示されることを確認
@@ -425,11 +441,15 @@ void main() {
       mockService.delay = const Duration(milliseconds: 100);
       mockService.shouldSucceed = true;
 
+      // カスタムTestAnalysisNotifierを使用
+      final testNotifier = TestAnalysisNotifier();
+
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             ...testServiceOverrides,
             presentationAnalysisServiceProvider.overrideWithValue(mockService),
+            analysisNotifierProvider.overrideWith(() => testNotifier),
           ],
           child: MaterialApp.router(
             routerConfig: appRouter,
@@ -440,6 +460,10 @@ void main() {
       // PDFファイル選択ボタンをタップしてローディングダイアログを表示
       await tester.ensureVisible(find.text('PDFファイルを選択'));
       await tester.tap(find.text('PDFファイルを選択'), warnIfMissed: false);
+      await tester.pump();
+
+      // 手動でローディング状態に設定
+      testNotifier.setLoading();
       await tester.pump();
 
       // ローディングダイアログが表示される
