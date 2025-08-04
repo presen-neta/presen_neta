@@ -2,9 +2,49 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/annotations.dart';
+import 'package:mockito/mockito.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:presen_neta/shared/service/gemini_service.dart';
 import 'package:presen_neta/shared/service/interfaces/gemini_service_interface.dart';
+import 'package:presen_neta/shared/service/interfaces/generative_model_interface.dart';
 import 'package:presen_neta/shared/models/review_result.dart';
+
+import 'gemini_service_test.mocks.dart';
+
+@GenerateMocks([GenerativeModelInterface])
+
+/// Mock implementation of GenerateContentResponseInterface
+class MockGenerateContentResponse implements GenerateContentResponseInterface {
+  final String? _text;
+  
+  MockGenerateContentResponse({String? text}) : _text = text;
+  
+  @override
+  String? get text => _text;
+  
+  @override
+  List<Candidate> get candidates => [];
+  
+  @override
+  PromptFeedback? get promptFeedback => null;
+  
+  @override
+  UsageMetadata? get usageMetadata => null;
+  
+  @override
+  Iterable<FunctionCall> get functionCalls => [];
+}
+
+/// Mock implementation of CountTokensResponseInterface
+class MockCountTokensResponse implements CountTokensResponseInterface {
+  final int _totalTokens;
+  
+  MockCountTokensResponse({required int totalTokens}) : _totalTokens = totalTokens;
+  
+  @override
+  int get totalTokens => _totalTokens;
+}
 
 /// Test implementation of GeminiService for testing purposes
 class TestGeminiService implements GeminiServiceInterface {
@@ -213,6 +253,486 @@ void main() {
           () => geminiService.analyzeMultipleSlideImages(imageDataList),
           throwsA(isA<ArgumentError>()),
         );
+      });
+    });
+  });
+
+  group('Real GeminiService with Mocks', () {
+    late MockGenerativeModelInterface mockModel;
+    late MockGenerateContentResponse mockResponse;
+    late MockCountTokensResponse mockCountResponse;
+    late GeminiService geminiService;
+
+    setUp(() {
+      mockModel = MockGenerativeModelInterface();
+      mockResponse = MockGenerateContentResponse(text: '{}');
+      mockCountResponse = MockCountTokensResponse(totalTokens: 0);
+      geminiService = GeminiService(mockModel: mockModel);
+    });
+
+    group('analyzeMultipleSlideImages with mocked model', () {
+      test('should return ReviewResult when API call succeeds', () async {
+        // Arrange
+        final response = MockGenerateContentResponse(text: '''
+{
+  "point": 85,
+  "good": ["Excellent structure", "Clear visuals"],
+  "improve": ["Add more examples", "Increase font size"]
+}
+''');
+        when(mockModel.generateContent(any)).thenAnswer((_) async => response);
+
+        final imageData = Uint8List.fromList([1, 2, 3, 4]);
+
+        // Act
+        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+
+        // Assert
+        expect(result, isA<ReviewResult>());
+        expect(result!.point, 85);
+        expect(result.good, contains("Excellent structure"));
+        expect(result.improve, contains("Add more examples"));
+        verify(mockModel.generateContent(any)).called(1);
+      });
+
+      test('should return null when API response is empty', () async {
+        // Arrange
+        when(mockResponse.text).thenReturn(null);
+        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+
+        final imageData = Uint8List.fromList([1, 2, 3, 4]);
+
+        // Act
+        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+
+        // Assert
+        expect(result, isNull);
+        verify(mockModel.generateContent(any)).called(1);
+      });
+
+      test('should return null when API response is empty string', () async {
+        // Arrange
+        when(mockResponse.text).thenReturn('');
+        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+
+        final imageData = Uint8List.fromList([1, 2, 3, 4]);
+
+        // Act
+        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+
+        // Assert
+        expect(result, isNull);
+        verify(mockModel.generateContent(any)).called(1);
+      });
+
+      test('should return null when JSON extraction fails', () async {
+        // Arrange
+        when(mockResponse.text).thenReturn('This is not JSON at all');
+        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+
+        final imageData = Uint8List.fromList([1, 2, 3, 4]);
+
+        // Act
+        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+
+        // Assert
+        expect(result, isNull);
+        verify(mockModel.generateContent(any)).called(1);
+      });
+
+      test('should return null when point is invalid (negative)', () async {
+        // Arrange
+        when(mockResponse.text).thenReturn('''
+{
+  "point": -10,
+  "good": ["Test"],
+  "improve": ["Test"]
+}
+''');
+        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+
+        final imageData = Uint8List.fromList([1, 2, 3, 4]);
+
+        // Act
+        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+
+        // Assert
+        expect(result, isNull);
+        verify(mockModel.generateContent(any)).called(1);
+      });
+
+      test('should return null when point is invalid (over 100)', () async {
+        // Arrange
+        when(mockResponse.text).thenReturn('''
+{
+  "point": 150,
+  "good": ["Test"],
+  "improve": ["Test"]
+}
+''');
+        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+
+        final imageData = Uint8List.fromList([1, 2, 3, 4]);
+
+        // Act
+        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+
+        // Assert
+        expect(result, isNull);
+        verify(mockModel.generateContent(any)).called(1);
+      });
+
+      test('should return null when point is null', () async {
+        // Arrange
+        when(mockResponse.text).thenReturn('''
+{
+  "good": ["Test"],
+  "improve": ["Test"]
+}
+''');
+        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+
+        final imageData = Uint8List.fromList([1, 2, 3, 4]);
+
+        // Act
+        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+
+        // Assert
+        expect(result, isNull);
+        verify(mockModel.generateContent(any)).called(1);
+      });
+
+      test('should handle API exception gracefully', () async {
+        // Arrange
+        when(mockModel.generateContent(any)).thenThrow(Exception('API Error'));
+
+        final imageData = Uint8List.fromList([1, 2, 3, 4]);
+
+        // Act
+        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+
+        // Assert
+        expect(result, isNull);
+        verify(mockModel.generateContent(any)).called(1);
+      });
+
+      test('should filter non-string values from good array', () async {
+        // Arrange
+        when(mockResponse.text).thenReturn('''
+{
+  "point": 80,
+  "good": ["Valid string", 123, null, "Another string"],
+  "improve": ["Test"]
+}
+''');
+        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+
+        final imageData = Uint8List.fromList([1, 2, 3, 4]);
+
+        // Act
+        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+
+        // Assert
+        expect(result!.point, 80);
+        expect(result.good, ["Valid string", "Another string"]);
+        verify(mockModel.generateContent(any)).called(1);
+      });
+
+      test('should filter non-string values from improve array', () async {
+        // Arrange
+        when(mockResponse.text).thenReturn('''
+{
+  "point": 70,
+  "good": ["Test"],
+  "improve": ["Valid improvement", 456, null, "Another improvement"]
+}
+''');
+        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+
+        final imageData = Uint8List.fromList([1, 2, 3, 4]);
+
+        // Act
+        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+
+        // Assert
+        expect(result!.point, 70);
+        expect(result.improve, ["Valid improvement", "Another improvement"]);
+        verify(mockModel.generateContent(any)).called(1);
+      });
+
+      test('should handle null good and improve arrays', () async {
+        // Arrange
+        when(mockResponse.text).thenReturn('''
+{
+  "point": 60,
+  "good": null,
+  "improve": null
+}
+''');
+        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+
+        final imageData = Uint8List.fromList([1, 2, 3, 4]);
+
+        // Act
+        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+
+        // Assert
+        expect(result!.point, 60);
+        expect(result.good, isEmpty);
+        expect(result.improve, isEmpty);
+        verify(mockModel.generateContent(any)).called(1);
+      });
+
+      test('should handle multiple images', () async {
+        // Arrange
+        when(mockResponse.text).thenReturn('''
+{
+  "point": 75,
+  "good": ["Multiple slides consistency"],
+  "improve": ["Better flow between slides"]
+}
+''');
+        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+
+        final imageDataList = [
+          Uint8List.fromList([1, 2, 3, 4]),
+          Uint8List.fromList([5, 6, 7, 8]),
+          Uint8List.fromList([9, 10, 11, 12]),
+        ];
+
+        // Act
+        final result = await geminiService.analyzeMultipleSlideImages(imageDataList);
+
+        // Assert
+        expect(result!.point, 75);
+        expect(result.good, contains("Multiple slides consistency"));
+        verify(mockModel.generateContent(any)).called(1);
+      });
+
+      test('should handle custom MIME type', () async {
+        // Arrange
+        when(mockResponse.text).thenReturn('''
+{
+  "point": 80,
+  "good": ["JPEG format test"],
+  "improve": ["Test improvement"]
+}
+''');
+        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+
+        final imageData = Uint8List.fromList([1, 2, 3, 4]);
+
+        // Act
+        final result = await geminiService.analyzeMultipleSlideImages(
+          [imageData],
+          imageMimeType: 'image/jpeg',
+        );
+
+        // Assert
+        expect(result!.point, 80);
+        expect(result.good, contains("JPEG format test"));
+        verify(mockModel.generateContent(any)).called(1);
+      });
+    });
+
+    group('countTokens with mocked model', () {
+      test('should return token count when API call succeeds', () async {
+        // Arrange
+        when(mockCountResponse.totalTokens).thenReturn(42);
+        when(mockModel.countTokens(any)).thenAnswer((_) async => mockCountResponse);
+
+        // Act
+        final tokenCount = await geminiService.countTokens('test content');
+
+        // Assert
+        expect(tokenCount, 42);
+        verify(mockModel.countTokens(any)).called(1);
+      });
+
+      test('should return 0 when API call throws exception', () async {
+        // Arrange
+        when(mockModel.countTokens(any)).thenThrow(Exception('Token count error'));
+
+        // Act
+        final tokenCount = await geminiService.countTokens('test content');
+
+        // Assert
+        expect(tokenCount, 0);
+        verify(mockModel.countTokens(any)).called(1);
+      });
+
+      test('should handle empty content', () async {
+        // Arrange
+        when(mockCountResponse.totalTokens).thenReturn(0);
+        when(mockModel.countTokens(any)).thenAnswer((_) async => mockCountResponse);
+
+        // Act
+        final tokenCount = await geminiService.countTokens('');
+
+        // Assert
+        expect(tokenCount, 0);
+        verify(mockModel.countTokens(any)).called(1);
+      });
+
+      test('should handle long content', () async {
+        // Arrange
+        when(mockCountResponse.totalTokens).thenReturn(500);
+        when(mockModel.countTokens(any)).thenAnswer((_) async => mockCountResponse);
+
+        final longContent = 'test content ' * 100;
+
+        // Act
+        final tokenCount = await geminiService.countTokens(longContent);
+
+        // Assert
+        expect(tokenCount, 500);
+        verify(mockModel.countTokens(any)).called(1);
+      });
+    });
+
+    group('extractJsonFromResponse comprehensive coverage', () {
+      test('should extract JSON from code block', () {
+        final response = '''
+```json
+{
+  "point": 95,
+  "good": ["Code block test"],
+  "improve": ["Coverage test"]
+}
+```
+''';
+        
+        final result = geminiService.extractJsonFromResponse(response);
+        
+        expect(result, isNotNull);
+        expect(result!['point'], 95);
+        expect(result['good'], contains('Code block test'));
+      });
+
+      test('should extract JSON from plain text', () {
+        final response = '''
+Analysis result:
+{
+  "point": 88,
+  "good": ["Plain text test"],
+  "improve": ["Extract test"]
+}
+End of analysis.
+''';
+        
+        final result = geminiService.extractJsonFromResponse(response);
+        
+        expect(result, isNotNull);
+        expect(result!['point'], 88);
+        expect(result['good'], contains('Plain text test'));
+      });
+
+      test('should handle malformed JSON gracefully', () {
+        final response = '''
+{
+  "point": 75,
+  "good": ["Malformed",
+  "improve": "Missing bracket"
+}
+''';
+        
+        final result = geminiService.extractJsonFromResponse(response);
+        
+        expect(result, isNull);
+      });
+
+      test('should handle empty response', () {
+        final result = geminiService.extractJsonFromResponse('');
+        expect(result, isNull);
+      });
+
+      test('should handle response with no JSON', () {
+        final response = 'This is just plain text without any JSON';
+        
+        final result = geminiService.extractJsonFromResponse(response);
+        
+        expect(result, isNull);
+      });
+
+      test('should handle JSON with special characters', () {
+        final response = '''
+{
+  "point": 85,
+  "good": ["Good with \\"quotes\\"", "Line\\nbreak", "Tab\\there"],
+  "improve": ["Fix / issues", "Handle \\\\ backslashes"]
+}
+''';
+        
+        final result = geminiService.extractJsonFromResponse(response);
+        
+        expect(result, isNotNull);
+        expect(result!['point'], 85);
+        expect(result['good'][0], contains('"quotes"'));
+      });
+
+      test('should handle nested JSON structures', () {
+        final response = '''
+{
+  "point": 92,
+  "good": [
+    "First comprehensive point",
+    "Second detailed point",
+    "Third point with details"
+  ],
+  "improve": [
+    "First improvement",
+    "Second improvement with explanation"
+  ]
+}
+''';
+        
+        final result = geminiService.extractJsonFromResponse(response);
+        
+        expect(result, isNotNull);
+        expect(result!['point'], 92);
+        expect(result['good'], hasLength(3));
+        expect(result['improve'], hasLength(2));
+      });
+
+      test('should handle multiple JSON blocks and take first', () {
+        final response = '''
+First JSON:
+```json
+{
+  "point": 70,
+  "good": ["First"],
+  "improve": ["First improve"]
+}
+```
+
+Second JSON:
+{
+  "point": 80,
+  "good": ["Second"],
+  "improve": ["Second improve"]
+}
+''';
+        
+        final result = geminiService.extractJsonFromResponse(response);
+        
+        expect(result, isNotNull);
+        expect(result!['point'], 70); // Should extract the first JSON block
+        expect(result['good'], contains('First'));
+      });
+
+      test('should handle whitespace and formatting variations', () {
+        final responses = [
+          '   {"point": 85, "good": ["Test"], "improve": ["Test"]}   ',
+          '\n\n{"point": 85, "good": ["Test"], "improve": ["Test"]}\n\n',
+          '\t{"point": 85, "good": ["Test"], "improve": ["Test"]}\t',
+        ];
+        
+        for (final response in responses) {
+          final result = geminiService.extractJsonFromResponse(response);
+          
+          expect(result, isNotNull);
+          expect(result!['point'], 85);
+        }
       });
     });
   });
@@ -609,6 +1129,144 @@ Additional explanation follows.
       }
     });
 
+    test('should handle empty content in countTokens with real service', () async {
+      final service = GeminiService(apiKey: 'test_key_for_coverage');
+      
+      final tokenCount = await service.countTokens('');
+      
+      expect(tokenCount, 0);
+    });
+
+    test('should test _extractJsonFromResponse indirectly through TestGeminiService', () async {
+      final service = TestGeminiService();
+      
+      // Test JSON with code block
+      service.mockResponse = '''
+```json
+{
+  "point": 95,
+  "good": ["JSON block extraction"],
+  "improve": ["Test coverage"]
+}
+```
+''';
+      
+      final imageData = Uint8List.fromList([1, 2, 3, 4]);
+      final result = await service.analyzeMultipleSlideImages([imageData]);
+      
+      expect(result?.point, 95);
+      expect(result?.good, contains("JSON block extraction"));
+    });
+
+    test('should handle various JSON response formats', () async {
+      final service = TestGeminiService();
+      
+      final testCases = [
+        // Simple JSON
+        '{"point": 80, "good": ["Simple"], "improve": ["Test"]}',
+        // JSON with whitespace
+        '  {"point": 81, "good": ["Whitespace"], "improve": ["Test"]}  ',
+        // JSON with newlines
+        '{\n  "point": 82,\n  "good": ["Newlines"],\n  "improve": ["Test"]\n}',
+        // JSON with extra text before
+        'Analysis result: {"point": 83, "good": ["Prefix"], "improve": ["Test"]}',
+        // JSON with extra text after
+        '{"point": 84, "good": ["Suffix"], "improve": ["Test"]} End of analysis.',
+      ];
+      
+      final imageData = Uint8List.fromList([1, 2, 3, 4]);
+      
+      for (int i = 0; i < testCases.length; i++) {
+        service.mockResponse = testCases[i];
+        final result = await service.analyzeMultipleSlideImages([imageData]);
+        expect(result?.point, 80 + i);
+      }
+    });
+
+    test('should handle complex nested JSON structures', () async {
+      final service = TestGeminiService();
+      service.mockResponse = '''
+{
+  "point": 87,
+  "good": [
+    "First good point with detailed explanation",
+    "Second point",
+    "Third point with 日本語"
+  ],
+  "improve": [
+    "First improvement suggestion",
+    "Second improvement with details"
+  ]
+}
+''';
+      
+      final imageData = Uint8List.fromList([1, 2, 3, 4]);
+      final result = await service.analyzeMultipleSlideImages([imageData]);
+      
+      expect(result?.point, 87);
+      expect(result?.good.length, 3);
+      expect(result?.improve.length, 2);
+      expect(result?.good.first, contains("detailed explanation"));
+    });
+
+    test('should handle JSON with special characters and escapes', () async {
+      final service = TestGeminiService();
+      service.mockResponse = '''
+{
+  "point": 89,
+  "good": [
+    "Good point with \\"quotes\\"",
+    "Point with \\n newline",
+    "Point with \\t tab"
+  ],
+  "improve": [
+    "Improve with / slash",
+    "Improve with \\\\ backslash"
+  ]
+}
+''';
+      
+      final imageData = Uint8List.fromList([1, 2, 3, 4]);
+      final result = await service.analyzeMultipleSlideImages([imageData]);
+      
+      expect(result?.point, 89);
+      expect(result?.good.first, contains('"quotes"'));
+    });
+
+    test('should handle boundary values for point field', () async {
+      final service = TestGeminiService();
+      final imageData = Uint8List.fromList([1, 2, 3, 4]);
+      
+      // Test boundary values
+      final boundaryTests = [
+        (0, true),    // Minimum valid
+        (1, true),    // Just above minimum
+        (50, true),   // Middle value
+        (99, true),   // Just below maximum
+        (100, true),  // Maximum valid
+        (-1, false),  // Just below minimum (invalid)
+        (101, false), // Just above maximum (invalid)
+      ];
+      
+      for (final (point, shouldBeValid) in boundaryTests) {
+        service.mockResponse = '''
+{
+  "point": $point,
+  "good": ["Test"],
+  "improve": ["Test"]
+}
+''';
+        
+        final result = await service.analyzeMultipleSlideImages([imageData]);
+        
+        if (shouldBeValid) {
+          expect(result?.point, point);
+        } else {
+          expect(result, isNull);
+        }
+      }
+    });
+
     test('should handle JSON parsing edge cases', () async {
       final service = TestGeminiService();
       // Don't set shouldThrowError = true, let the natural ArgumentError for empty list be thrown
@@ -728,6 +1386,163 @@ Additional explanation follows.
       expect(result1!.point, result2!.point);
       expect(result2.point, result3!.point);
       expect(result1.point, 80);
+    });
+
+    group('Direct JSON Extraction Tests', () {
+      test('should extract JSON from code block', () {
+        final service = GeminiService(apiKey: 'test_key_for_coverage');
+        final response = '''
+```json
+{
+  "point": 95,
+  "good": ["Excellent"],
+  "improve": ["Perfect"]
+}
+```
+''';
+        
+        final result = service.extractJsonFromResponse(response);
+        
+        expect(result, isNotNull);
+        expect(result!['point'], 95);
+        expect(result['good'], contains('Excellent'));
+      });
+
+      test('should extract JSON from plain text', () {
+        final service = GeminiService(apiKey: 'test_key_for_coverage');
+        final response = '''
+Here is the analysis:
+{
+  "point": 88,
+  "good": ["Great structure"],
+  "improve": ["Add examples"]
+}
+End of analysis.
+''';
+        
+        final result = service.extractJsonFromResponse(response);
+        
+        expect(result, isNotNull);
+        expect(result!['point'], 88);
+        expect(result['good'], contains('Great structure'));
+      });
+
+      test('should handle malformed JSON gracefully', () {
+        final service = GeminiService(apiKey: 'test_key_for_coverage');
+        final response = '''
+{
+  "point": 75,
+  "good": ["Incomplete JSON",
+  "improve": "Missing bracket"
+}
+''';
+        
+        final result = service.extractJsonFromResponse(response);
+        
+        expect(result, isNull);
+      });
+
+      test('should handle empty response', () {
+        final service = GeminiService(apiKey: 'test_key_for_coverage');
+        
+        final result = service.extractJsonFromResponse('');
+        
+        expect(result, isNull);
+      });
+
+      test('should handle response with no JSON', () {
+        final service = GeminiService(apiKey: 'test_key_for_coverage');
+        final response = 'This is just plain text without any JSON';
+        
+        final result = service.extractJsonFromResponse(response);
+        
+        expect(result, isNull);
+      });
+
+      test('should handle JSON with special characters', () {
+        final service = GeminiService(apiKey: 'test_key_for_coverage');
+        final response = '''
+{
+  "point": 85,
+  "good": ["Good with \\"quotes\\"", "Line\\nbreak", "Tab\\there"],
+  "improve": ["Fix / issues", "Handle \\\\ backslashes"]
+}
+''';
+        
+        final result = service.extractJsonFromResponse(response);
+        
+        expect(result, isNotNull);
+        expect(result!['point'], 85);
+        expect(result['good'][0], contains('"quotes"'));
+      });
+
+      test('should handle nested JSON structures', () {
+        final service = GeminiService(apiKey: 'test_key_for_coverage');
+        final response = '''
+{
+  "point": 92,
+  "good": [
+    "First point with details",
+    "Second point",
+    "Third comprehensive point"
+  ],
+  "improve": [
+    "First improvement",
+    "Second improvement with explanation"
+  ]
+}
+''';
+        
+        final result = service.extractJsonFromResponse(response);
+        
+        expect(result, isNotNull);
+        expect(result!['point'], 92);
+        expect(result['good'], hasLength(3));
+        expect(result['improve'], hasLength(2));
+      });
+
+      test('should handle multiple JSON blocks and take first', () {
+        final service = GeminiService(apiKey: 'test_key_for_coverage');
+        final response = '''
+First JSON:
+```json
+{
+  "point": 70,
+  "good": ["First"],
+  "improve": ["First improve"]
+}
+```
+
+Second JSON:
+{
+  "point": 80,
+  "good": ["Second"],
+  "improve": ["Second improve"]
+}
+''';
+        
+        final result = service.extractJsonFromResponse(response);
+        
+        expect(result, isNotNull);
+        expect(result!['point'], 70); // Should extract the first JSON block
+        expect(result['good'], contains('First'));
+      });
+
+      test('should handle whitespace and formatting variations', () {
+        final service = GeminiService(apiKey: 'test_key_for_coverage');
+        final responses = [
+          '   {"point": 85, "good": ["Test"], "improve": ["Test"]}   ',
+          '\n\n{"point": 85, "good": ["Test"], "improve": ["Test"]}\n\n',
+          '\t{"point": 85, "good": ["Test"], "improve": ["Test"]}\t',
+        ];
+        
+        for (final response in responses) {
+          final result = service.extractJsonFromResponse(response);
+          
+          expect(result, isNotNull);
+          expect(result!['point'], 85);
+        }
+      });
     });
   });
 }

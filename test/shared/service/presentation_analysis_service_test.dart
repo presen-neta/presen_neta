@@ -397,5 +397,278 @@ void main() {
       
       expect(customService.filePickerService, equals(mockFilePickerService));
     });
+
+    test('convertPdfToPngImages should handle various PDF data patterns', () async {
+      final testCases = [
+        // Empty data
+        Uint8List(0),
+        // Very small data
+        Uint8List.fromList([1, 2, 3]),
+        // PDF header simulation (still invalid but tests header checking)
+        Uint8List.fromList([37, 80, 68, 70, 45, 49, 46, 52]), // %PDF-1.4
+        // Large invalid data
+        Uint8List.fromList(List.generate(10000, (i) => i % 256)),
+        // Random data patterns
+        Uint8List.fromList([255, 255, 255, 255, 0, 0, 0, 0]),
+        // Repeating patterns
+        Uint8List.fromList(List.filled(1000, 42)),
+      ];
+      
+      for (final testData in testCases) {
+        final result = await service.convertPdfToPngImages(testData);
+        // All should return empty list due to invalid PDF data
+        expect(result, isEmpty);
+      }
+    });
+
+    test('convertPdfToPngImages should handle memory-intensive operations', () async {
+      // Test with progressively larger data sizes
+      final dataSizes = [0, 1, 100, 1000, 10000, 100000];
+      
+      for (final size in dataSizes) {
+        final testData = Uint8List.fromList(List.generate(size, (i) => i % 256));
+        final result = await service.convertPdfToPngImages(testData);
+        expect(result, isEmpty);
+      }
+    });
+
+    test('convertPdfToPngImages should handle various data patterns', () async {
+      final patterns = [
+        // All zeros
+        List.filled(1000, 0),
+        // All ones
+        List.filled(1000, 1),
+        // All 255s
+        List.filled(1000, 255),
+        // Alternating pattern
+        List.generate(1000, (i) => i % 2 == 0 ? 0 : 255),
+        // Incremental pattern
+        List.generate(1000, (i) => i % 256),
+        // Random-like pattern
+        List.generate(1000, (i) => (i * 17 + 42) % 256),
+      ];
+      
+      for (final pattern in patterns) {
+        final testData = Uint8List.fromList(pattern);
+        final result = await service.convertPdfToPngImages(testData);
+        expect(result, isEmpty);
+      }
+    });
+
+    test('convertPdfToPngImages should handle concurrent calls', () async {
+      final testData = Uint8List.fromList([1, 2, 3, 4, 5]);
+      
+      // Run multiple concurrent conversions
+      final futures = List.generate(10, (_) => service.convertPdfToPngImages(testData));
+      final results = await Future.wait(futures);
+      
+      // All should return empty lists
+      for (final result in results) {
+        expect(result, isEmpty);
+      }
+    });
+
+    test('convertPdfToPngImages should maintain consistent behavior', () async {
+      final testData = Uint8List.fromList([42, 42, 42, 42]);
+      
+      // Run the same conversion multiple times
+      for (int i = 0; i < 5; i++) {
+        final result = await service.convertPdfToPngImages(testData);
+        expect(result, isEmpty);
+      }
+    });
+
+    testWidgets('analyzePdfFile should handle various error scenarios with snackbars', (tester) async {
+      // Test multiple error scenarios that show different snackbars
+      final errorCases = [
+        ('Non-PDF file', 'test.txt', 'PDFファイルのみ対応しています'),
+        ('Doc file', 'test.doc', 'PDFファイルのみ対応しています'),
+        ('Image file', 'test.jpg', 'PDFファイルのみ対応しています'),
+        ('No extension', 'test', 'PDFファイルのみ対応しています'),
+      ];
+      
+      for (final (description, fileName, expectedMessage) in errorCases) {
+        final file = PlatformFile(name: fileName, size: 1);
+        when(mockFilePickerService.pickFile())
+            .thenAnswer((_) async => FilePickerResult([file]));
+        
+        await tester.pumpWidget(ProviderScope(
+          child: MaterialApp(
+            home: Scaffold(
+              body: Consumer(
+                builder: (context, ref, _) {
+                  return Builder(
+                    builder: (BuildContext context) {
+                      return ElevatedButton(
+                        onPressed: () async {
+                          await service.analyzePdfFile(context, ref);
+                        },
+                        child: Text(description),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ),
+        ));
+        
+        await tester.tap(find.text(description));
+        await tester.pumpAndSettle();
+        
+        expect(find.text(expectedMessage), findsOneWidget);
+        
+        // Clear the snackbar for next test
+        await tester.pumpAndSettle(const Duration(seconds: 5));
+      }
+    });
+
+    testWidgets('analyzePdfFile should handle PDF reading failure scenarios', (tester) async {
+      final file = PlatformFile(name: 'test.pdf', size: 1000, path: 'test.pdf');
+      when(mockFilePickerService.pickFile())
+          .thenAnswer((_) async => FilePickerResult([file]));
+      when(mockFilePickerService.readPdfFileContent(any))
+          .thenAnswer((_) async => null);
+      
+      await tester.pumpWidget(ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: Consumer(
+              builder: (context, ref, _) {
+                return Builder(
+                  builder: (BuildContext context) {
+                    return ElevatedButton(
+                      onPressed: () async {
+                        final result = await service.analyzePdfFile(context, ref);
+                        expect(result, false);
+                      },
+                      child: const Text('Test PDF Read Failure'),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      ));
+      
+      await tester.tap(find.text('Test PDF Read Failure'));
+      await tester.pumpAndSettle();
+      
+      expect(find.text('PDFファイルの読み取りに失敗しました'), findsOneWidget);
+    });
+
+    testWidgets('analyzePdfFile should handle empty PDF data', (tester) async {
+      final file = PlatformFile(name: 'empty.pdf', size: 0, path: 'empty.pdf');
+      when(mockFilePickerService.pickFile())
+          .thenAnswer((_) async => FilePickerResult([file]));
+      when(mockFilePickerService.readPdfFileContent(any))
+          .thenAnswer((_) async => Uint8List(0));
+      
+      await tester.pumpWidget(ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: Consumer(
+              builder: (context, ref, _) {
+                return Builder(
+                  builder: (BuildContext context) {
+                    return ElevatedButton(
+                      onPressed: () async {
+                        final result = await service.analyzePdfFile(context, ref);
+                        expect(result, false);
+                      },
+                      child: const Text('Test Empty PDF'),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      ));
+      
+      await tester.tap(find.text('Test Empty PDF'));
+      await tester.pumpAndSettle();
+      
+      // Empty PDF should trigger conversion failure
+      expect(find.text('PDFの変換に失敗しました'), findsOneWidget);
+    });
+
+    test('should handle various file extensions correctly', () {
+      final testCases = [
+        ('file.pdf', true),
+        ('file.PDF', true),
+        ('file.Pdf', true),
+        ('file.txt', false),
+        ('file.doc', false),
+        ('file.docx', false),
+        ('file.jpg', false),
+        ('file.png', false),
+        ('file', false),
+        ('file.', false),
+        ('.pdf', true),
+        ('test.backup.pdf', true),
+        ('test.pdf.backup', false),
+      ];
+      
+      for (final (fileName, isPdf) in testCases) {
+        final file = PlatformFile(name: fileName, size: 100);
+        final isPdfFile = file.name.toLowerCase().endsWith('.pdf');
+        expect(isPdfFile, isPdf, reason: 'Failed for file: $fileName');
+      }
+    });
+
+    test('should handle service initialization with different parameters', () {
+      // Test with null filePickerService (default initialization)
+      expect(() => PresentationAnalysisService(), returnsNormally);
+      
+      // Test with provided filePickerService
+      final customService = PresentationAnalysisService(filePickerService: mockFilePickerService);
+      expect(customService.filePickerService, equals(mockFilePickerService));
+    });
+
+    testWidgets('analyzePdfFile should handle context becoming unmounted during processing', (tester) async {
+      final file = PlatformFile(name: 'test.pdf', size: 1000);
+      when(mockFilePickerService.pickFile())
+          .thenAnswer((_) async => FilePickerResult([file]));
+      when(mockFilePickerService.readPdfFileContent(any))
+          .thenAnswer((_) async {
+        // Simulate delay
+        await Future.delayed(const Duration(milliseconds: 100));
+        return Uint8List.fromList([1, 2, 3, 4]);
+      });
+      
+      await tester.pumpWidget(ProviderScope(
+        child: MaterialApp(
+          home: Scaffold(
+            body: Consumer(
+              builder: (context, ref, _) {
+                return Builder(
+                  builder: (BuildContext context) {
+                    return ElevatedButton(
+                      onPressed: () async {
+                        // Start the analysis
+                        final future = service.analyzePdfFile(context, ref);
+                        
+                        // Immediately dispose the widget to unmount context
+                        await tester.pumpWidget(const SizedBox());
+                        
+                        // Wait for the analysis to complete
+                        final result = await future;
+                        expect(result, false);
+                      },
+                      child: const Text('Test Context Unmount'),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      ));
+      
+      await tester.tap(find.text('Test Context Unmount'));
+      await tester.pumpAndSettle();
+    });
   });
 }

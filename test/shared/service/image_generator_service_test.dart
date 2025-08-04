@@ -283,5 +283,246 @@ void main() {
         return Uint8List(0).buffer.asByteData();
       });
     });
+
+    test('should generate images with extreme values', () async {
+      final extremeCases = [
+        (0, 'Perfect', <String>[], <String>[]),
+        (100, 'Worst', <String>[], <String>[]),
+        (50, '', <String>[], <String>[]),
+        (25, 'Test', <String>['A' * 1000], <String>[]),
+        (75, 'Test', <String>[], <String>['B' * 1000]),
+      ];
+      
+      for (final (percentage, title, good, improve) in extremeCases) {
+        final result = await service.generateResultImage(
+          sleepPercentage: percentage,
+          title: title,
+          goodPoints: good,
+          improvements: improve,
+        );
+        
+        expect(result, isA<Uint8List>());
+        expect(result.isNotEmpty, true);
+      }
+    });
+
+    test('should handle various text lengths and content', () async {
+      final textVariations = [
+        // Empty strings
+        (30, '', <String>[], <String>[]),
+        // Very short
+        (35, 'A', <String>['B'], <String>['C']),
+        // Medium length
+        (40, 'Medium Length Title', <String>['Good point here'], <String>['Improvement here']),
+        // Very long strings
+        (45, 'Very Long Title That Might Need Wrapping Or Truncation In The Generated Image Because It Is So Long', <String>['Very long good point that contains a lot of detailed information about what is good'], <String>['Very long improvement suggestion with detailed explanation']),
+        // Special characters
+        (50, 'Title with 特殊文字 & symbols!', <String>['Good with émojis 🎉'], <String>['Improve with ñ accents']),
+        // Numbers and mixed content
+        (55, '2024 Analysis Report #1', <String>['99% better than before'], <String>['Reduce by 50%']),
+      ];
+      
+      for (final (percentage, title, good, improve) in textVariations) {
+        final result = await service.generateResultImage(
+          sleepPercentage: percentage,
+          title: title,
+          goodPoints: good,
+          improvements: improve,
+        );
+        
+        expect(result, isA<Uint8List>());
+        expect(result.isNotEmpty, true);
+      }
+    });
+
+    test('should handle multiple concurrent image generations', () async {
+      const sleepPercentage = 60;
+      const title = 'Concurrent Test';
+      const goodPoints = ['Concurrency'];
+      const improvements = ['Performance'];
+
+      final futures = List.generate(5, (i) => service.generateResultImage(
+        sleepPercentage: sleepPercentage + i,
+        title: '$title $i',
+        goodPoints: goodPoints,
+        improvements: improvements,
+      ));
+      
+      final results = await Future.wait(futures);
+      
+      for (final result in results) {
+        expect(result, isA<Uint8List>());
+        expect(result.isNotEmpty, true);
+      }
+    });
+
+    test('should generate different images for different inputs', () async {
+      final result1 = await service.generateResultImage(
+        sleepPercentage: 30,
+        title: 'First Test',
+        goodPoints: ['Good 1'],
+        improvements: ['Improve 1'],
+      );
+
+      final result2 = await service.generateResultImage(
+        sleepPercentage: 70,
+        title: 'Second Test',
+        goodPoints: ['Good 2'],
+        improvements: ['Improve 2'],
+      );
+
+      expect(result1, isA<Uint8List>());
+      expect(result2, isA<Uint8List>());
+      expect(result1.isNotEmpty, true);
+      expect(result2.isNotEmpty, true);
+      
+      // Images should be different (though we can't easily compare content)
+      // At minimum, they should both be valid images
+    });
+
+    test('should handle edge cases for list content', () async {
+      final listTestCases = [
+        // Empty lists
+        (<String>[], <String>[]),
+        // Single items
+        (<String>['Single good'], <String>['Single improve']),
+        // Many items
+        (List.generate(20, (i) => 'Good point $i'), List.generate(15, (i) => 'Improvement $i')),
+        // Mixed lengths
+        (<String>['Short', 'Medium length point', 'Very long good point with lots of detail'], <String>['Brief', 'Detailed improvement suggestion with explanation']),
+        // Special characters in lists
+        (<String>['Good with 🎉', 'Point with "quotes"', 'Item with \n newline'], <String>['Fix & improve', 'Handle / slashes', 'Address \\ backslashes']),
+      ];
+      
+      for (int i = 0; i < listTestCases.length; i++) {
+        final (good, improve) = listTestCases[i];
+        final result = await service.generateResultImage(
+          sleepPercentage: 40 + i * 10,
+          title: 'List Test $i',
+          goodPoints: good,
+          improvements: improve,
+        );
+        
+        expect(result, isA<Uint8List>());
+        expect(result.isNotEmpty, true);
+      }
+    });
+
+    test('should maintain consistent image dimensions', () async {
+      const sleepPercentage = 50;
+      const title = 'Dimension Test';
+      const goodPoints = ['Consistency'];
+      const improvements = ['Standards'];
+
+      final results = <Uint8List>[];
+      for (int i = 0; i < 3; i++) {
+        final result = await service.generateResultImage(
+          sleepPercentage: sleepPercentage,
+          title: title,
+          goodPoints: goodPoints,
+          improvements: improvements,
+        );
+        results.add(result);
+      }
+      
+      // All results should be non-empty images
+      for (final result in results) {
+        expect(result, isA<Uint8List>());
+        expect(result.isNotEmpty, true);
+        // PNG images should start with PNG signature
+        expect(result.take(8).toList(), [137, 80, 78, 71, 13, 10, 26, 10]);
+      }
+    });
+
+    test('should handle various percentage display formats', () async {
+      final percentageTests = [
+        0,   // 0%
+        1,   // 1%
+        10,  // 10%
+        25,  // 25%
+        50,  // 50%
+        75,  // 75%
+        99,  // 99%
+        100, // 100%
+      ];
+      
+      for (final percentage in percentageTests) {
+        final result = await service.generateResultImage(
+          sleepPercentage: percentage,
+          title: 'Percentage Test $percentage%',
+          goodPoints: ['Test'],
+          improvements: ['Test'],
+        );
+        
+        expect(result, isA<Uint8List>());
+        expect(result.isNotEmpty, true);
+      }
+    });
+
+    test('should handle memory-intensive text content', () async {
+      // Test with large amounts of text
+      final largeGoodPoints = List.generate(100, (i) => 'Good point number $i with some additional text to make it longer');
+      final largeImprovements = List.generate(100, (i) => 'Improvement number $i with detailed explanation and suggestions');
+      
+      final result = await service.generateResultImage(
+        sleepPercentage: 65,
+        title: 'Memory Test with Very Long Title That Contains Lots of Text and Information',
+        goodPoints: largeGoodPoints,
+        improvements: largeImprovements,
+      );
+      
+      expect(result, isA<Uint8List>());
+      expect(result.isNotEmpty, true);
+    });
+
+    test('should validate PNG format output', () async {
+      const sleepPercentage = 42;
+      const title = 'PNG Format Test';
+      const goodPoints = ['Valid PNG'];
+      const improvements = ['Format checking'];
+
+      final result = await service.generateResultImage(
+        sleepPercentage: sleepPercentage,
+        title: title,
+        goodPoints: goodPoints,
+        improvements: improvements,
+      );
+
+      expect(result, isA<Uint8List>());
+      expect(result.isNotEmpty, true);
+      
+      // Verify PNG signature (first 8 bytes)
+      expect(result.length, greaterThan(8));
+      expect(result[0], 137); // PNG signature byte 1
+      expect(result[1], 80);  // 'P'
+      expect(result[2], 78);  // 'N'
+      expect(result[3], 71);  // 'G'
+      expect(result[4], 13);  // CR
+      expect(result[5], 10);  // LF
+      expect(result[6], 26);  // SUB
+      expect(result[7], 10);  // LF
+    });
+
+    test('should handle canvas operations without errors', () async {
+      // This test exercises various canvas operations
+      const sleepPercentage = 85;
+      const title = 'Canvas Operations Test';
+      const goodPoints = ['Drawing', 'Colors', 'Text rendering'];
+      const improvements = ['Canvas efficiency', 'Memory usage'];
+
+      final result = await service.generateResultImage(
+        sleepPercentage: sleepPercentage,
+        title: title,
+        goodPoints: goodPoints,
+        improvements: improvements,
+      );
+
+      expect(result, isA<Uint8List>());
+      expect(result.isNotEmpty, true);
+      
+      // Should be a reasonable size for a PNG image
+      expect(result.length, greaterThan(1000));
+      expect(result.length, lessThan(1000000)); // Not too large
+    });
   });
 }

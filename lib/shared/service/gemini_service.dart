@@ -5,13 +5,21 @@ import 'package:logger/logger.dart';
 import 'package:presen_neta/shared/config/env_config.dart';
 import 'package:presen_neta/shared/models/review_result.dart';
 import 'package:presen_neta/shared/service/interfaces/gemini_service_interface.dart';
+import 'package:presen_neta/shared/service/interfaces/generative_model_interface.dart';
 
 /// Google Generative AIを使用してプレゼンテーションを分析するサービス
 class GeminiService implements GeminiServiceInterface {
   /// GeminiServiceのコンストラクタ
   ///
   /// APIキーは環境変数から取得するか、直接渡すことができます
-  GeminiService({String? apiKey}) {
+  /// テスト時は[mockModel]を指定してAPIコールをモック化できます
+  GeminiService({String? apiKey, GenerativeModelInterface? mockModel}) {
+    if (mockModel != null) {
+      _model = mockModel;
+      _logger.i('GeminiService初期化完了（モック）');
+      return;
+    }
+
     // 環境変数からAPIキーを取得
     final key = apiKey ?? EnvConfig.geminiApiKey;
 
@@ -23,11 +31,12 @@ class GeminiService implements GeminiServiceInterface {
     }
 
     _logger.i('GeminiService初期化完了');
-    _model = GenerativeModel(
+    final realModel = GenerativeModel(
       model: 'gemini-1.5-flash',
       apiKey: key,
       generationConfig: GenerationConfig(temperature: 0.4),
     );
+    _model = GenerativeModelWrapper(realModel);
   }
 
   /// 三輪開人さんの『共感プレゼン』に基づく評価用プロンプト
@@ -46,7 +55,7 @@ class GeminiService implements GeminiServiceInterface {
 JSON以外の説明は不要です。必ず有効なJSON形式で返答してください。
 ''';
 
-  late final GenerativeModel _model;
+  late final GenerativeModelInterface _model;
   final Logger _logger = Logger();
 
   /// 複数のスライド画像を分析して構造化された評価結果を取得する
@@ -86,7 +95,7 @@ JSON以外の説明は不要です。必ず有効なJSON形式で返答してく
       }
 
       // JSONを抽出して解析
-      final jsonResult = _extractJsonFromResponse(responseText);
+      final jsonResult = extractJsonFromResponse(responseText);
       if (jsonResult == null) {
         _logger.w('JSONの抽出に失敗しました');
         return null;
@@ -126,7 +135,7 @@ JSON以外の説明は不要です。必ず有効なJSON形式で返答してく
   ///
   /// [responseText] Geminiからのレスポンステキスト
   /// 抽出されたJSONオブジェクトを返す。抽出に失敗した場合はnullを返す
-  Map<String, dynamic>? _extractJsonFromResponse(String responseText) {
+  Map<String, dynamic>? extractJsonFromResponse(String responseText) {
     try {
       // レスポンステキストをクリーンアップ
       final cleanedText = responseText.trim();
