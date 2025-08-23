@@ -1,11 +1,11 @@
 import 'dart:typed_data';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:presen_neta/features/result/provider/result_provider.dart';
+import 'package:presen_neta/shared/models/review_result.dart';
 import 'package:presen_neta/shared/providers/service_providers.dart';
 import 'package:presen_neta/shared/service/interfaces/file_picker_service_interface.dart';
 import 'package:presen_neta/shared/service/interfaces/gemini_service_interface.dart';
 import 'package:presen_neta/shared/service/interfaces/presentation_analysis_service_interface.dart';
-import 'package:presen_neta/features/result/provider/result_provider.dart';
-import 'package:presen_neta/shared/models/review_result.dart';
 import '../service/mocks/mock_file_picker_service.dart';
 import '../service/mocks/mock_gemini_service.dart';
 import '../service/mocks/mock_presentation_analysis_service.dart';
@@ -44,7 +44,7 @@ final List<Override> testServiceOverrides = [
     (ref) => MockPresentationAnalysisService(),
   ),
   // 分析結果プロバイダーもリセット状態でオーバーライド
-  analysisNotifierProvider.overrideWith(() => TestAnalysisNotifier()),
+  analysisNotifierProvider.overrideWith(TestAnalysisNotifier.new),
 ];
 
 /// テスト用のAnalysisNotifier

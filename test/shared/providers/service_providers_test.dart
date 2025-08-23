@@ -135,7 +135,7 @@ void main() {
         );
         final filePickerService = container.read(filePickerServiceProvider);
 
-        // Mock services don't have dependency injection, just verify they are provided
+        // モックサービスは依存性注入を持たないため、提供されていることのみを検証する
         expect(
           presentationService,
           isA<PresentationAnalysisServiceInterface>(),
@@ -146,7 +146,7 @@ void main() {
       test(
         'should create actual PresentationAnalysisService when no override',
         () {
-          // Create container with only filePickerService override to test real service creation
+          // 実際のサービス生成をテストするため、filePickerServiceのみオーバーライドしたコンテナを作成
           final partialOverrideContainer = ProviderContainer(
             overrides: [
               filePickerServiceProvider.overrideWithValue(
@@ -288,7 +288,7 @@ void main() {
 
       test('should handle container recreation', () {
         // Create and dispose multiple containers
-        for (int i = 0; i < 3; i++) {
+        for (var i = 0; i < 3; i++) {
           final testContainer = ProviderContainer(
             overrides: [
               filePickerServiceProvider.overrideWithValue(
@@ -349,7 +349,7 @@ void main() {
       });
 
       test('should maintain state even after error in other providers', () {
-        // Create container where filePickerService works but geminiService fails
+        // filePickerServiceは正常に動作し、geminiServiceは失敗するコンテナを作成する
         final mixedContainer = ProviderContainer();
 
         try {

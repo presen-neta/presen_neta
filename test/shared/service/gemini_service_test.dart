@@ -15,9 +15,8 @@ import 'gemini_service_test.mocks.dart';
 @GenerateMocks([GenerativeModelInterface])
 /// Mock implementation of GenerateContentResponseInterface
 class MockGenerateContentResponse implements GenerateContentResponseInterface {
-  final String? _text;
-
   MockGenerateContentResponse({String? text}) : _text = text;
+  final String? _text;
 
   @override
   String? get text => _text;
@@ -37,10 +36,9 @@ class MockGenerateContentResponse implements GenerateContentResponseInterface {
 
 /// Mock implementation of CountTokensResponseInterface
 class MockCountTokensResponse implements CountTokensResponseInterface {
-  final int _totalTokens;
-
   MockCountTokensResponse({required int totalTokens})
     : _totalTokens = totalTokens;
+  final int _totalTokens;
 
   @override
   int get totalTokens => _totalTokens;
@@ -72,7 +70,7 @@ class TestGeminiService implements GeminiServiceInterface {
     // Simulate JSON parsing
     final response = mockResponse!;
     if (response == 'Invalid JSON response') {
-      throw FormatException('Invalid JSON');
+      throw const FormatException('Invalid JSON');
     }
 
     // Parse the mock response more realistically
@@ -86,7 +84,7 @@ class TestGeminiService implements GeminiServiceInterface {
           final jsonString = jsonMatch.group(0)!;
           jsonData = json.decode(jsonString) as Map<String, dynamic>;
         } else {
-          throw FormatException('No JSON found in response');
+          throw const FormatException('No JSON found in response');
         }
       } else {
         // Fallback for simple test cases
@@ -153,8 +151,8 @@ void main() {
         // Assert
         expect(result, isA<ReviewResult>());
         expect(result!.point, 85);
-        expect(result.good, contains("スライドの構成が分かりやすい"));
-        expect(result.improve, contains("より詳細な説明が必要"));
+        expect(result.good, contains('スライドの構成が分かりやすい'));
+        expect(result.improve, contains('より詳細な説明が必要'));
       });
 
       test('should handle invalid JSON response', () async {
@@ -193,8 +191,9 @@ void main() {
           Uint8List.fromList([1, 2, 3, 4]),
         ];
 
-        geminiService.shouldThrowError = true;
-        geminiService.errorMessage = 'API Error';
+        geminiService
+          ..shouldThrowError = true
+          ..errorMessage = 'API Error';
 
         // Act & Assert
         expect(
@@ -226,8 +225,8 @@ void main() {
 
         // Assert
         expect(result!.point, 75);
-        expect(result.good, contains("複数スライドの一貫性"));
-        expect(result.improve, contains("スライド間のつながりを改善"));
+        expect(result.good, contains('複数スライドの一貫性'));
+        expect(result.improve, contains('スライド間のつながりを改善'));
       });
 
       test('should use custom MIME type', () async {
@@ -253,8 +252,8 @@ void main() {
 
         // Assert
         expect(result!.point, 80);
-        expect(result.good, contains("テスト"));
-        expect(result.improve, contains("テスト"));
+        expect(result.good, contains('テスト'));
+        expect(result.improve, contains('テスト'));
       });
 
       test('should handle empty image list', () async {
@@ -307,8 +306,8 @@ void main() {
         // Assert
         expect(result, isA<ReviewResult>());
         expect(result!.point, 85);
-        expect(result.good, contains("Excellent structure"));
-        expect(result.improve, contains("Add more examples"));
+        expect(result.good, contains('Excellent structure'));
+        expect(result.improve, contains('Add more examples'));
         verify(mockModel.generateContent(any)).called(1);
       });
 
@@ -481,7 +480,7 @@ void main() {
 
         // Assert
         expect(result!.point, 80);
-        expect(result.good, ["Valid string", "Another string"]);
+        expect(result.good, ['Valid string', 'Another string']);
         verify(mockModel.generateContent(any)).called(1);
       });
 
@@ -507,7 +506,7 @@ void main() {
 
         // Assert
         expect(result!.point, 70);
-        expect(result.improve, ["Valid improvement", "Another improvement"]);
+        expect(result.improve, ['Valid improvement', 'Another improvement']);
         verify(mockModel.generateContent(any)).called(1);
       });
 
@@ -564,7 +563,7 @@ void main() {
 
         // Assert
         expect(result!.point, 75);
-        expect(result.good, contains("Multiple slides consistency"));
+        expect(result.good, contains('Multiple slides consistency'));
         verify(mockModel.generateContent(any)).called(1);
       });
 
@@ -591,7 +590,7 @@ void main() {
 
         // Assert
         expect(result!.point, 80);
-        expect(result.good, contains("JPEG format test"));
+        expect(result.good, contains('JPEG format test'));
         verify(mockModel.generateContent(any)).called(1);
       });
     });
@@ -661,7 +660,7 @@ void main() {
 
     group('extractJsonFromResponse comprehensive coverage', () {
       test('should extract JSON from code block', () {
-        final response = '''
+        const response = '''
 ```json
 {
   "point": 95,
@@ -679,7 +678,7 @@ void main() {
       });
 
       test('should extract JSON from plain text', () {
-        final response = '''
+        const response = '''
 Analysis result:
 {
   "point": 88,
@@ -697,7 +696,7 @@ End of analysis.
       });
 
       test('should handle malformed JSON gracefully', () {
-        final response = '''
+        const response = '''
 {
   "point": 75,
   "good": ["Malformed",
@@ -716,7 +715,7 @@ End of analysis.
       });
 
       test('should handle response with no JSON', () {
-        final response = 'This is just plain text without any JSON';
+        const response = 'This is just plain text without any JSON';
 
         final result = geminiService.extractJsonFromResponse(response);
 
@@ -724,11 +723,11 @@ End of analysis.
       });
 
       test('should handle JSON with special characters', () {
-        final response = '''
+        const response = r'''
 {
   "point": 85,
-  "good": ["Good with \\"quotes\\"", "Line\\nbreak", "Tab\\there"],
-  "improve": ["Fix / issues", "Handle \\\\ backslashes"]
+  "good": ["Good with \"quotes\"", "Line\nbreak", "Tab\there"],
+  "improve": ["Fix / issues", "Handle \\ backslashes"]
 }
 ''';
 
@@ -736,11 +735,11 @@ End of analysis.
 
         expect(result, isNotNull);
         expect(result!['point'], 85);
-        expect(result['good'][0], contains('"quotes"'));
+        expect((result['good'] as List)[0], contains('"quotes"'));
       });
 
       test('should handle nested JSON structures', () {
-        final response = '''
+        const response = '''
 {
   "point": 92,
   "good": [
@@ -764,7 +763,7 @@ End of analysis.
       });
 
       test('should handle multiple JSON blocks and take first', () {
-        final response = '''
+        const response = '''
 First JSON:
 ```json
 {
@@ -865,8 +864,9 @@ Second JSON:
     );
 
     test('should handle valid JSON parsing from response', () async {
-      final service = TestGeminiService();
-      service.mockResponse = '''
+      final service =
+          TestGeminiService()
+            ..mockResponse = '''
 {
   "point": 85,
   "good": ["Test good point"],
@@ -878,13 +878,14 @@ Second JSON:
       final result = await service.analyzeMultipleSlideImages([imageData]);
 
       expect(result?.point, 85);
-      expect(result?.good, contains("Test good point"));
-      expect(result?.improve, contains("Test improvement"));
+      expect(result?.good, contains('Test good point'));
+      expect(result?.improve, contains('Test improvement'));
     });
 
     test('should handle invalid point values', () async {
-      final service = TestGeminiService();
-      service.mockResponse = '''
+      final service =
+          TestGeminiService()
+            ..mockResponse = '''
 {
   "point": -10,
   "good": ["Test"],
@@ -899,8 +900,9 @@ Second JSON:
     });
 
     test('should handle point values over 100', () async {
-      final service = TestGeminiService();
-      service.mockResponse = '''
+      final service =
+          TestGeminiService()
+            ..mockResponse = '''
 {
   "point": 150,
   "good": ["Test"],
@@ -915,8 +917,9 @@ Second JSON:
     });
 
     test('should handle missing point field', () async {
-      final service = TestGeminiService();
-      service.mockResponse = '''
+      final service =
+          TestGeminiService()
+            ..mockResponse = '''
 {
   "good": ["Test"],
   "improve": ["Test"]
@@ -930,8 +933,9 @@ Second JSON:
     });
 
     test('should handle non-string values in good array', () async {
-      final service = TestGeminiService();
-      service.mockResponse = '''
+      final service =
+          TestGeminiService()
+            ..mockResponse = '''
 {
   "point": 80,
   "good": ["Valid string", 123, null, "Another string"],
@@ -943,12 +947,13 @@ Second JSON:
       final result = await service.analyzeMultipleSlideImages([imageData]);
 
       expect(result?.point, 80);
-      expect(result?.good, ["Valid string", "Another string"]);
+      expect(result?.good, ['Valid string', 'Another string']);
     });
 
     test('should handle non-string values in improve array', () async {
-      final service = TestGeminiService();
-      service.mockResponse = '''
+      final service =
+          TestGeminiService()
+            ..mockResponse = '''
 {
   "point": 70,
   "good": ["Test"],
@@ -960,12 +965,13 @@ Second JSON:
       final result = await service.analyzeMultipleSlideImages([imageData]);
 
       expect(result?.point, 70);
-      expect(result?.improve, ["Valid improvement", "Another improvement"]);
+      expect(result?.improve, ['Valid improvement', 'Another improvement']);
     });
 
     test('should handle null good and improve arrays', () async {
-      final service = TestGeminiService();
-      service.mockResponse = '''
+      final service =
+          TestGeminiService()
+            ..mockResponse = '''
 {
   "point": 60,
   "good": null,
@@ -982,8 +988,9 @@ Second JSON:
     });
 
     test('should handle JSON with markdown code blocks', () async {
-      final service = TestGeminiService();
-      service.mockResponse = '''
+      final service =
+          TestGeminiService()
+            ..mockResponse = '''
 ```json
 {
   "point": 88,
@@ -997,12 +1004,13 @@ Second JSON:
       final result = await service.analyzeMultipleSlideImages([imageData]);
 
       expect(result?.point, 88);
-      expect(result?.good, contains("Code block test"));
+      expect(result?.good, contains('Code block test'));
     });
 
     test('should handle response with extra text around JSON', () async {
-      final service = TestGeminiService();
-      service.mockResponse = '''
+      final service =
+          TestGeminiService()
+            ..mockResponse = '''
 Here's the analysis result:
 
 {
@@ -1018,13 +1026,14 @@ Additional explanation follows.
       final result = await service.analyzeMultipleSlideImages([imageData]);
 
       expect(result?.point, 92);
-      expect(result?.good, contains("Extra text test"));
+      expect(result?.good, contains('Extra text test'));
     });
 
     test('should handle response with no JSON pattern', () async {
-      final service = TestGeminiService();
-      service.mockResponse =
-          'This is just plain text without any JSON structure';
+      final service =
+          TestGeminiService()
+            ..mockResponse =
+                'This is just plain text without any JSON structure';
 
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
 
@@ -1035,8 +1044,9 @@ Additional explanation follows.
     });
 
     test('should handle malformed JSON structure', () async {
-      final service = TestGeminiService();
-      service.mockResponse = '''
+      final service =
+          TestGeminiService()
+            ..mockResponse = '''
 {
   "point": 75,
   "good": ["Malformed",
@@ -1144,7 +1154,7 @@ Additional explanation follows.
       final results = await Future.wait([
         service.analyzeMultipleSlideImages([
           imageData,
-        ], imageMimeType: 'image/png'),
+        ]),
         service.analyzeMultipleSlideImages([
           imageData,
         ], imageMimeType: 'image/jpeg'),
@@ -1215,7 +1225,7 @@ Additional explanation follows.
       final testContents = [
         'Simple text',
         'テキストの日本語',
-        '🚀 Emojis and symbols! @#\$%^&*()',
+        r'🚀 Emojis and symbols! @#$%^&*()',
         'Very long text ' * 1000,
         '   \n\t  ', // 空白文字
         'Mixed content: 日本語 English 123 🌟',
@@ -1240,12 +1250,12 @@ Additional explanation follows.
     );
 
     test(
-      'should test _extractJsonFromResponse indirectly through TestGeminiService',
+      'TestGeminiService を通じて _extractJsonFromResponse を間接的にテストする',
       () async {
-        final service = TestGeminiService();
-
-        // Test JSON with code block
-        service.mockResponse = '''
+        final service =
+            TestGeminiService()
+              // Test JSON with code block
+              ..mockResponse = '''
 ```json
 {
   "point": 95,
@@ -1259,7 +1269,7 @@ Additional explanation follows.
         final result = await service.analyzeMultipleSlideImages([imageData]);
 
         expect(result?.point, 95);
-        expect(result?.good, contains("JSON block extraction"));
+        expect(result?.good, contains('JSON block extraction'));
       },
     );
 
@@ -1274,14 +1284,14 @@ Additional explanation follows.
         // JSON with newlines
         '{\n  "point": 82,\n  "good": ["Newlines"],\n  "improve": ["Test"]\n}',
         // JSON with extra text before
-        'Analysis result: {"point": 83, "good": ["Prefix"], "improve": ["Test"]}',
+        'Analysis result: {"point": 83, "good": ["Test"], "improve": ["Test"]}',
         // JSON with extra text after
-        '{"point": 84, "good": ["Suffix"], "improve": ["Test"]} End of analysis.',
+        '{"point": 84, "good": ["Test"], "improve": ["Test"]} End of analysis.',
       ];
 
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
 
-      for (int i = 0; i < testCases.length; i++) {
+      for (var i = 0; i < testCases.length; i++) {
         service.mockResponse = testCases[i];
         final result = await service.analyzeMultipleSlideImages([imageData]);
         expect(result?.point, 80 + i);
@@ -1289,8 +1299,9 @@ Additional explanation follows.
     });
 
     test('should handle complex nested JSON structures', () async {
-      final service = TestGeminiService();
-      service.mockResponse = '''
+      final service =
+          TestGeminiService()
+            ..mockResponse = '''
 {
   "point": 87,
   "good": [
@@ -1311,22 +1322,23 @@ Additional explanation follows.
       expect(result?.point, 87);
       expect(result?.good.length, 3);
       expect(result?.improve.length, 2);
-      expect(result?.good.first, contains("detailed explanation"));
+      expect(result?.good.first, contains('detailed explanation'));
     });
 
     test('should handle JSON with special characters and escapes', () async {
-      final service = TestGeminiService();
-      service.mockResponse = '''
+      final service =
+          TestGeminiService()
+            ..mockResponse = r'''
 {
   "point": 89,
   "good": [
-    "Good point with \\"quotes\\"",
-    "Point with \\n newline",
-    "Point with \\t tab"
+    "Good point with \"quotes\"",
+    "Point with \n newline",
+    "Point with \t tab"
   ],
   "improve": [
     "Improve with / slash",
-    "Improve with \\\\ backslash"
+    "Improve with \\ backslash"
   ]
 }
 ''';
@@ -1374,7 +1386,7 @@ Additional explanation follows.
 
     test('should handle JSON parsing edge cases', () async {
       final service = TestGeminiService();
-      // Don't set shouldThrowError = true, let the natural ArgumentError for empty list be thrown
+      // shouldThrowError = true を設定せず、空リストの場合は自然に ArgumentError がスローされることを確認する
 
       // 空の画像リストの場合の例外処理
       expect(
@@ -1416,15 +1428,16 @@ Additional explanation follows.
 
       // 有効な形式のAPIキー（テスト用のモック応答は別のテストで確認）
       expect(
-        () => GeminiService(apiKey: 'AIzaSyA' + 'B' * 32),
+        () => GeminiService(apiKey: 'AIzaSyA${'B' * 32}'),
         returnsNormally,
       );
     });
 
     test('should handle network connectivity issues', () async {
-      final service = TestGeminiService();
-      service.shouldThrowError = true;
-      service.errorMessage = 'Network connectivity error';
+      final service =
+          TestGeminiService()
+            ..shouldThrowError = true
+            ..errorMessage = 'Network connectivity error';
 
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
 
@@ -1436,8 +1449,9 @@ Additional explanation follows.
     });
 
     test('should handle rate limiting scenarios', () async {
-      final service = TestGeminiService();
-      service.mockResponse = '''
+      final service =
+          TestGeminiService()
+            ..mockResponse = '''
 {
   "point": 80,
   "good": ["テスト"],
@@ -1449,7 +1463,7 @@ Additional explanation follows.
 
       // 連続してAPIを呼び出し（レート制限をテスト）
       final results = <ReviewResult?>[];
-      for (int i = 0; i < 10; i++) {
+      for (var i = 0; i < 10; i++) {
         final result = await service.analyzeMultipleSlideImages([imageData]);
         results.add(result);
       }
@@ -1461,8 +1475,9 @@ Additional explanation follows.
     });
 
     test('should handle memory pressure with large datasets', () async {
-      final service = TestGeminiService();
-      service.mockResponse = '''
+      final service =
+          TestGeminiService()
+            ..mockResponse = '''
 {
   "point": 75,
   "good": ["複数スライドの一貫性"],
@@ -1484,8 +1499,9 @@ Additional explanation follows.
     });
 
     test('should maintain consistent behavior across calls', () async {
-      final service = TestGeminiService();
-      service.mockResponse = '''
+      final service =
+          TestGeminiService()
+            ..mockResponse = '''
 {
   "point": 80,
   "good": ["テスト"],
@@ -1509,7 +1525,7 @@ Additional explanation follows.
     group('Direct JSON Extraction Tests', () {
       test('should extract JSON from code block', () {
         final service = GeminiService(apiKey: 'test_key_for_coverage');
-        final response = '''
+        const response = '''
 ```json
 {
   "point": 95,
@@ -1528,7 +1544,7 @@ Additional explanation follows.
 
       test('should extract JSON from plain text', () {
         final service = GeminiService(apiKey: 'test_key_for_coverage');
-        final response = '''
+        const response = '''
 Here is the analysis:
 {
   "point": 88,
@@ -1547,7 +1563,7 @@ End of analysis.
 
       test('should handle malformed JSON gracefully', () {
         final service = GeminiService(apiKey: 'test_key_for_coverage');
-        final response = '''
+        const response = '''
 {
   "point": 75,
   "good": ["Incomplete JSON",
@@ -1570,7 +1586,7 @@ End of analysis.
 
       test('should handle response with no JSON', () {
         final service = GeminiService(apiKey: 'test_key_for_coverage');
-        final response = 'This is just plain text without any JSON';
+        const response = 'This is just plain text without any JSON';
 
         final result = service.extractJsonFromResponse(response);
 
@@ -1579,11 +1595,11 @@ End of analysis.
 
       test('should handle JSON with special characters', () {
         final service = GeminiService(apiKey: 'test_key_for_coverage');
-        final response = '''
+        const response = r'''
 {
   "point": 85,
-  "good": ["Good with \\"quotes\\"", "Line\\nbreak", "Tab\\there"],
-  "improve": ["Fix / issues", "Handle \\\\ backslashes"]
+  "good": ["Good with \"quotes\"", "Line\nbreak", "Tab\there"],
+  "improve": ["Fix / issues", "Handle \\ backslashes"]
 }
 ''';
 
@@ -1591,12 +1607,12 @@ End of analysis.
 
         expect(result, isNotNull);
         expect(result!['point'], 85);
-        expect(result['good'][0], contains('"quotes"'));
+        expect((result['good'] as List)[0], contains('"quotes"'));
       });
 
       test('should handle nested JSON structures', () {
         final service = GeminiService(apiKey: 'test_key_for_coverage');
-        final response = '''
+        const response = '''
 {
   "point": 92,
   "good": [
@@ -1621,7 +1637,7 @@ End of analysis.
 
       test('should handle multiple JSON blocks and take first', () {
         final service = GeminiService(apiKey: 'test_key_for_coverage');
-        final response = '''
+        const response = '''
 First JSON:
 ```json
 {
