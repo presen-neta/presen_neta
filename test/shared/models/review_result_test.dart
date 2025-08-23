@@ -61,7 +61,7 @@ void main() {
         good: ['良い'],
         improve: ['改善'],
       );
-      
+
       const reviewResult2 = ReviewResult(
         point: 80,
         good: ['良い'],
@@ -84,7 +84,7 @@ void main() {
         good: ['良い'],
         improve: ['改善'],
       );
-      
+
       const reviewResult2 = ReviewResult(
         point: 80,
         good: ['良い'],
@@ -131,7 +131,7 @@ void main() {
       );
 
       final stringRepresentation = reviewResult.toString();
-      
+
       expect(stringRepresentation, contains('ReviewResult'));
       expect(stringRepresentation, contains('85'));
       expect(stringRepresentation, contains('良い点1'));

@@ -51,7 +51,7 @@ final List<Override> testServiceOverrides = [
 class TestAnalysisNotifier extends AnalysisNotifier {
   ReviewResult? _mockResult;
   bool _shouldThrowError = false;
-  
+
   @override
   Future<ReviewResult?> build() async {
     return null;
@@ -82,22 +82,27 @@ class TestAnalysisNotifier extends AnalysisNotifier {
     String imageMimeType = 'image/png',
   }) async {
     state = const AsyncValue<ReviewResult?>.loading();
-    
+
     // テスト用の遅延をシミュレート
-    await Future.delayed(const Duration(milliseconds: 10));
-    
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+
     if (_shouldThrowError) {
-      state = AsyncValue<ReviewResult?>.error(Exception('Test error'), StackTrace.current);
+      state = AsyncValue<ReviewResult?>.error(
+        Exception('Test error'),
+        StackTrace.current,
+      );
       return;
     }
-    
+
     // モック結果がない場合は、デフォルトの結果を返す
-    final result = _mockResult ?? const ReviewResult(
-      point: 75,
-      good: ['テスト用の良い点'],
-      improve: ['テスト用の改善点'],
-    );
-    
+    final result =
+        _mockResult ??
+        const ReviewResult(
+          point: 75,
+          good: ['テスト用の良い点'],
+          improve: ['テスト用の改善点'],
+        );
+
     state = AsyncValue<ReviewResult?>.data(result);
   }
 }

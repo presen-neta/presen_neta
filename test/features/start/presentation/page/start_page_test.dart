@@ -1,21 +1,17 @@
-import 'dart:async';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:presen_neta/app/app_router/app_router.dart';
-import 'package:presen_neta/shared/service/interfaces/presentation_analysis_service_interface.dart';
-import 'package:presen_neta/shared/providers/service_providers.dart';
-import 'package:presen_neta/features/start/presentation/page/start_page.dart';
 import 'package:presen_neta/features/result/provider/result_provider.dart';
-import 'package:presen_neta/shared/models/review_result.dart';
+import 'package:presen_neta/features/start/presentation/page/start_page.dart';
+import 'package:presen_neta/shared/providers/service_providers.dart';
+import 'package:presen_neta/shared/service/interfaces/presentation_analysis_service_interface.dart';
 import '../../../../shared/providers/test_service_providers.dart';
 
 /// テスト専用のPresentationAnalysisServiceモック（タイマーなし）
-class TestPresentationAnalysisService implements PresentationAnalysisServiceInterface {
+class TestPresentationAnalysisService
+    implements PresentationAnalysisServiceInterface {
   bool shouldSucceed = true;
   bool shouldThrowException = false;
   Duration? delay;
@@ -24,26 +20,26 @@ class TestPresentationAnalysisService implements PresentationAnalysisServiceInte
   Future<bool> analyzePdfFile(BuildContext context, WidgetRef ref) async {
     // 遅延を設定している場合は待機
     if (delay != null) {
-      await Future.delayed(delay!);
+      await Future<void>.delayed(delay!);
     }
-    
+
     // 例外を投げる設定の場合
     if (shouldThrowException) {
       throw Exception('Test exception');
     }
-    
+
     if (shouldSucceed) {
       // 成功時はAnalysisNotifierにテスト画像を送って分析を実行
       final testImages = [
         Uint8List.fromList([1, 2, 3, 4]), // テスト画像1
         Uint8List.fromList([5, 6, 7, 8]), // テスト画像2
       ];
-      
+
       // Riverpodを使用して分析を実行
       await ref
           .read(analysisNotifierProvider.notifier)
           .analyzeMultipleSlideImages(testImages);
-      
+
       return true;
     } else {
       // 失敗時はfalseを返す
@@ -54,7 +50,9 @@ class TestPresentationAnalysisService implements PresentationAnalysisServiceInte
   @override
   Future<List<Uint8List>> convertPdfToPngImages(Uint8List pdfData) async {
     // テスト用のダミー画像データを返す
-    return [Uint8List.fromList([1, 2, 3, 4])];
+    return [
+      Uint8List.fromList([1, 2, 3, 4]),
+    ];
   }
 }
 
@@ -77,7 +75,7 @@ void main() {
         // その他のエラーは通常通り処理
         FlutterError.dumpErrorToConsole(details);
       };
-      
+
       mockService = TestPresentationAnalysisService();
     });
 
@@ -196,7 +194,7 @@ void main() {
 
       // エラーハンドリングが動作することを確認
       await tester.pumpAndSettle();
-      
+
       // ページがまだ表示されていることを確認（遷移していない）
       expect(find.text('PDFファイルを選択'), findsOneWidget);
     });
@@ -215,7 +213,7 @@ void main() {
       expect(find.text('目的ははっきりしている？'), findsOneWidget);
       expect(find.text('文字ばっかりのスライド？'), findsOneWidget);
       expect(find.text('視聴者目線になっている？'), findsOneWidget);
-      
+
       // アイコンが表示されることを確認
       expect(find.byIcon(Icons.check_circle_outline), findsOneWidget);
       expect(find.byIcon(Icons.text_snippet_outlined), findsOneWidget);
@@ -248,17 +246,18 @@ void main() {
 
       // ElevatedButtonが正しく表示されることを確認
       expect(find.byType(ElevatedButton), findsOneWidget);
-      
+
       // SafeAreaが使用されていることを確認
       expect(find.byType(SafeArea), findsOneWidget);
-      
+
       // SingleChildScrollViewが使用されていることを確認
       expect(find.byType(SingleChildScrollView), findsOneWidget);
     });
 
     testWidgets('マウント状態が正しく処理される', (WidgetTester tester) async {
-      mockService.delay = const Duration(milliseconds: 50);
-      mockService.shouldSucceed = true;
+      mockService
+        ..delay = const Duration(milliseconds: 50)
+        ..shouldSucceed = true;
 
       await tester.pumpWidget(
         ProviderScope(
@@ -310,8 +309,9 @@ void main() {
     });
 
     testWidgets('コンテキストがアンマウントされた状態での処理', (WidgetTester tester) async {
-      mockService.shouldSucceed = false;
-      mockService.delay = const Duration(milliseconds: 100);
+      mockService
+        ..shouldSucceed = false
+        ..delay = const Duration(milliseconds: 100);
 
       await tester.pumpWidget(
         ProviderScope(
@@ -332,7 +332,7 @@ void main() {
 
       // ウィジェットを削除してコンテキストをアンマウント状態にする
       await tester.pumpWidget(const SizedBox());
-      
+
       // 分析処理が完了するまで待機
       await tester.pumpAndSettle();
     });
@@ -354,8 +354,8 @@ void main() {
     });
 
     testWidgets('サービスが注入されている場合は注入されたサービスを使用', (WidgetTester tester) async {
-      final injectedService = TestPresentationAnalysisService();
-      injectedService.shouldSucceed = true;
+      final injectedService =
+          TestPresentationAnalysisService()..shouldSucceed = true;
 
       await tester.pumpWidget(
         ProviderScope(
@@ -376,8 +376,8 @@ void main() {
     });
 
     testWidgets('StartPageコンストラクタのサービス注入確認', (WidgetTester tester) async {
-      final injectedService = TestPresentationAnalysisService();
-      injectedService.shouldSucceed = true;
+      final injectedService =
+          TestPresentationAnalysisService()..shouldSucceed = true;
 
       await tester.pumpWidget(
         ProviderScope(
@@ -396,8 +396,9 @@ void main() {
     });
 
     testWidgets('mountedチェックが正常に機能する', (WidgetTester tester) async {
-      mockService.shouldSucceed = false;
-      mockService.delay = const Duration(milliseconds: 50);
+      mockService
+        ..shouldSucceed = false
+        ..delay = const Duration(milliseconds: 50);
 
       await tester.pumpWidget(
         ProviderScope(
@@ -405,23 +406,23 @@ void main() {
             ...testServiceOverrides,
             presentationAnalysisServiceProvider.overrideWithValue(mockService),
           ],
-          child: MaterialApp(
-            home: const StartPage(),
+          child: const MaterialApp(
+            home: StartPage(),
           ),
         ),
       );
 
       // PDFファイル選択ボタンが存在することを確認
       expect(find.text('PDFファイルを選択'), findsOneWidget);
-      
+
       // PDFファイル選択ボタンをタップ
       await tester.tap(find.text('PDFファイルを選択'));
       await tester.pump();
-      
+
       // 短時間待機してから分析処理が完了するまで待機（mountedチェックが機能することを確認）
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pumpAndSettle();
-      
+
       // エラーが発生せず正常に完了することを確認
       expect(find.text('PDFファイルを選択'), findsOneWidget);
     });
@@ -430,8 +431,8 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: testServiceOverrides,
-          child: MaterialApp(
-            home: const StartPage(),
+          child: const MaterialApp(
+            home: StartPage(),
           ),
         ),
       );
@@ -446,8 +447,8 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: testServiceOverrides,
-          child: MaterialApp(
-            home: const StartPage(),
+          child: const MaterialApp(
+            home: StartPage(),
           ),
         ),
       );
@@ -460,18 +461,21 @@ void main() {
     });
 
     testWidgets('ローディング状態での表示確認', (WidgetTester tester) async {
-      final loadingService = TestPresentationAnalysisService();
-      loadingService.delay = const Duration(milliseconds: 200);
-      loadingService.shouldSucceed = true;
+      final loadingService =
+          TestPresentationAnalysisService()
+            ..delay = const Duration(milliseconds: 200)
+            ..shouldSucceed = true;
 
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             ...testServiceOverrides,
-            presentationAnalysisServiceProvider.overrideWithValue(loadingService),
+            presentationAnalysisServiceProvider.overrideWithValue(
+              loadingService,
+            ),
           ],
-          child: MaterialApp(
-            home: const StartPage(),
+          child: const MaterialApp(
+            home: StartPage(),
           ),
         ),
       );
@@ -483,7 +487,7 @@ void main() {
 
       // ロード状態を確認
       await tester.pump(const Duration(milliseconds: 50));
-      
+
       // 処理完了まで待機
       await tester.pumpAndSettle();
     });
@@ -492,8 +496,8 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: testServiceOverrides,
-          child: MaterialApp(
-            home: const StartPage(),
+          child: const MaterialApp(
+            home: StartPage(),
           ),
         ),
       );
@@ -506,8 +510,8 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: testServiceOverrides,
-          child: MaterialApp(
-            home: const StartPage(),
+          child: const MaterialApp(
+            home: StartPage(),
           ),
         ),
       );
@@ -520,8 +524,8 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: testServiceOverrides,
-          child: MaterialApp(
-            home: const StartPage(),
+          child: const MaterialApp(
+            home: StartPage(),
           ),
         ),
       );
@@ -536,9 +540,11 @@ void main() {
       expect(find.text('視聴者目線になっている？'), findsOneWidget);
     });
 
-    testWidgets('StartPage service injectionの動作確認', (WidgetTester tester) async {
-      final testService = TestPresentationAnalysisService();
-      testService.shouldSucceed = true;
+    testWidgets('StartPage service injectionの動作確認', (
+      WidgetTester tester,
+    ) async {
+      final testService =
+          TestPresentationAnalysisService()..shouldSucceed = true;
 
       await tester.pumpWidget(
         ProviderScope(
@@ -553,12 +559,14 @@ void main() {
 
       // 注入されたサービスでページが正常に動作することを確認
       expect(find.text('PDFファイルを選択'), findsOneWidget);
-      
+
       await tester.tap(find.text('PDFファイルを選択'));
       await tester.pumpAndSettle();
     });
 
-    testWidgets('分析中にanalysisNotifierProviderの状態変化をテスト', (WidgetTester tester) async {
+    testWidgets('分析中にanalysisNotifierProviderの状態変化をテスト', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: testServiceOverrides,
@@ -574,9 +582,10 @@ void main() {
     });
 
     testWidgets('ローディングダイアログの表示・非表示テスト', (WidgetTester tester) async {
-      final delayService = TestPresentationAnalysisService();
-      delayService.shouldSucceed = true;
-      delayService.delay = const Duration(milliseconds: 500);
+      final delayService =
+          TestPresentationAnalysisService()
+            ..shouldSucceed = true
+            ..delay = const Duration(milliseconds: 500);
 
       await tester.pumpWidget(
         ProviderScope(
@@ -584,8 +593,8 @@ void main() {
             ...testServiceOverrides,
             presentationAnalysisServiceProvider.overrideWithValue(delayService),
           ],
-          child: MaterialApp(
-            home: const StartPage(),
+          child: const MaterialApp(
+            home: StartPage(),
           ),
         ),
       );
@@ -596,15 +605,16 @@ void main() {
 
       // 短時間待機してローディング状態を確認
       await tester.pump(const Duration(milliseconds: 100));
-      
+
       // 分析処理完了まで待機
       await tester.pumpAndSettle();
     });
 
     testWidgets('エラー状態でのローディングダイアログのクローズ', (WidgetTester tester) async {
-      final errorService = TestPresentationAnalysisService();
-      errorService.shouldThrowException = true;
-      errorService.delay = const Duration(milliseconds: 200);
+      final errorService =
+          TestPresentationAnalysisService()
+            ..shouldThrowException = true
+            ..delay = const Duration(milliseconds: 200);
 
       await tester.pumpWidget(
         ProviderScope(
@@ -612,8 +622,8 @@ void main() {
             ...testServiceOverrides,
             presentationAnalysisServiceProvider.overrideWithValue(errorService),
           ],
-          child: MaterialApp(
-            home: const StartPage(),
+          child: const MaterialApp(
+            home: StartPage(),
           ),
         ),
       );
@@ -633,8 +643,8 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: testServiceOverrides,
-          child: MaterialApp(
-            home: const StartPage(),
+          child: const MaterialApp(
+            home: StartPage(),
           ),
         ),
       );
@@ -645,14 +655,16 @@ void main() {
     });
 
     testWidgets('分析成功時のcontext.go呼び出し', (WidgetTester tester) async {
-      final successService = TestPresentationAnalysisService();
-      successService.shouldSucceed = true;
+      final successService =
+          TestPresentationAnalysisService()..shouldSucceed = true;
 
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             ...testServiceOverrides,
-            presentationAnalysisServiceProvider.overrideWithValue(successService),
+            presentationAnalysisServiceProvider.overrideWithValue(
+              successService,
+            ),
           ],
           child: MaterialApp.router(
             routerConfig: appRouter,
@@ -668,8 +680,8 @@ void main() {
     });
 
     testWidgets('分析失敗時の状態リセット', (WidgetTester tester) async {
-      final failService = TestPresentationAnalysisService();
-      failService.shouldSucceed = false;
+      final failService =
+          TestPresentationAnalysisService()..shouldSucceed = false;
 
       await tester.pumpWidget(
         ProviderScope(
@@ -677,8 +689,8 @@ void main() {
             ...testServiceOverrides,
             presentationAnalysisServiceProvider.overrideWithValue(failService),
           ],
-          child: MaterialApp(
-            home: const StartPage(),
+          child: const MaterialApp(
+            home: StartPage(),
           ),
         ),
       );
@@ -692,9 +704,10 @@ void main() {
     });
 
     testWidgets('mountedチェックの各分岐をテスト', (WidgetTester tester) async {
-      final delayService = TestPresentationAnalysisService();
-      delayService.shouldSucceed = false;
-      delayService.delay = const Duration(milliseconds: 200);
+      final delayService =
+          TestPresentationAnalysisService()
+            ..shouldSucceed = false
+            ..delay = const Duration(milliseconds: 200);
 
       await tester.pumpWidget(
         ProviderScope(
@@ -702,8 +715,8 @@ void main() {
             ...testServiceOverrides,
             presentationAnalysisServiceProvider.overrideWithValue(delayService),
           ],
-          child: MaterialApp(
-            home: const StartPage(),
+          child: const MaterialApp(
+            home: StartPage(),
           ),
         ),
       );
@@ -714,7 +727,7 @@ void main() {
 
       // ウィジェットをアンマウントする前に少し待機
       await tester.pump(const Duration(milliseconds: 100));
-      
+
       // 分析処理完了まで待機
       await tester.pumpAndSettle();
 
@@ -723,9 +736,10 @@ void main() {
     });
 
     testWidgets('_isAnalysisStartedフラグの動作確認', (WidgetTester tester) async {
-      final testService = TestPresentationAnalysisService();
-      testService.shouldSucceed = true;
-      testService.delay = const Duration(milliseconds: 100);
+      final testService =
+          TestPresentationAnalysisService()
+            ..shouldSucceed = true
+            ..delay = const Duration(milliseconds: 100);
 
       await tester.pumpWidget(
         ProviderScope(
@@ -733,8 +747,8 @@ void main() {
             ...testServiceOverrides,
             presentationAnalysisServiceProvider.overrideWithValue(testService),
           ],
-          child: MaterialApp(
-            home: const StartPage(),
+          child: const MaterialApp(
+            home: StartPage(),
           ),
         ),
       );
@@ -750,12 +764,14 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('analysisNotifierProviderの各状態での分岐テスト', (WidgetTester tester) async {
+    testWidgets('analysisNotifierProviderの各状態での分岐テスト', (
+      WidgetTester tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: testServiceOverrides,
-          child: MaterialApp(
-            home: const StartPage(),
+          child: const MaterialApp(
+            home: StartPage(),
           ),
         ),
       );
@@ -765,19 +781,24 @@ void main() {
       expect(find.text('100人中何人が寝るプレゼンスライド？'), findsOneWidget);
     });
 
-    testWidgets('WidgetsBinding.addPostFrameCallbackの各分岐テスト', (WidgetTester tester) async {
-      final successService = TestPresentationAnalysisService();
-      successService.shouldSucceed = true;
-      successService.delay = const Duration(milliseconds: 100);
+    testWidgets('WidgetsBinding.addPostFrameCallbackの各分岐テスト', (
+      WidgetTester tester,
+    ) async {
+      final successService =
+          TestPresentationAnalysisService()
+            ..shouldSucceed = true
+            ..delay = const Duration(milliseconds: 100);
 
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
             ...testServiceOverrides,
-            presentationAnalysisServiceProvider.overrideWithValue(successService),
+            presentationAnalysisServiceProvider.overrideWithValue(
+              successService,
+            ),
           ],
-          child: MaterialApp(
-            home: const StartPage(),
+          child: const MaterialApp(
+            home: StartPage(),
           ),
         ),
       );
@@ -794,8 +815,8 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: testServiceOverrides,
-          child: MaterialApp(
-            home: const StartPage(),
+          child: const MaterialApp(
+            home: StartPage(),
           ),
         ),
       );
@@ -810,8 +831,8 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: testServiceOverrides,
-          child: MaterialApp(
-            home: const StartPage(), // serviceパラメータなし
+          child: const MaterialApp(
+            home: StartPage(), // serviceパラメータなし
           ),
         ),
       );
@@ -820,7 +841,7 @@ void main() {
 
       // プロバイダーからサービスが取得されて正常に動作することを確認
       expect(find.text('PDFファイルを選択'), findsOneWidget);
-      
+
       // PDFファイル選択ボタンをタップ
       await tester.tap(find.text('PDFファイルを選択'));
       await tester.pumpAndSettle();

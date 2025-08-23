@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -29,12 +28,10 @@ class TestResultPageWrapper extends StatelessWidget {
   }
 }
 
-
 /// テスト用のAnalysisNotifier。
 class TestAnalysisNotifier extends AnalysisNotifier {
-  final ReviewResult? _initialResult;
-
   TestAnalysisNotifier(this._initialResult);
+  final ReviewResult? _initialResult;
 
   @override
   Future<ReviewResult?> build() async {
@@ -229,14 +226,14 @@ void main() {
   final loadingOverrides = [
     ...testServiceOverrides,
     analysisNotifierProvider.overrideWith(
-      () => TestLoadingAnalysisNotifier(),
+      TestLoadingAnalysisNotifier.new,
     ),
   ];
 
   final errorOverrides = [
     ...testServiceOverrides,
     analysisNotifierProvider.overrideWith(
-      () => TestErrorAnalysisNotifier(),
+      TestErrorAnalysisNotifier.new,
     ),
   ];
 
@@ -371,7 +368,7 @@ void main() {
 
       testWidgets('低得点（60-74点）で「がんばれ」が表示される', (WidgetTester tester) async {
         // 60点のテストデータを作成
-        final sixtyScoreResult = const ReviewResult(
+        const sixtyScoreResult = ReviewResult(
           point: 60,
           good: ['良い点'],
           improve: ['改善点'],
@@ -407,8 +404,10 @@ void main() {
         expect(find.text('55人が寝た!'), findsOneWidget);
       });
 
-      testWidgets('境界値テスト - 90点ちょうどで「いいんじゃない？」が表示される', (WidgetTester tester) async {
-        final ninetyScoreResult = const ReviewResult(
+      testWidgets('境界値テスト - 90点ちょうどで「いいんじゃない？」が表示される', (
+        WidgetTester tester,
+      ) async {
+        const ninetyScoreResult = ReviewResult(
           point: 90,
           good: ['良い点'],
           improve: ['改善点'],
@@ -432,7 +431,9 @@ void main() {
         expect(find.text('10人が寝た!'), findsOneWidget);
       });
 
-      testWidgets('境界値テスト - 75点ちょうどで「まあまあだけど」が表示される', (WidgetTester tester) async {
+      testWidgets('境界値テスト - 75点ちょうどで「まあまあだけど」が表示される', (
+        WidgetTester tester,
+      ) async {
         await tester.pumpWidget(
           ProviderScope(
             overrides: mediumScoreOverrides,
@@ -810,7 +811,6 @@ void main() {
       });
     });
 
-
     group('特殊条件テスト', () {
       testWidgets('null結果からのナビゲーション処理', (WidgetTester tester) async {
         await tester.pumpWidget(
@@ -823,7 +823,7 @@ void main() {
 
         expect(find.text('PDFをアップロードしてください'), findsOneWidget);
         expect(find.text('StartPageに戻ります...'), findsOneWidget);
-        
+
         // PostFrameCallbackの実行を待つ
         await tester.pumpAndSettle();
         expect(router.state.uri.toString(), '/');

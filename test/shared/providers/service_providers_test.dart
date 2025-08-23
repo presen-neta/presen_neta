@@ -2,11 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:presen_neta/shared/providers/service_providers.dart';
 import 'package:presen_neta/shared/service/file_picker_service.dart';
-import 'package:presen_neta/shared/service/gemini_service.dart';
-import 'package:presen_neta/shared/service/presentation_analysis_service.dart';
 import 'package:presen_neta/shared/service/interfaces/file_picker_service_interface.dart';
 import 'package:presen_neta/shared/service/interfaces/gemini_service_interface.dart';
 import 'package:presen_neta/shared/service/interfaces/presentation_analysis_service_interface.dart';
+import 'package:presen_neta/shared/service/presentation_analysis_service.dart';
 import '../service/mocks/mock_file_picker_service.dart';
 import '../service/mocks/mock_gemini_service.dart';
 import '../service/mocks/mock_presentation_analysis_service.dart';
@@ -22,12 +21,14 @@ void main() {
       mockFilePickerService = MockFilePickerService();
       mockGeminiService = MockGeminiService();
       mockPresentationAnalysisService = MockPresentationAnalysisService();
-      
+
       container = ProviderContainer(
         overrides: [
           filePickerServiceProvider.overrideWithValue(mockFilePickerService),
           geminiServiceProvider.overrideWithValue(mockGeminiService),
-          presentationAnalysisServiceProvider.overrideWithValue(mockPresentationAnalysisService),
+          presentationAnalysisServiceProvider.overrideWithValue(
+            mockPresentationAnalysisService,
+          ),
         ],
       );
     });
@@ -39,7 +40,7 @@ void main() {
     group('filePickerServiceProvider', () {
       test('should provide FilePickerService instance', () {
         final service = container.read(filePickerServiceProvider);
-        
+
         expect(service, isA<FilePickerServiceInterface>());
         expect(service, same(mockFilePickerService));
       });
@@ -47,14 +48,14 @@ void main() {
       test('should return same instance on multiple reads', () {
         final service1 = container.read(filePickerServiceProvider);
         final service2 = container.read(filePickerServiceProvider);
-        
+
         expect(service1, same(service2));
         expect(service1, same(mockFilePickerService));
       });
 
       test('should create actual FilePickerService when no override', () {
         final noOverrideContainer = ProviderContainer();
-        
+
         try {
           final service = noOverrideContainer.read(filePickerServiceProvider);
           expect(service, isA<FilePickerServiceInterface>());
@@ -67,7 +68,7 @@ void main() {
       test('should maintain provider state correctly', () {
         final service1 = container.read(filePickerServiceProvider);
         final service2 = container.read(filePickerServiceProvider);
-        
+
         expect(identical(service1, service2), isTrue);
       });
     });
@@ -75,7 +76,7 @@ void main() {
     group('geminiServiceProvider', () {
       test('should provide GeminiService instance', () {
         final service = container.read(geminiServiceProvider);
-        
+
         expect(service, isA<GeminiServiceInterface>());
         expect(service, same(mockGeminiService));
       });
@@ -83,7 +84,7 @@ void main() {
       test('should return same instance on multiple reads', () {
         final service1 = container.read(geminiServiceProvider);
         final service2 = container.read(geminiServiceProvider);
-        
+
         expect(service1, same(service2));
         expect(service1, same(mockGeminiService));
       });
@@ -91,7 +92,7 @@ void main() {
       test('should handle provider creation without override', () {
         // Create container without overrides to test actual provider creation
         final noOverrideContainer = ProviderContainer();
-        
+
         try {
           // This will attempt to create the actual GeminiService
           // It should fail because no valid API key is set in test environment
@@ -107,7 +108,7 @@ void main() {
       test('should maintain provider state correctly', () {
         final service1 = container.read(geminiServiceProvider);
         final service2 = container.read(geminiServiceProvider);
-        
+
         // Should maintain same instance
         expect(identical(service1, service2), isTrue);
       });
@@ -116,7 +117,7 @@ void main() {
     group('presentationAnalysisServiceProvider', () {
       test('should provide PresentationAnalysisService instance', () {
         final service = container.read(presentationAnalysisServiceProvider);
-        
+
         expect(service, isA<PresentationAnalysisServiceInterface>());
         expect(service, same(mockPresentationAnalysisService));
       });
@@ -124,40 +125,52 @@ void main() {
       test('should return same instance on multiple reads', () {
         final service1 = container.read(presentationAnalysisServiceProvider);
         final service2 = container.read(presentationAnalysisServiceProvider);
-        
+
         expect(service1, same(service2));
       });
 
       test('should inject FilePickerService dependency', () {
-        final presentationService = container.read(presentationAnalysisServiceProvider);
+        final presentationService = container.read(
+          presentationAnalysisServiceProvider,
+        );
         final filePickerService = container.read(filePickerServiceProvider);
-        
+
         // Mock services don't have dependency injection, just verify they are provided
-        expect(presentationService, isA<PresentationAnalysisServiceInterface>());
+        expect(
+          presentationService,
+          isA<PresentationAnalysisServiceInterface>(),
+        );
         expect(filePickerService, isA<FilePickerServiceInterface>());
       });
 
-      test('should create actual PresentationAnalysisService when no override', () {
-        // Create container with only filePickerService override to test real service creation
-        final partialOverrideContainer = ProviderContainer(
-          overrides: [
-            filePickerServiceProvider.overrideWithValue(mockFilePickerService),
-          ],
-        );
-        
-        try {
-          final service = partialOverrideContainer.read(presentationAnalysisServiceProvider);
-          expect(service, isA<PresentationAnalysisServiceInterface>());
-          expect(service, isA<PresentationAnalysisService>());
-        } finally {
-          partialOverrideContainer.dispose();
-        }
-      });
+      test(
+        'should create actual PresentationAnalysisService when no override',
+        () {
+          // Create container with only filePickerService override to test real service creation
+          final partialOverrideContainer = ProviderContainer(
+            overrides: [
+              filePickerServiceProvider.overrideWithValue(
+                mockFilePickerService,
+              ),
+            ],
+          );
+
+          try {
+            final service = partialOverrideContainer.read(
+              presentationAnalysisServiceProvider,
+            );
+            expect(service, isA<PresentationAnalysisServiceInterface>());
+            expect(service, isA<PresentationAnalysisService>());
+          } finally {
+            partialOverrideContainer.dispose();
+          }
+        },
+      );
 
       test('should maintain dependency chain correctly', () {
         final service1 = container.read(presentationAnalysisServiceProvider);
         final service2 = container.read(presentationAnalysisServiceProvider);
-        
+
         expect(identical(service1, service2), isTrue);
       });
 
@@ -165,15 +178,23 @@ void main() {
         final newMockFilePickerService = MockFilePickerService();
         final newContainer = ProviderContainer(
           overrides: [
-            filePickerServiceProvider.overrideWithValue(newMockFilePickerService),
-            presentationAnalysisServiceProvider.overrideWithValue(mockPresentationAnalysisService),
+            filePickerServiceProvider.overrideWithValue(
+              newMockFilePickerService,
+            ),
+            presentationAnalysisServiceProvider.overrideWithValue(
+              mockPresentationAnalysisService,
+            ),
           ],
         );
-        
+
         try {
-          final filePickerService = newContainer.read(filePickerServiceProvider);
-          final presentationService = newContainer.read(presentationAnalysisServiceProvider);
-          
+          final filePickerService = newContainer.read(
+            filePickerServiceProvider,
+          );
+          final presentationService = newContainer.read(
+            presentationAnalysisServiceProvider,
+          );
+
           expect(filePickerService, same(newMockFilePickerService));
           expect(presentationService, same(mockPresentationAnalysisService));
         } finally {
@@ -183,24 +204,34 @@ void main() {
     });
 
     group('provider dependencies', () {
-      test('presentationAnalysisServiceProvider should depend on filePickerServiceProvider', () {
-        // Get the services
-        final filePickerService = container.read(filePickerServiceProvider);
-        final presentationService = container.read(presentationAnalysisServiceProvider);
-        
-        // Verify both services are provided as expected interfaces
-        expect(filePickerService, isA<FilePickerServiceInterface>());
-        expect(presentationService, isA<PresentationAnalysisServiceInterface>());
-      });
+      test(
+        '''presentationAnalysisServiceProvider should depend on filePickerServiceProvider''',
+        () {
+          // Get the services
+          final filePickerService = container.read(filePickerServiceProvider);
+          final presentationService = container.read(
+            presentationAnalysisServiceProvider,
+          );
+
+          // Verify both services are provided as expected interfaces
+          expect(filePickerService, isA<FilePickerServiceInterface>());
+          expect(
+            presentationService,
+            isA<PresentationAnalysisServiceInterface>(),
+          );
+        },
+      );
 
       test('should handle provider overrides correctly', () {
         // Create another mock service for override testing
         final anotherMockFilePickerService = MockFilePickerService();
-        
+
         // Create a container with provider overrides
         final overrideContainer = ProviderContainer(
           overrides: [
-            filePickerServiceProvider.overrideWithValue(anotherMockFilePickerService),
+            filePickerServiceProvider.overrideWithValue(
+              anotherMockFilePickerService,
+            ),
           ],
         );
 
@@ -217,10 +248,11 @@ void main() {
     group('provider lifecycle', () {
       test('should dispose providers correctly', () {
         // Read all providers to initialize them
-        container.read(filePickerServiceProvider);
-        container.read(geminiServiceProvider);
-        container.read(presentationAnalysisServiceProvider);
-        
+        container
+          ..read(filePickerServiceProvider)
+          ..read(geminiServiceProvider)
+          ..read(presentationAnalysisServiceProvider);
+
         // Dispose should not throw
         expect(() => container.dispose(), returnsNormally);
       });
@@ -228,7 +260,7 @@ void main() {
       test('should handle multiple containers independently', () {
         final mockService1 = MockFilePickerService();
         final mockService2 = MockFilePickerService();
-        
+
         final container1 = ProviderContainer(
           overrides: [
             filePickerServiceProvider.overrideWithValue(mockService1),
@@ -243,7 +275,7 @@ void main() {
         try {
           final service1 = container1.read(filePickerServiceProvider);
           final service2 = container2.read(filePickerServiceProvider);
-          
+
           // Different containers should provide different instances
           expect(service1, same(mockService1));
           expect(service2, same(mockService2));
@@ -259,13 +291,15 @@ void main() {
         for (int i = 0; i < 3; i++) {
           final testContainer = ProviderContainer(
             overrides: [
-              filePickerServiceProvider.overrideWithValue(MockFilePickerService()),
+              filePickerServiceProvider.overrideWithValue(
+                MockFilePickerService(),
+              ),
             ],
           );
-          
+
           final service = testContainer.read(filePickerServiceProvider);
           expect(service, isA<FilePickerServiceInterface>());
-          
+
           testContainer.dispose();
         }
       });
@@ -281,7 +315,7 @@ void main() {
         try {
           final fileService = partialContainer.read(filePickerServiceProvider);
           expect(fileService, same(mockFilePickerService));
-          
+
           // This should fail because GeminiService needs valid API key
           expect(
             () => partialContainer.read(geminiServiceProvider),
@@ -296,14 +330,14 @@ void main() {
     group('error handling', () {
       test('should handle provider read errors gracefully', () {
         final errorContainer = ProviderContainer();
-        
+
         try {
           // FilePickerService should work fine
           expect(
             () => errorContainer.read(filePickerServiceProvider),
             returnsNormally,
           );
-          
+
           // GeminiService should throw because no valid API key
           expect(
             () => errorContainer.read(geminiServiceProvider),
@@ -317,18 +351,18 @@ void main() {
       test('should maintain state even after error in other providers', () {
         // Create container where filePickerService works but geminiService fails
         final mixedContainer = ProviderContainer();
-        
+
         try {
           // This should work
           final fileService = mixedContainer.read(filePickerServiceProvider);
           expect(fileService, isA<FilePickerServiceInterface>());
-          
+
           // This should fail
           expect(
             () => mixedContainer.read(geminiServiceProvider),
             throwsA(isA<Exception>()),
           );
-          
+
           // FilePickerService should still work after other provider failed
           final fileService2 = mixedContainer.read(filePickerServiceProvider);
           expect(fileService2, same(fileService));

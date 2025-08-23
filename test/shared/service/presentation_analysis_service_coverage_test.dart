@@ -6,14 +6,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:presen_neta/features/result/provider/result_provider.dart';
 import 'package:presen_neta/shared/service/file_picker_service.dart';
 import 'package:presen_neta/shared/service/presentation_analysis_service.dart';
 
 import 'presentation_analysis_service_coverage_test.mocks.dart';
 
 @GenerateMocks([FilePickerService])
-
 void main() {
   group('PresentationAnalysisService Coverage Tests', () {
     late MockFilePickerService mockFilePickerService;
@@ -21,22 +19,28 @@ void main() {
 
     setUp(() {
       mockFilePickerService = MockFilePickerService();
-      service = PresentationAnalysisService(filePickerService: mockFilePickerService);
+      service = PresentationAnalysisService(
+        filePickerService: mockFilePickerService,
+      );
     });
 
     group('analyzePdfFile comprehensive coverage', () {
-      testWidgets('should handle successful file selection and analysis', (tester) async {
+      testWidgets('should handle successful file selection and analysis', (
+        tester,
+      ) async {
         // Arrange
         final pdfFile = PlatformFile(
           name: 'test.pdf',
           size: 1000,
           bytes: Uint8List.fromList(List.generate(1000, (i) => i % 256)),
         );
-        
-        when(mockFilePickerService.pickFile())
-            .thenAnswer((_) async => FilePickerResult([pdfFile]));
-        when(mockFilePickerService.readPdfFileContent(any))
-            .thenAnswer((_) async => pdfFile.bytes);
+
+        when(
+          mockFilePickerService.pickFile(),
+        ).thenAnswer((_) async => FilePickerResult([pdfFile]));
+        when(
+          mockFilePickerService.readPdfFileContent(any),
+        ).thenAnswer((_) async => pdfFile.bytes);
 
         await tester.pumpWidget(
           ProviderScope(
@@ -48,8 +52,14 @@ void main() {
                       builder: (context, ref, _) {
                         return ElevatedButton(
                           onPressed: () async {
-                            final result = await service.analyzePdfFile(context, ref);
-                            expect(result, false); // PDF conversion will fail in test environment
+                            final result = await service.analyzePdfFile(
+                              context,
+                              ref,
+                            );
+                            expect(
+                              result,
+                              false,
+                            ); // PDF conversion will fail in test environment
                           },
                           child: const Text('Test'),
                         );
@@ -83,7 +93,10 @@ void main() {
                       builder: (context, ref, _) {
                         return ElevatedButton(
                           onPressed: () async {
-                            final result = await service.analyzePdfFile(context, ref);
+                            final result = await service.analyzePdfFile(
+                              context,
+                              ref,
+                            );
                             expect(result, false);
                           },
                           child: const Text('Test Null'),
@@ -106,8 +119,9 @@ void main() {
 
       testWidgets('should handle empty file list', (tester) async {
         // Arrange
-        when(mockFilePickerService.pickFile())
-            .thenAnswer((_) async => FilePickerResult([]));
+        when(
+          mockFilePickerService.pickFile(),
+        ).thenAnswer((_) async => const FilePickerResult([]));
 
         await tester.pumpWidget(
           ProviderScope(
@@ -119,7 +133,10 @@ void main() {
                       builder: (context, ref, _) {
                         return ElevatedButton(
                           onPressed: () async {
-                            final result = await service.analyzePdfFile(context, ref);
+                            final result = await service.analyzePdfFile(
+                              context,
+                              ref,
+                            );
                             expect(result, false);
                           },
                           child: const Text('Test Empty'),
@@ -143,8 +160,9 @@ void main() {
       testWidgets('should handle non-PDF file extension', (tester) async {
         // Arrange
         final txtFile = PlatformFile(name: 'test.txt', size: 100);
-        when(mockFilePickerService.pickFile())
-            .thenAnswer((_) async => FilePickerResult([txtFile]));
+        when(
+          mockFilePickerService.pickFile(),
+        ).thenAnswer((_) async => FilePickerResult([txtFile]));
 
         await tester.pumpWidget(
           ProviderScope(
@@ -156,7 +174,10 @@ void main() {
                       builder: (context, ref, _) {
                         return ElevatedButton(
                           onPressed: () async {
-                            final result = await service.analyzePdfFile(context, ref);
+                            final result = await service.analyzePdfFile(
+                              context,
+                              ref,
+                            );
                             expect(result, false);
                           },
                           child: const Text('Test TXT'),
@@ -186,10 +207,11 @@ void main() {
           PlatformFile(name: 'test', size: 100), // no extension
         ];
 
-        for (int i = 0; i < testFiles.length; i++) {
+        for (var i = 0; i < testFiles.length; i++) {
           final file = testFiles[i];
-          when(mockFilePickerService.pickFile())
-              .thenAnswer((_) async => FilePickerResult([file]));
+          when(
+            mockFilePickerService.pickFile(),
+          ).thenAnswer((_) async => FilePickerResult([file]));
 
           await tester.pumpWidget(
             ProviderScope(
@@ -201,8 +223,12 @@ void main() {
                         builder: (context, ref, _) {
                           return ElevatedButton(
                             onPressed: () async {
-                              final result = await service.analyzePdfFile(context, ref);
-                              // Only lowercase 'pdf' should succeed to file reading stage
+                              final result = await service.analyzePdfFile(
+                                context,
+                                ref,
+                              );
+
+                              // 小文字の 'pdf' のみがファイル読み込み段階に進むべき
                               expect(result, false);
                             },
                             child: Text('Test $i'),
@@ -224,10 +250,12 @@ void main() {
       testWidgets('should handle PDF file read failure', (tester) async {
         // Arrange
         final pdfFile = PlatformFile(name: 'test.pdf', size: 1000);
-        when(mockFilePickerService.pickFile())
-            .thenAnswer((_) async => FilePickerResult([pdfFile]));
-        when(mockFilePickerService.readPdfFileContent(any))
-            .thenAnswer((_) async => null);
+        when(
+          mockFilePickerService.pickFile(),
+        ).thenAnswer((_) async => FilePickerResult([pdfFile]));
+        when(
+          mockFilePickerService.readPdfFileContent(any),
+        ).thenAnswer((_) async => null);
 
         await tester.pumpWidget(
           ProviderScope(
@@ -239,7 +267,10 @@ void main() {
                       builder: (context, ref, _) {
                         return ElevatedButton(
                           onPressed: () async {
-                            final result = await service.analyzePdfFile(context, ref);
+                            final result = await service.analyzePdfFile(
+                              context,
+                              ref,
+                            );
                             expect(result, false);
                           },
                           child: const Text('Test Read Failure'),
@@ -260,10 +291,13 @@ void main() {
         verify(mockFilePickerService.readPdfFileContent(any)).called(1);
       });
 
-      testWidgets('should handle file picker service exception', (tester) async {
+      testWidgets('should handle file picker service exception', (
+        tester,
+      ) async {
         // Arrange
-        when(mockFilePickerService.pickFile())
-            .thenThrow(Exception('File picker error'));
+        when(
+          mockFilePickerService.pickFile(),
+        ).thenThrow(Exception('File picker error'));
 
         await tester.pumpWidget(
           ProviderScope(
@@ -275,7 +309,10 @@ void main() {
                       builder: (context, ref, _) {
                         return ElevatedButton(
                           onPressed: () async {
-                            final result = await service.analyzePdfFile(context, ref);
+                            final result = await service.analyzePdfFile(
+                              context,
+                              ref,
+                            );
                             expect(result, false);
                           },
                           child: const Text('Test Exception'),
@@ -298,10 +335,12 @@ void main() {
       testWidgets('should handle file read exception', (tester) async {
         // Arrange
         final pdfFile = PlatformFile(name: 'test.pdf', size: 1000);
-        when(mockFilePickerService.pickFile())
-            .thenAnswer((_) async => FilePickerResult([pdfFile]));
-        when(mockFilePickerService.readPdfFileContent(any))
-            .thenThrow(Exception('File read error'));
+        when(
+          mockFilePickerService.pickFile(),
+        ).thenAnswer((_) async => FilePickerResult([pdfFile]));
+        when(
+          mockFilePickerService.readPdfFileContent(any),
+        ).thenThrow(Exception('File read error'));
 
         await tester.pumpWidget(
           ProviderScope(
@@ -313,7 +352,10 @@ void main() {
                       builder: (context, ref, _) {
                         return ElevatedButton(
                           onPressed: () async {
-                            final result = await service.analyzePdfFile(context, ref);
+                            final result = await service.analyzePdfFile(
+                              context,
+                              ref,
+                            );
                             expect(result, false);
                           },
                           child: const Text('Test Read Exception'),
@@ -357,7 +399,7 @@ void main() {
 
       test('should handle various PDF data sizes', () async {
         final testSizes = [1, 10, 100, 1000, 10000];
-        
+
         for (final size in testSizes) {
           final pdfData = Uint8List.fromList(
             List.generate(size, (i) => i % 256),
@@ -383,11 +425,14 @@ void main() {
     });
 
     group('error handling edge cases', () {
-      testWidgets('should handle context unmounted during file selection', (tester) async {
+      testWidgets('should handle context unmounted during file selection', (
+        tester,
+      ) async {
         // This is a complex scenario to test due to widget lifecycle
         final pdfFile = PlatformFile(name: 'test.pdf', size: 1000);
-        when(mockFilePickerService.pickFile())
-            .thenAnswer((_) async => FilePickerResult([pdfFile]));
+        when(
+          mockFilePickerService.pickFile(),
+        ).thenAnswer((_) async => FilePickerResult([pdfFile]));
 
         await tester.pumpWidget(
           ProviderScope(
@@ -400,7 +445,10 @@ void main() {
                         return ElevatedButton(
                           onPressed: () async {
                             // This will test the context.mounted check
-                            final result = await service.analyzePdfFile(context, ref);
+                            final result = await service.analyzePdfFile(
+                              context,
+                              ref,
+                            );
                             expect(result, false);
                           },
                           child: const Text('Test Context'),

@@ -49,8 +49,8 @@ class ResultPage extends ConsumerWidget {
 
     try {
       _logger.d('ResultPage - 分析状態: $analysisState');
-    } catch (e) {
-      print('ResultPage - 分析状態: $analysisState');
+    } on Exception catch (e) {
+      debugPrint('ResultPage - 分析状態: $analysisState : $e');
     }
 
     return Scaffold(
@@ -59,16 +59,20 @@ class ResultPage extends ConsumerWidget {
         child: analysisState.when(
           data: (result) {
             try {
-              _logger.d('ResultPage - data状態: result=${result?.point ?? 'null'}');
-            } catch (e) {
-              print('ResultPage - data状態: result=${result?.point ?? 'null'}');
+              _logger.d(
+                'ResultPage - data状態: result=${result?.point ?? 'null'}',
+              );
+            } on Exception catch (e) {
+              debugPrint(
+                'ResultPage - data状態: result=${result?.point ?? 'null'} : $e',
+              );
             }
             if (result == null) {
               // 分析結果がない場合はStartPageに戻る
               try {
                 _logger.i('ResultPage - 分析結果なし、StartPageに戻る');
-              } catch (e) {
-                print('ResultPage - 分析結果なし、StartPageに戻る');
+              } on Exception catch (e) {
+                debugPrint('ResultPage - 分析結果なし、StartPageに戻る : $e');
               }
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (context.mounted) {
@@ -78,8 +82,8 @@ class ResultPage extends ConsumerWidget {
                   } on Exception catch (e) {
                     try {
                       _logger.e('ResultPage - ナビゲーションエラー: $e');
-                    } catch (logError) {
-                      print('ResultPage - ナビゲーションエラー: $e');
+                    } on Exception catch (logError) {
+                      debugPrint('ResultPage - ナビゲーションエラー: $logError');
                     }
                   }
                 }
@@ -346,8 +350,8 @@ class ResultPage extends ConsumerWidget {
           loading: () {
             try {
               _logger.d('ResultPage - loading状態');
-            } catch (e) {
-              print('ResultPage - loading状態');
+            } on Exception catch (e) {
+              debugPrint('ResultPage - loading状態: $e');
             }
             return const Scaffold(
               backgroundColor: Color(0xFFF7FAFC),
@@ -385,9 +389,9 @@ class ResultPage extends ConsumerWidget {
           error: (error, stack) {
             try {
               _logger.e('ResultPage - error状態: $error');
-            } catch (e) {
+            } on Exception catch (e) {
               // テスト環境でLoggerが初期化されていない場合をハンドリング
-              print('ResultPage - error状態: $error');
+              debugPrint('ResultPage - error状態: $error : $e');
             }
             return Scaffold(
               backgroundColor: const Color(0xFFF7FAFC),

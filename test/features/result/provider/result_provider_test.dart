@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:presen_neta/features/result/provider/result_provider.dart';
 import 'package:presen_neta/shared/models/review_result.dart';
-import 'package:presen_neta/shared/service/interfaces/gemini_service_interface.dart';
 import 'package:presen_neta/shared/providers/service_providers.dart';
+import 'package:presen_neta/shared/service/interfaces/gemini_service_interface.dart';
 
 /// Test implementation of GeminiService for result provider testing
 class TestGeminiServiceForProvider implements GeminiServiceInterface {
@@ -20,7 +20,8 @@ class TestGeminiServiceForProvider implements GeminiServiceInterface {
     if (shouldThrow) {
       throw Exception('Test error');
     }
-    return mockResult ?? const ReviewResult(point: 80, good: ['Test'], improve: ['Test']);
+    return mockResult ??
+        const ReviewResult(point: 80, good: ['Test'], improve: ['Test']);
   }
 
   @override
@@ -48,9 +49,9 @@ void main() {
     });
 
     test('should build with null initial state', () async {
-      final notifier = container.read(analysisNotifierProvider.notifier);
+      container.read(analysisNotifierProvider.notifier);
       final state = await container.read(analysisNotifierProvider.future);
-      
+
       expect(state, isNull);
     });
 
@@ -68,7 +69,7 @@ void main() {
       ];
 
       await notifier.analyzeMultipleSlideImages(imageDataList);
-      
+
       final state = container.read(analysisNotifierProvider);
       expect(state.hasValue, true);
       expect(state.value?.point, 85);
@@ -80,10 +81,12 @@ void main() {
       mockGeminiService.shouldThrow = true;
 
       final notifier = container.read(analysisNotifierProvider.notifier);
-      final imageDataList = [Uint8List.fromList([1, 2, 3, 4])];
+      final imageDataList = [
+        Uint8List.fromList([1, 2, 3, 4]),
+      ];
 
       await notifier.analyzeMultipleSlideImages(imageDataList);
-      
+
       final state = container.read(analysisNotifierProvider);
       expect(state.hasError, true);
       expect(state.error, isA<Exception>());
@@ -98,8 +101,10 @@ void main() {
       );
 
       final notifier = container.read(analysisNotifierProvider.notifier);
-      await notifier.analyzeMultipleSlideImages([Uint8List.fromList([1, 2, 3])]);
-      
+      await notifier.analyzeMultipleSlideImages([
+        Uint8List.fromList([1, 2, 3]),
+      ]);
+
       // Verify data is set
       var state = container.read(analysisNotifierProvider);
       expect(state.hasValue, true);
@@ -120,13 +125,15 @@ void main() {
       );
 
       final notifier = container.read(analysisNotifierProvider.notifier);
-      final imageDataList = [Uint8List.fromList([1, 2, 3, 4])];
+      final imageDataList = [
+        Uint8List.fromList([1, 2, 3, 4]),
+      ];
 
       await notifier.analyzeMultipleSlideImages(
         imageDataList,
         imageMimeType: 'image/jpeg',
       );
-      
+
       final state = container.read(analysisNotifierProvider);
       expect(state.hasValue, true);
       expect(state.value?.point, 90);
@@ -144,7 +151,7 @@ void main() {
       final imageDataList = <Uint8List>[];
 
       await notifier.analyzeMultipleSlideImages(imageDataList);
-      
+
       final state = container.read(analysisNotifierProvider);
       expect(state.hasValue, true);
       expect(state.value?.point, 50);

@@ -7,8 +7,6 @@ import 'package:mockito/mockito.dart';
 import 'package:presen_neta/features/result/presentation/page/result_page_controller.dart';
 import 'package:presen_neta/shared/service/image_generator_service.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:share_plus_platform_interface/platform_interface/share_plus_platform.dart';
-
 import 'result_page_controller_test.mocks.dart';
 
 @GenerateMocks([ImageGeneratorService, SharePlus, Directory, File])
@@ -17,13 +15,11 @@ void main() {
     late MockImageGeneratorService mockImageGenerator;
     late MockSharePlus mockShareService;
     late MockDirectory mockTempDir;
-    late MockFile mockImageFile;
 
     setUp(() {
       mockImageGenerator = MockImageGeneratorService();
       mockShareService = MockSharePlus();
       mockTempDir = MockDirectory();
-      mockImageFile = MockFile();
     });
 
     test('デフォルトコンストラクタで正常にインスタンス化される', () {
@@ -49,7 +45,7 @@ void main() {
 
       test('画像生成が成功した場合に画像付きでシェアする', () async {
         final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
-        final tempDirPath = 'assets';
+        const tempDirPath = 'assets';
 
         final controller = ResultPageController(
           imageGenerator: mockImageGenerator,
@@ -69,7 +65,9 @@ void main() {
         when(mockTempDir.path).thenReturn(tempDirPath);
         when(
           mockShareService.share(any),
-        ).thenAnswer((_) async => ShareResult('', ShareResultStatus.success));
+        ).thenAnswer(
+          (_) async => const ShareResult('', ShareResultStatus.success),
+        );
 
         await controller.shareResult(
           sleepPercentage: sleepPercentage,
@@ -108,7 +106,9 @@ void main() {
 
         when(
           mockShareService.share(any),
-        ).thenAnswer((_) async => ShareResult('', ShareResultStatus.success));
+        ).thenAnswer(
+          (_) async => const ShareResult('', ShareResultStatus.success),
+        );
 
         await controller.shareResult(
           sleepPercentage: sleepPercentage,
@@ -131,7 +131,7 @@ void main() {
 
       test('空のリストを処理する', () async {
         final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
-        final tempDirPath = 'assets';
+        const tempDirPath = 'assets';
 
         final controller = ResultPageController(
           imageGenerator: mockImageGenerator,
@@ -151,7 +151,9 @@ void main() {
         when(mockTempDir.path).thenReturn(tempDirPath);
         when(
           mockShareService.share(any),
-        ).thenAnswer((_) async => ShareResult('', ShareResultStatus.success));
+        ).thenAnswer(
+          (_) async => const ShareResult('', ShareResultStatus.success),
+        );
 
         await controller.shareResult(
           sleepPercentage: sleepPercentage,
@@ -172,7 +174,7 @@ void main() {
 
       test('睡眠パーセンテージが0の場合を処理する', () async {
         final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
-        final tempDirPath = 'assets';
+        const tempDirPath = 'assets';
 
         final controller = ResultPageController(
           imageGenerator: mockImageGenerator,
@@ -192,7 +194,9 @@ void main() {
         when(mockTempDir.path).thenReturn(tempDirPath);
         when(
           mockShareService.share(any),
-        ).thenAnswer((_) async => ShareResult('', ShareResultStatus.success));
+        ).thenAnswer(
+          (_) async => const ShareResult('', ShareResultStatus.success),
+        );
 
         await controller.shareResult(
           sleepPercentage: 0,
@@ -231,7 +235,9 @@ void main() {
 
         when(
           mockShareService.share(any),
-        ).thenAnswer((_) async => ShareResult('', ShareResultStatus.success));
+        ).thenAnswer(
+          (_) async => const ShareResult('', ShareResultStatus.success),
+        );
 
         await controller.shareResult(
           sleepPercentage: sleepPercentage,
@@ -245,7 +251,7 @@ void main() {
 
       test('シェアサービスの失敗を適切に処理する', () async {
         final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
-        final tempDirPath = 'assets';
+        const tempDirPath = 'assets';
 
         final controller = ResultPageController(
           imageGenerator: mockImageGenerator,
@@ -265,13 +271,13 @@ void main() {
         when(mockTempDir.path).thenReturn(tempDirPath);
 
         // Share サービスの呼び出しをカウントするためのカウンター
-        int shareCallCount = 0;
+        var shareCallCount = 0;
         when(mockShareService.share(any)).thenAnswer((_) async {
           shareCallCount++;
           if (shareCallCount == 1) {
             throw Exception('Share failed');
           }
-          return ShareResult('', ShareResultStatus.success);
+          return const ShareResult('', ShareResultStatus.success);
         });
 
         // 例外が発生しないことを確認
@@ -288,7 +294,7 @@ void main() {
 
       test('睡眠パーセンテージが100の場合を処理する', () async {
         final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
-        final tempDirPath = 'assets';
+        const tempDirPath = 'assets';
 
         final controller = ResultPageController(
           imageGenerator: mockImageGenerator,
@@ -308,7 +314,9 @@ void main() {
         when(mockTempDir.path).thenReturn(tempDirPath);
         when(
           mockShareService.share(any),
-        ).thenAnswer((_) async => ShareResult('', ShareResultStatus.success));
+        ).thenAnswer(
+          (_) async => const ShareResult('', ShareResultStatus.success),
+        );
 
         await controller.shareResult(
           sleepPercentage: 100,
@@ -329,7 +337,7 @@ void main() {
 
       test('長いタイトルとリストを処理する', () async {
         final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
-        final tempDirPath = 'assets';
+        const tempDirPath = 'assets';
         final longTitle = 'A' * 1000; // 非常に長いタイトル
         final longGoodPoints = List.generate(100, (i) => 'Good point $i');
         final longImprovements = List.generate(100, (i) => 'Improvement $i');
@@ -352,7 +360,9 @@ void main() {
         when(mockTempDir.path).thenReturn(tempDirPath);
         when(
           mockShareService.share(any),
-        ).thenAnswer((_) async => ShareResult('', ShareResultStatus.success));
+        ).thenAnswer(
+          (_) async => const ShareResult('', ShareResultStatus.success),
+        );
 
         await controller.shareResult(
           sleepPercentage: sleepPercentage,

@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -147,25 +145,25 @@ void main() {
         size: testBytes.length,
         bytes: testBytes,
       );
-      
+
       final result = await service.readPdfFileContent(file);
-      
+
       expect(result, equals(testBytes));
     });
 
     test('should return null when file has no path and no bytes', () async {
       final file = PlatformFile(name: 'test.pdf', size: 100);
-      
+
       final result = await service.readPdfFileContent(file);
-      
+
       expect(result, isNull);
     });
 
     test('should return null when file path is empty', () async {
       final file = PlatformFile(name: 'test.pdf', size: 100, path: '');
-      
+
       final result = await service.readPdfFileContent(file);
-      
+
       expect(result, isNull);
     });
 
@@ -175,9 +173,9 @@ void main() {
         size: 100,
         path: '/non/existent/path/test.pdf',
       );
-      
+
       final result = await service.readPdfFileContent(file);
-      
+
       expect(result, isNull);
     });
 
@@ -189,9 +187,9 @@ void main() {
         path: '/some/path/test.pdf',
         bytes: testBytes,
       );
-      
+
       final result = await service.readPdfFileContent(file);
-      
+
       expect(result, equals(testBytes));
     });
 
@@ -201,23 +199,25 @@ void main() {
         size: 0,
         bytes: Uint8List(0),
       );
-      
+
       final result = await service.readPdfFileContent(file);
-      
+
       expect(result, isNotNull);
       expect(result, hasLength(0));
     });
 
     test('should handle large files', () async {
-      final largeBytes = Uint8List.fromList(List.generate(10000, (i) => i % 256));
+      final largeBytes = Uint8List.fromList(
+        List.generate(10000, (i) => i % 256),
+      );
       final file = PlatformFile(
         name: 'large.pdf',
         size: largeBytes.length,
         bytes: largeBytes,
       );
-      
+
       final result = await service.readPdfFileContent(file);
-      
+
       expect(result, equals(largeBytes));
       expect(result?.length, 10000);
     });
@@ -229,22 +229,26 @@ void main() {
         size: testBytes.length,
         bytes: testBytes,
       );
-      
+
       final result = await service.readPdfFileContent(file);
-      
+
       expect(result, equals(testBytes));
     });
   });
 
   group('FilePickerService - constructor', () {
-    test('should create with default FilePicker when none provided', () {
-      // Skip this test as it requires platform initialization
-      // In real usage, FilePicker.platform is properly initialized
-    }, skip: 'Requires platform initialization, covered by integration tests');
+    test(
+      'should create with default FilePicker when none provided',
+      () {
+        // Skip this test as it requires platform initialization
+        // In real usage, FilePicker.platform is properly initialized
+      },
+      skip: 'Requires platform initialization, covered by integration tests',
+    );
 
     test('should use injected FilePicker when provided', () {
       final injectedService = FilePickerService(filePicker: mockFilePicker);
-      
+
       expect(injectedService, isA<FilePickerService>());
     });
 
@@ -274,10 +278,13 @@ void main() {
       final future2 = service.pickFile();
 
       final results = await Future.wait([future1, future2]);
-      
+
       // Service prevents concurrent calls - first succeeds, second returns null
       expect(results[0], isNotNull);
-      expect(results[1], isNull); // Second call should return null due to _isPicking flag
+      expect(
+        results[1],
+        isNull,
+      ); // Second call should return null due to _isPicking flag
     });
 
     test('should maintain consistent parameters across calls', () async {
@@ -339,15 +346,17 @@ void main() {
     });
 
     test('should handle very large file reading', () async {
-      final largeData = Uint8List.fromList(List.generate(1000000, (i) => i % 256));
+      final largeData = Uint8List.fromList(
+        List.generate(1000000, (i) => i % 256),
+      );
       final file = PlatformFile(
         name: 'large.pdf',
         size: largeData.length,
         bytes: largeData,
       );
-      
+
       final result = await service.readPdfFileContent(file);
-      
+
       expect(result, equals(largeData));
       expect(result?.length, 1000000);
     });
@@ -356,33 +365,52 @@ void main() {
       final testBytes = Uint8List.fromList([1, 2, 3]);
       final files = [
         PlatformFile(name: '..pdf', size: testBytes.length, bytes: testBytes),
-        PlatformFile(name: 'file.with.dots.pdf', size: testBytes.length, bytes: testBytes),
-        PlatformFile(name: 'file name with spaces.pdf', size: testBytes.length, bytes: testBytes),
-        PlatformFile(name: 'ファイル名.pdf', size: testBytes.length, bytes: testBytes),
-        PlatformFile(name: '123456789.pdf', size: testBytes.length, bytes: testBytes),
+        PlatformFile(
+          name: 'file.with.dots.pdf',
+          size: testBytes.length,
+          bytes: testBytes,
+        ),
+        PlatformFile(
+          name: 'file name with spaces.pdf',
+          size: testBytes.length,
+          bytes: testBytes,
+        ),
+        PlatformFile(
+          name: 'ファイル名.pdf',
+          size: testBytes.length,
+          bytes: testBytes,
+        ),
+        PlatformFile(
+          name: '123456789.pdf',
+          size: testBytes.length,
+          bytes: testBytes,
+        ),
       ];
-      
+
       for (final file in files) {
         final result = await service.readPdfFileContent(file);
         expect(result, equals(testBytes));
       }
     });
 
-    test('should handle multiple readPdfFileContent calls with same file', () async {
-      final testBytes = Uint8List.fromList([1, 2, 3, 4, 5]);
-      final file = PlatformFile(
-        name: 'test.pdf',
-        size: testBytes.length,
-        bytes: testBytes,
-      );
-      
-      final result1 = await service.readPdfFileContent(file);
-      final result2 = await service.readPdfFileContent(file);
-      
-      expect(result1, equals(testBytes));
-      expect(result2, equals(testBytes));
-      expect(result1, equals(result2));
-    });
+    test(
+      'should handle multiple readPdfFileContent calls with same file',
+      () async {
+        final testBytes = Uint8List.fromList([1, 2, 3, 4, 5]);
+        final file = PlatformFile(
+          name: 'test.pdf',
+          size: testBytes.length,
+          bytes: testBytes,
+        );
+
+        final result1 = await service.readPdfFileContent(file);
+        final result2 = await service.readPdfFileContent(file);
+
+        expect(result1, equals(testBytes));
+        expect(result2, equals(testBytes));
+        expect(result1, equals(result2));
+      },
+    );
 
     test('should handle file with zero size but valid bytes', () async {
       final testBytes = Uint8List.fromList([1, 2, 3]);
@@ -391,47 +419,50 @@ void main() {
         size: 0, // サイズは0だが実際にはバイトがある
         bytes: testBytes,
       );
-      
+
       final result = await service.readPdfFileContent(file);
-      
+
       expect(result, equals(testBytes));
     });
 
-    test('should handle file with mismatched size and actual bytes length', () async {
-      final testBytes = Uint8List.fromList([1, 2, 3, 4, 5]);
-      final file = PlatformFile(
-        name: 'test.pdf',
-        size: 1000, // 実際のバイト数と異なるサイズ
-        bytes: testBytes,
-      );
-      
-      final result = await service.readPdfFileContent(file);
-      
-      expect(result, equals(testBytes));
-      expect(result?.length, 5); // 実際のバイト数が返される
-    });
+    test(
+      'should handle file with mismatched size and actual bytes length',
+      () async {
+        final testBytes = Uint8List.fromList([1, 2, 3, 4, 5]);
+        final file = PlatformFile(
+          name: 'test.pdf',
+          size: 1000, // 実際のバイト数と異なるサイズ
+          bytes: testBytes,
+        );
+
+        final result = await service.readPdfFileContent(file);
+
+        expect(result, equals(testBytes));
+        expect(result?.length, 5); // 実際のバイト数が返される
+      },
+    );
 
     test('should handle concurrent readPdfFileContent calls', () async {
       final testBytes1 = Uint8List.fromList([1, 2, 3]);
       final testBytes2 = Uint8List.fromList([4, 5, 6]);
-      
+
       final file1 = PlatformFile(
         name: 'test1.pdf',
         size: testBytes1.length,
         bytes: testBytes1,
       );
-      
+
       final file2 = PlatformFile(
         name: 'test2.pdf',
         size: testBytes2.length,
         bytes: testBytes2,
       );
-      
+
       final future1 = service.readPdfFileContent(file1);
       final future2 = service.readPdfFileContent(file2);
-      
+
       final results = await Future.wait([future1, future2]);
-      
+
       expect(results[0], equals(testBytes1));
       expect(results[1], equals(testBytes2));
     });
@@ -442,23 +473,26 @@ void main() {
         size: 100,
         path: '/some/path/test.txt',
       );
-      
+
       final result = await service.readPdfFileContent(file);
-      
+
       expect(result, isNull);
     });
 
-    test('should return null when exception occurs during file reading', () async {
-      final file = PlatformFile(
-        name: 'test.pdf',
-        size: 100,
-        path: '/invalid/path/test.pdf', // This will cause an exception
-      );
-      
-      final result = await service.readPdfFileContent(file);
-      
-      expect(result, isNull);
-    });
+    test(
+      'should return null when exception occurs during file reading',
+      () async {
+        final file = PlatformFile(
+          name: 'test.pdf',
+          size: 100,
+          path: '/invalid/path/test.pdf', // This will cause an exception
+        );
+
+        final result = await service.readPdfFileContent(file);
+
+        expect(result, isNull);
+      },
+    );
   });
 
   group('FilePickerService - readFileContent', () {
@@ -468,9 +502,9 @@ void main() {
         size: 100,
         path: '/some/path/test.pdf',
       );
-      
+
       final result = await service.readFileContent(file);
-      
+
       expect(result, isNull);
     });
 
@@ -479,34 +513,38 @@ void main() {
         name: 'test.txt',
         size: 100,
       );
-      
+
       final result = await service.readFileContent(file);
-      
+
       expect(result, isNull);
     });
 
-    test('should return null when exception occurs during file reading', () async {
-      final file = PlatformFile(
-        name: 'test.txt',
-        size: 100,
-        path: '/invalid/path/test.txt', // This will cause an exception
-      );
-      
-      final result = await service.readFileContent(file);
-      
-      expect(result, isNull);
-    });
+    test(
+      'should return null when exception occurs during file reading',
+      () async {
+        final file = PlatformFile(
+          name: 'test.txt',
+          size: 100,
+          path: '/invalid/path/test.txt', // This will cause an exception
+        );
+
+        final result = await service.readFileContent(file);
+
+        expect(result, isNull);
+      },
+    );
 
     test('should handle txt file extension correctly', () async {
       final file = PlatformFile(
         name: 'test.txt',
         size: 100,
-        path: '/invalid/path/test.txt', // This will cause an exception in real scenario
+        path:
+            '/invalid/path/test.txt', // This will cause an exception in real scenario
       );
-      
+
       // This will return null due to exception, but we test the extension logic
       final result = await service.readFileContent(file);
-      
+
       expect(result, isNull);
     });
 
@@ -516,9 +554,9 @@ void main() {
         size: 100,
         path: '/some/path/test',
       );
-      
+
       final result = await service.readFileContent(file);
-      
+
       expect(result, isNull);
     });
 
@@ -528,10 +566,10 @@ void main() {
         size: 100,
         path: '/some/path/test.backup.txt',
       );
-      
-      // This will return null due to exception in file reading, but tests extension handling
+
+      // ファイル読み込み時の例外によりnullが返るが、拡張子の判定処理をテストする
       final result = await service.readFileContent(file);
-      
+
       expect(result, isNull);
     });
 
@@ -541,10 +579,11 @@ void main() {
         size: 100,
         path: '/some/path/test.TXT',
       );
-      
+
       final result = await service.readFileContent(file);
-      
-      // Since extension is case-sensitive and we check for 'txt', this should return null
+
+      // 拡張子の判定は大文字・小文字を区別しており、'txt'のみを対象としているため、これはnullを返すはずです
+
       expect(result, isNull);
     });
   });

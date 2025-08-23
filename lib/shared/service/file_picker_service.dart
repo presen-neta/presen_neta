@@ -65,17 +65,17 @@ class FilePickerService implements FilePickerServiceInterface {
   @override
   Future<Uint8List?> readPdfFileContent(PlatformFile file) async {
     try {
-      // Prioritize bytes property if available (useful for testing and when withData: true)
+      // bytesプロパティが利用可能な場合は優先して使用する（テストやwithData: true時に有用）
       if (file.bytes != null) {
         return file.bytes!;
       }
-      
+
       // Fall back to reading from file path
       if (file.extension == 'pdf' && file.path != null) {
         final fileContent = File(file.path!);
         return await fileContent.readAsBytes();
       }
-      
+
       return null;
     } on Exception {
       return null;

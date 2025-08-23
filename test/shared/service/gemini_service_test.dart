@@ -2,36 +2,35 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:presen_neta/shared/models/review_result.dart';
 import 'package:presen_neta/shared/service/gemini_service.dart';
 import 'package:presen_neta/shared/service/interfaces/gemini_service_interface.dart';
 import 'package:presen_neta/shared/service/interfaces/generative_model_interface.dart';
-import 'package:presen_neta/shared/models/review_result.dart';
 
 import 'gemini_service_test.mocks.dart';
 
 @GenerateMocks([GenerativeModelInterface])
-
 /// Mock implementation of GenerateContentResponseInterface
 class MockGenerateContentResponse implements GenerateContentResponseInterface {
   final String? _text;
-  
+
   MockGenerateContentResponse({String? text}) : _text = text;
-  
+
   @override
   String? get text => _text;
-  
+
   @override
   List<Candidate> get candidates => [];
-  
+
   @override
   PromptFeedback? get promptFeedback => null;
-  
+
   @override
   UsageMetadata? get usageMetadata => null;
-  
+
   @override
   Iterable<FunctionCall> get functionCalls => [];
 }
@@ -39,9 +38,10 @@ class MockGenerateContentResponse implements GenerateContentResponseInterface {
 /// Mock implementation of CountTokensResponseInterface
 class MockCountTokensResponse implements CountTokensResponseInterface {
   final int _totalTokens;
-  
-  MockCountTokensResponse({required int totalTokens}) : _totalTokens = totalTokens;
-  
+
+  MockCountTokensResponse({required int totalTokens})
+    : _totalTokens = totalTokens;
+
   @override
   int get totalTokens => _totalTokens;
 }
@@ -78,7 +78,7 @@ class TestGeminiService implements GeminiServiceInterface {
     // Parse the mock response more realistically
     try {
       Map<String, dynamic> jsonData;
-      
+
       if (response.contains('{') && response.contains('}')) {
         // Try to parse actual JSON from response
         final jsonMatch = RegExp(r'\{.*\}', dotAll: true).firstMatch(response);
@@ -93,9 +93,9 @@ class TestGeminiService implements GeminiServiceInterface {
         jsonData = {
           'point': 85,
           'good': ['スライドの構成が分かりやすい', '視覚的に魅力的'],
-          'improve': ['より詳細な説明が必要', 'フォントサイズを大きく']
+          'improve': ['より詳細な説明が必要', 'フォントサイズを大きく'],
         };
-        
+
         // Override with specific test values if provided
         if (response.contains('"point": 75')) {
           jsonData['point'] = 75;
@@ -120,6 +120,7 @@ class TestGeminiService implements GeminiServiceInterface {
     return content.length ~/ 4; // Rough approximation
   }
 }
+
 void main() {
   group('GeminiService', () {
     late TestGeminiService geminiService;
@@ -135,7 +136,7 @@ void main() {
           Uint8List.fromList([1, 2, 3, 4]),
           Uint8List.fromList([5, 6, 7, 8]),
         ];
-        
+
         geminiService.mockResponse = '''
 {
   "point": 85,
@@ -145,7 +146,9 @@ void main() {
         ''';
 
         // Act
-        final result = await geminiService.analyzeMultipleSlideImages(imageDataList);
+        final result = await geminiService.analyzeMultipleSlideImages(
+          imageDataList,
+        );
 
         // Assert
         expect(result, isA<ReviewResult>());
@@ -156,8 +159,10 @@ void main() {
 
       test('should handle invalid JSON response', () async {
         // Arrange
-        final imageDataList = [Uint8List.fromList([1, 2, 3, 4])];
-        
+        final imageDataList = [
+          Uint8List.fromList([1, 2, 3, 4]),
+        ];
+
         geminiService.mockResponse = 'Invalid JSON response';
 
         // Act & Assert
@@ -169,8 +174,10 @@ void main() {
 
       test('should handle empty response', () async {
         // Arrange
-        final imageDataList = [Uint8List.fromList([1, 2, 3, 4])];
-        
+        final imageDataList = [
+          Uint8List.fromList([1, 2, 3, 4]),
+        ];
+
         geminiService.mockResponse = null;
 
         // Act & Assert
@@ -182,8 +189,10 @@ void main() {
 
       test('should handle model generation exception', () async {
         // Arrange
-        final imageDataList = [Uint8List.fromList([1, 2, 3, 4])];
-        
+        final imageDataList = [
+          Uint8List.fromList([1, 2, 3, 4]),
+        ];
+
         geminiService.shouldThrowError = true;
         geminiService.errorMessage = 'API Error';
 
@@ -201,7 +210,7 @@ void main() {
           Uint8List.fromList([5, 6, 7, 8]),
           Uint8List.fromList([9, 10, 11, 12]),
         ];
-        
+
         geminiService.mockResponse = '''
 {
   "point": 75,
@@ -211,7 +220,9 @@ void main() {
         ''';
 
         // Act
-        final result = await geminiService.analyzeMultipleSlideImages(imageDataList);
+        final result = await geminiService.analyzeMultipleSlideImages(
+          imageDataList,
+        );
 
         // Assert
         expect(result!.point, 75);
@@ -221,9 +232,11 @@ void main() {
 
       test('should use custom MIME type', () async {
         // Arrange
-        final imageDataList = [Uint8List.fromList([1, 2, 3, 4])];
+        final imageDataList = [
+          Uint8List.fromList([1, 2, 3, 4]),
+        ];
         const customMimeType = 'image/jpeg';
-        
+
         geminiService.mockResponse = '''
 {
   "point": 80,
@@ -273,19 +286,23 @@ void main() {
     group('analyzeMultipleSlideImages with mocked model', () {
       test('should return ReviewResult when API call succeeds', () async {
         // Arrange
-        final response = MockGenerateContentResponse(text: '''
+        final response = MockGenerateContentResponse(
+          text: '''
 {
   "point": 85,
   "good": ["Excellent structure", "Clear visuals"],
   "improve": ["Add more examples", "Increase font size"]
 }
-''');
+''',
+        );
         when(mockModel.generateContent(any)).thenAnswer((_) async => response);
 
         final imageData = Uint8List.fromList([1, 2, 3, 4]);
 
         // Act
-        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+        final result = await geminiService.analyzeMultipleSlideImages([
+          imageData,
+        ]);
 
         // Assert
         expect(result, isA<ReviewResult>());
@@ -298,12 +315,16 @@ void main() {
       test('should return null when API response is empty', () async {
         // Arrange
         when(mockResponse.text).thenReturn(null);
-        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+        when(
+          mockModel.generateContent(any),
+        ).thenAnswer((_) async => mockResponse);
 
         final imageData = Uint8List.fromList([1, 2, 3, 4]);
 
         // Act
-        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+        final result = await geminiService.analyzeMultipleSlideImages([
+          imageData,
+        ]);
 
         // Assert
         expect(result, isNull);
@@ -313,12 +334,16 @@ void main() {
       test('should return null when API response is empty string', () async {
         // Arrange
         when(mockResponse.text).thenReturn('');
-        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+        when(
+          mockModel.generateContent(any),
+        ).thenAnswer((_) async => mockResponse);
 
         final imageData = Uint8List.fromList([1, 2, 3, 4]);
 
         // Act
-        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+        final result = await geminiService.analyzeMultipleSlideImages([
+          imageData,
+        ]);
 
         // Assert
         expect(result, isNull);
@@ -328,12 +353,16 @@ void main() {
       test('should return null when JSON extraction fails', () async {
         // Arrange
         when(mockResponse.text).thenReturn('This is not JSON at all');
-        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+        when(
+          mockModel.generateContent(any),
+        ).thenAnswer((_) async => mockResponse);
 
         final imageData = Uint8List.fromList([1, 2, 3, 4]);
 
         // Act
-        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+        final result = await geminiService.analyzeMultipleSlideImages([
+          imageData,
+        ]);
 
         // Assert
         expect(result, isNull);
@@ -349,12 +378,16 @@ void main() {
   "improve": ["Test"]
 }
 ''');
-        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+        when(
+          mockModel.generateContent(any),
+        ).thenAnswer((_) async => mockResponse);
 
         final imageData = Uint8List.fromList([1, 2, 3, 4]);
 
         // Act
-        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+        final result = await geminiService.analyzeMultipleSlideImages([
+          imageData,
+        ]);
 
         // Assert
         expect(result, isNull);
@@ -370,12 +403,16 @@ void main() {
   "improve": ["Test"]
 }
 ''');
-        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+        when(
+          mockModel.generateContent(any),
+        ).thenAnswer((_) async => mockResponse);
 
         final imageData = Uint8List.fromList([1, 2, 3, 4]);
 
         // Act
-        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+        final result = await geminiService.analyzeMultipleSlideImages([
+          imageData,
+        ]);
 
         // Assert
         expect(result, isNull);
@@ -390,12 +427,16 @@ void main() {
   "improve": ["Test"]
 }
 ''');
-        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+        when(
+          mockModel.generateContent(any),
+        ).thenAnswer((_) async => mockResponse);
 
         final imageData = Uint8List.fromList([1, 2, 3, 4]);
 
         // Act
-        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+        final result = await geminiService.analyzeMultipleSlideImages([
+          imageData,
+        ]);
 
         // Assert
         expect(result, isNull);
@@ -409,7 +450,9 @@ void main() {
         final imageData = Uint8List.fromList([1, 2, 3, 4]);
 
         // Act
-        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+        final result = await geminiService.analyzeMultipleSlideImages([
+          imageData,
+        ]);
 
         // Assert
         expect(result, isNull);
@@ -425,12 +468,16 @@ void main() {
   "improve": ["Test"]
 }
 ''');
-        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+        when(
+          mockModel.generateContent(any),
+        ).thenAnswer((_) async => mockResponse);
 
         final imageData = Uint8List.fromList([1, 2, 3, 4]);
 
         // Act
-        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+        final result = await geminiService.analyzeMultipleSlideImages([
+          imageData,
+        ]);
 
         // Assert
         expect(result!.point, 80);
@@ -447,12 +494,16 @@ void main() {
   "improve": ["Valid improvement", 456, null, "Another improvement"]
 }
 ''');
-        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+        when(
+          mockModel.generateContent(any),
+        ).thenAnswer((_) async => mockResponse);
 
         final imageData = Uint8List.fromList([1, 2, 3, 4]);
 
         // Act
-        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+        final result = await geminiService.analyzeMultipleSlideImages([
+          imageData,
+        ]);
 
         // Assert
         expect(result!.point, 70);
@@ -469,12 +520,16 @@ void main() {
   "improve": null
 }
 ''');
-        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+        when(
+          mockModel.generateContent(any),
+        ).thenAnswer((_) async => mockResponse);
 
         final imageData = Uint8List.fromList([1, 2, 3, 4]);
 
         // Act
-        final result = await geminiService.analyzeMultipleSlideImages([imageData]);
+        final result = await geminiService.analyzeMultipleSlideImages([
+          imageData,
+        ]);
 
         // Assert
         expect(result!.point, 60);
@@ -492,7 +547,9 @@ void main() {
   "improve": ["Better flow between slides"]
 }
 ''');
-        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+        when(
+          mockModel.generateContent(any),
+        ).thenAnswer((_) async => mockResponse);
 
         final imageDataList = [
           Uint8List.fromList([1, 2, 3, 4]),
@@ -501,7 +558,9 @@ void main() {
         ];
 
         // Act
-        final result = await geminiService.analyzeMultipleSlideImages(imageDataList);
+        final result = await geminiService.analyzeMultipleSlideImages(
+          imageDataList,
+        );
 
         // Assert
         expect(result!.point, 75);
@@ -518,7 +577,9 @@ void main() {
   "improve": ["Test improvement"]
 }
 ''');
-        when(mockModel.generateContent(any)).thenAnswer((_) async => mockResponse);
+        when(
+          mockModel.generateContent(any),
+        ).thenAnswer((_) async => mockResponse);
 
         final imageData = Uint8List.fromList([1, 2, 3, 4]);
 
@@ -539,7 +600,9 @@ void main() {
       test('should return token count when API call succeeds', () async {
         // Arrange
         when(mockCountResponse.totalTokens).thenReturn(42);
-        when(mockModel.countTokens(any)).thenAnswer((_) async => mockCountResponse);
+        when(
+          mockModel.countTokens(any),
+        ).thenAnswer((_) async => mockCountResponse);
 
         // Act
         final tokenCount = await geminiService.countTokens('test content');
@@ -551,7 +614,9 @@ void main() {
 
       test('should return 0 when API call throws exception', () async {
         // Arrange
-        when(mockModel.countTokens(any)).thenThrow(Exception('Token count error'));
+        when(
+          mockModel.countTokens(any),
+        ).thenThrow(Exception('Token count error'));
 
         // Act
         final tokenCount = await geminiService.countTokens('test content');
@@ -564,7 +629,9 @@ void main() {
       test('should handle empty content', () async {
         // Arrange
         when(mockCountResponse.totalTokens).thenReturn(0);
-        when(mockModel.countTokens(any)).thenAnswer((_) async => mockCountResponse);
+        when(
+          mockModel.countTokens(any),
+        ).thenAnswer((_) async => mockCountResponse);
 
         // Act
         final tokenCount = await geminiService.countTokens('');
@@ -577,7 +644,9 @@ void main() {
       test('should handle long content', () async {
         // Arrange
         when(mockCountResponse.totalTokens).thenReturn(500);
-        when(mockModel.countTokens(any)).thenAnswer((_) async => mockCountResponse);
+        when(
+          mockModel.countTokens(any),
+        ).thenAnswer((_) async => mockCountResponse);
 
         final longContent = 'test content ' * 100;
 
@@ -601,9 +670,9 @@ void main() {
 }
 ```
 ''';
-        
+
         final result = geminiService.extractJsonFromResponse(response);
-        
+
         expect(result, isNotNull);
         expect(result!['point'], 95);
         expect(result['good'], contains('Code block test'));
@@ -619,9 +688,9 @@ Analysis result:
 }
 End of analysis.
 ''';
-        
+
         final result = geminiService.extractJsonFromResponse(response);
-        
+
         expect(result, isNotNull);
         expect(result!['point'], 88);
         expect(result['good'], contains('Plain text test'));
@@ -635,9 +704,9 @@ End of analysis.
   "improve": "Missing bracket"
 }
 ''';
-        
+
         final result = geminiService.extractJsonFromResponse(response);
-        
+
         expect(result, isNull);
       });
 
@@ -648,9 +717,9 @@ End of analysis.
 
       test('should handle response with no JSON', () {
         final response = 'This is just plain text without any JSON';
-        
+
         final result = geminiService.extractJsonFromResponse(response);
-        
+
         expect(result, isNull);
       });
 
@@ -662,9 +731,9 @@ End of analysis.
   "improve": ["Fix / issues", "Handle \\\\ backslashes"]
 }
 ''';
-        
+
         final result = geminiService.extractJsonFromResponse(response);
-        
+
         expect(result, isNotNull);
         expect(result!['point'], 85);
         expect(result['good'][0], contains('"quotes"'));
@@ -685,9 +754,9 @@ End of analysis.
   ]
 }
 ''';
-        
+
         final result = geminiService.extractJsonFromResponse(response);
-        
+
         expect(result, isNotNull);
         expect(result!['point'], 92);
         expect(result['good'], hasLength(3));
@@ -712,9 +781,9 @@ Second JSON:
   "improve": ["Second improve"]
 }
 ''';
-        
+
         final result = geminiService.extractJsonFromResponse(response);
-        
+
         expect(result, isNotNull);
         expect(result!['point'], 70); // Should extract the first JSON block
         expect(result['good'], contains('First'));
@@ -726,10 +795,10 @@ Second JSON:
           '\n\n{"point": 85, "good": ["Test"], "improve": ["Test"]}\n\n',
           '\t{"point": 85, "good": ["Test"], "improve": ["Test"]}\t',
         ];
-        
+
         for (final response in responses) {
           final result = geminiService.extractJsonFromResponse(response);
-          
+
           expect(result, isNotNull);
           expect(result!['point'], 85);
         }
@@ -741,14 +810,26 @@ Second JSON:
     test('should throw exception when API key is empty', () {
       expect(
         () => GeminiService(apiKey: ''),
-        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('API key not valid'))),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('API key not valid'),
+          ),
+        ),
       );
     });
 
     test('should throw exception when API key is placeholder', () {
       expect(
         () => GeminiService(apiKey: 'your_gemini_api_key_here'),
-        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('API key not valid'))),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('API key not valid'),
+          ),
+        ),
       );
     });
 
@@ -759,23 +840,29 @@ Second JSON:
       );
     });
 
-    test('should handle API errors gracefully in analyzeMultipleSlideImages', () async {
-      final service = GeminiService(apiKey: 'test_key_for_coverage');
-      
-      final imageData = Uint8List.fromList([1, 2, 3, 4]);
-      final result = await service.analyzeMultipleSlideImages([imageData]);
-      
-      // With invalid API key, should return null due to error handling
-      expect(result, isNull);
-    });
+    test(
+      'should handle API errors gracefully in analyzeMultipleSlideImages',
+      () async {
+        final service = GeminiService(apiKey: 'test_key_for_coverage');
 
-    test('should handle empty image list in analyzeMultipleSlideImages', () async {
-      final service = GeminiService(apiKey: 'test_key_for_coverage');
-      
-      final result = await service.analyzeMultipleSlideImages([]);
-      
-      expect(result, isNull);
-    });
+        final imageData = Uint8List.fromList([1, 2, 3, 4]);
+        final result = await service.analyzeMultipleSlideImages([imageData]);
+
+        // With invalid API key, should return null due to error handling
+        expect(result, isNull);
+      },
+    );
+
+    test(
+      'should handle empty image list in analyzeMultipleSlideImages',
+      () async {
+        final service = GeminiService(apiKey: 'test_key_for_coverage');
+
+        final result = await service.analyzeMultipleSlideImages([]);
+
+        expect(result, isNull);
+      },
+    );
 
     test('should handle valid JSON parsing from response', () async {
       final service = TestGeminiService();
@@ -786,10 +873,10 @@ Second JSON:
   "improve": ["Test improvement"]
 }
 ''';
-      
+
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
       final result = await service.analyzeMultipleSlideImages([imageData]);
-      
+
       expect(result?.point, 85);
       expect(result?.good, contains("Test good point"));
       expect(result?.improve, contains("Test improvement"));
@@ -804,10 +891,10 @@ Second JSON:
   "improve": ["Test"]
 }
 ''';
-      
+
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
       final result = await service.analyzeMultipleSlideImages([imageData]);
-      
+
       expect(result, isNull);
     });
 
@@ -820,10 +907,10 @@ Second JSON:
   "improve": ["Test"]
 }
 ''';
-      
+
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
       final result = await service.analyzeMultipleSlideImages([imageData]);
-      
+
       expect(result, isNull);
     });
 
@@ -835,10 +922,10 @@ Second JSON:
   "improve": ["Test"]
 }
 ''';
-      
+
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
       final result = await service.analyzeMultipleSlideImages([imageData]);
-      
+
       expect(result, isNull);
     });
 
@@ -851,10 +938,10 @@ Second JSON:
   "improve": ["Test"]
 }
 ''';
-      
+
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
       final result = await service.analyzeMultipleSlideImages([imageData]);
-      
+
       expect(result?.point, 80);
       expect(result?.good, ["Valid string", "Another string"]);
     });
@@ -868,10 +955,10 @@ Second JSON:
   "improve": ["Valid improvement", 456, null, "Another improvement"]
 }
 ''';
-      
+
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
       final result = await service.analyzeMultipleSlideImages([imageData]);
-      
+
       expect(result?.point, 70);
       expect(result?.improve, ["Valid improvement", "Another improvement"]);
     });
@@ -885,10 +972,10 @@ Second JSON:
   "improve": null
 }
 ''';
-      
+
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
       final result = await service.analyzeMultipleSlideImages([imageData]);
-      
+
       expect(result?.point, 60);
       expect(result?.good, isEmpty);
       expect(result?.improve, isEmpty);
@@ -905,10 +992,10 @@ Second JSON:
 }
 ```
 ''';
-      
+
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
       final result = await service.analyzeMultipleSlideImages([imageData]);
-      
+
       expect(result?.point, 88);
       expect(result?.good, contains("Code block test"));
     });
@@ -926,20 +1013,21 @@ Here's the analysis result:
 
 Additional explanation follows.
 ''';
-      
+
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
       final result = await service.analyzeMultipleSlideImages([imageData]);
-      
+
       expect(result?.point, 92);
       expect(result?.good, contains("Extra text test"));
     });
 
     test('should handle response with no JSON pattern', () async {
       final service = TestGeminiService();
-      service.mockResponse = 'This is just plain text without any JSON structure';
-      
+      service.mockResponse =
+          'This is just plain text without any JSON structure';
+
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
-      
+
       expect(
         () => service.analyzeMultipleSlideImages([imageData]),
         throwsA(isA<FormatException>()),
@@ -955,9 +1043,9 @@ Additional explanation follows.
   "improve": "Missing closing bracket for good array"
 }
 ''';
-      
+
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
-      
+
       expect(
         () => service.analyzeMultipleSlideImages([imageData]),
         throwsA(isA<FormatException>()),
@@ -966,95 +1054,105 @@ Additional explanation follows.
 
     test('should handle API errors gracefully in countTokens', () async {
       final service = GeminiService(apiKey: 'test_key_for_coverage');
-      
+
       final tokenCount = await service.countTokens('test content');
-      
+
       // With invalid API key, should return 0 due to error handling
       expect(tokenCount, 0);
     });
 
     test('should handle empty content in countTokens', () async {
       final service = GeminiService(apiKey: 'test_key_for_coverage');
-      
+
       final tokenCount = await service.countTokens('');
-      
+
       // Should return 0 for empty content
       expect(tokenCount, 0);
     });
 
     test('should handle multiple images in API call', () async {
       final service = GeminiService(apiKey: 'test_key_for_coverage');
-      
+
       final imageData1 = Uint8List.fromList([1, 2, 3, 4]);
       final imageData2 = Uint8List.fromList([5, 6, 7, 8]);
-      
-      final result = await service.analyzeMultipleSlideImages([imageData1, imageData2]);
-      
+
+      final result = await service.analyzeMultipleSlideImages([
+        imageData1,
+        imageData2,
+      ]);
+
       // Should return null due to invalid API key
       expect(result, isNull);
     });
 
     test('should handle custom MIME type parameter', () async {
       final service = GeminiService(apiKey: 'test_key_for_coverage');
-      
+
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
-      
+
       final result = await service.analyzeMultipleSlideImages(
         [imageData],
         imageMimeType: 'image/jpeg',
       );
-      
+
       // Should return null due to invalid API key
       expect(result, isNull);
     });
 
     test('should handle empty image list', () async {
       final service = GeminiService(apiKey: 'test_key_for_coverage');
-      
+
       final result = await service.analyzeMultipleSlideImages([]);
-      
+
       // Should return null due to error or empty result
       expect(result, isNull);
     });
 
     test('should handle very large image data', () async {
       final service = GeminiService(apiKey: 'test_key_for_coverage');
-      
+
       // 10MBの大きな画像データを作成
       final largeImageData = Uint8List.fromList(
         List.generate(10000000, (i) => i % 256),
       );
-      
+
       final result = await service.analyzeMultipleSlideImages([largeImageData]);
-      
+
       // 無効なAPIキーのため、nullが返る
       expect(result, isNull);
     });
 
     test('should handle multiple very small images', () async {
       final service = GeminiService(apiKey: 'test_key_for_coverage');
-      
-      final smallImages = List.generate(100, (i) => 
-        Uint8List.fromList([i % 256, (i + 1) % 256, (i + 2) % 256])
+
+      final smallImages = List.generate(
+        100,
+        (i) => Uint8List.fromList([i % 256, (i + 1) % 256, (i + 2) % 256]),
       );
-      
+
       final result = await service.analyzeMultipleSlideImages(smallImages);
-      
+
       // 無効なAPIキーのため、nullが返る
       expect(result, isNull);
     });
 
     test('should handle different MIME types', () async {
       final service = GeminiService(apiKey: 'test_key_for_coverage');
-      
+
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
-      
+
       final results = await Future.wait([
-        service.analyzeMultipleSlideImages([imageData], imageMimeType: 'image/png'),
-        service.analyzeMultipleSlideImages([imageData], imageMimeType: 'image/jpeg'),
-        service.analyzeMultipleSlideImages([imageData], imageMimeType: 'image/webp'),
+        service.analyzeMultipleSlideImages([
+          imageData,
+        ], imageMimeType: 'image/png'),
+        service.analyzeMultipleSlideImages([
+          imageData,
+        ], imageMimeType: 'image/jpeg'),
+        service.analyzeMultipleSlideImages([
+          imageData,
+        ], imageMimeType: 'image/webp'),
       ]);
-      
+
       // 全て無効なAPIキーのため、nullが返る
       for (final result in results) {
         expect(result, isNull);
@@ -1063,30 +1161,30 @@ Additional explanation follows.
 
     test('should handle API timeout scenarios', () async {
       final service = GeminiService(apiKey: 'test_key_for_coverage');
-      
+
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
-      
+
       // タイムアウトを想定して実行
       final stopwatch = Stopwatch()..start();
       final result = await service.analyzeMultipleSlideImages([imageData]);
       stopwatch.stop();
-      
+
       // APIが失敗するため、nullが返る
       expect(result, isNull);
-      
+
       // 処理時間が合理的であることを確認（APIタイムアウトより短い）
       expect(stopwatch.elapsedMilliseconds, lessThan(30000));
     });
 
     test('should handle malformed image data', () async {
       final service = GeminiService(apiKey: 'test_key_for_coverage');
-      
+
       final malformedData = [
         Uint8List.fromList([255, 255, 255, 255]), // 無効なPNGヘッダー
         Uint8List.fromList([0, 0, 0, 0]), // null データ
         Uint8List.fromList([137, 80, 78, 71]), // 不完全なPNGヘッダー
       ];
-      
+
       for (final data in malformedData) {
         final result = await service.analyzeMultipleSlideImages([data]);
         expect(result, isNull);
@@ -1095,15 +1193,16 @@ Additional explanation follows.
 
     test('should handle concurrent API calls', () async {
       final service = GeminiService(apiKey: 'test_key_for_coverage');
-      
+
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
-      
-      final futures = List.generate(5, (i) => 
-        service.analyzeMultipleSlideImages([imageData])
+
+      final futures = List.generate(
+        5,
+        (i) => service.analyzeMultipleSlideImages([imageData]),
       );
-      
+
       final results = await Future.wait(futures);
-      
+
       // 全て無効なAPIキーのため、nullが返る
       for (final result in results) {
         expect(result, isNull);
@@ -1112,7 +1211,7 @@ Additional explanation follows.
 
     test('should handle countTokens with various content types', () async {
       final service = GeminiService(apiKey: 'test_key_for_coverage');
-      
+
       final testContents = [
         'Simple text',
         'テキストの日本語',
@@ -1121,7 +1220,7 @@ Additional explanation follows.
         '   \n\t  ', // 空白文字
         'Mixed content: 日本語 English 123 🌟',
       ];
-      
+
       for (final content in testContents) {
         final tokenCount = await service.countTokens(content);
         // 無効なAPIキーのため、0が返る
@@ -1129,19 +1228,24 @@ Additional explanation follows.
       }
     });
 
-    test('should handle empty content in countTokens with real service', () async {
-      final service = GeminiService(apiKey: 'test_key_for_coverage');
-      
-      final tokenCount = await service.countTokens('');
-      
-      expect(tokenCount, 0);
-    });
+    test(
+      'should handle empty content in countTokens with real service',
+      () async {
+        final service = GeminiService(apiKey: 'test_key_for_coverage');
 
-    test('should test _extractJsonFromResponse indirectly through TestGeminiService', () async {
-      final service = TestGeminiService();
-      
-      // Test JSON with code block
-      service.mockResponse = '''
+        final tokenCount = await service.countTokens('');
+
+        expect(tokenCount, 0);
+      },
+    );
+
+    test(
+      'should test _extractJsonFromResponse indirectly through TestGeminiService',
+      () async {
+        final service = TestGeminiService();
+
+        // Test JSON with code block
+        service.mockResponse = '''
 ```json
 {
   "point": 95,
@@ -1150,17 +1254,18 @@ Additional explanation follows.
 }
 ```
 ''';
-      
-      final imageData = Uint8List.fromList([1, 2, 3, 4]);
-      final result = await service.analyzeMultipleSlideImages([imageData]);
-      
-      expect(result?.point, 95);
-      expect(result?.good, contains("JSON block extraction"));
-    });
+
+        final imageData = Uint8List.fromList([1, 2, 3, 4]);
+        final result = await service.analyzeMultipleSlideImages([imageData]);
+
+        expect(result?.point, 95);
+        expect(result?.good, contains("JSON block extraction"));
+      },
+    );
 
     test('should handle various JSON response formats', () async {
       final service = TestGeminiService();
-      
+
       final testCases = [
         // Simple JSON
         '{"point": 80, "good": ["Simple"], "improve": ["Test"]}',
@@ -1173,9 +1278,9 @@ Additional explanation follows.
         // JSON with extra text after
         '{"point": 84, "good": ["Suffix"], "improve": ["Test"]} End of analysis.',
       ];
-      
+
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
-      
+
       for (int i = 0; i < testCases.length; i++) {
         service.mockResponse = testCases[i];
         final result = await service.analyzeMultipleSlideImages([imageData]);
@@ -1199,10 +1304,10 @@ Additional explanation follows.
   ]
 }
 ''';
-      
+
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
       final result = await service.analyzeMultipleSlideImages([imageData]);
-      
+
       expect(result?.point, 87);
       expect(result?.good.length, 3);
       expect(result?.improve.length, 2);
@@ -1225,10 +1330,10 @@ Additional explanation follows.
   ]
 }
 ''';
-      
+
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
       final result = await service.analyzeMultipleSlideImages([imageData]);
-      
+
       expect(result?.point, 89);
       expect(result?.good.first, contains('"quotes"'));
     });
@@ -1236,18 +1341,18 @@ Additional explanation follows.
     test('should handle boundary values for point field', () async {
       final service = TestGeminiService();
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
-      
+
       // Test boundary values
       final boundaryTests = [
-        (0, true),    // Minimum valid
-        (1, true),    // Just above minimum
-        (50, true),   // Middle value
-        (99, true),   // Just below maximum
-        (100, true),  // Maximum valid
-        (-1, false),  // Just below minimum (invalid)
+        (0, true), // Minimum valid
+        (1, true), // Just above minimum
+        (50, true), // Middle value
+        (99, true), // Just below maximum
+        (100, true), // Maximum valid
+        (-1, false), // Just below minimum (invalid)
         (101, false), // Just above maximum (invalid)
       ];
-      
+
       for (final (point, shouldBeValid) in boundaryTests) {
         service.mockResponse = '''
 {
@@ -1256,9 +1361,9 @@ Additional explanation follows.
   "improve": ["Test"]
 }
 ''';
-        
+
         final result = await service.analyzeMultipleSlideImages([imageData]);
-        
+
         if (shouldBeValid) {
           expect(result?.point, point);
         } else {
@@ -1270,7 +1375,7 @@ Additional explanation follows.
     test('should handle JSON parsing edge cases', () async {
       final service = TestGeminiService();
       // Don't set shouldThrowError = true, let the natural ArgumentError for empty list be thrown
-      
+
       // 空の画像リストの場合の例外処理
       expect(
         () => service.analyzeMultipleSlideImages([]),
@@ -1282,21 +1387,33 @@ Additional explanation follows.
       // 空文字列のAPIキー
       expect(
         () => GeminiService(apiKey: ''),
-        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('API key not valid'))),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('API key not valid'),
+          ),
+        ),
       );
-      
+
       // プレースホルダーのAPIキー
       expect(
         () => GeminiService(apiKey: 'your_gemini_api_key_here'),
-        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('API key not valid'))),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('API key not valid'),
+          ),
+        ),
       );
-      
+
       // 非常に短いAPIキー（実際には短いキーも受け入れられる場合がある）
       expect(
         () => GeminiService(apiKey: 'short_but_valid_key'),
         returnsNormally,
       );
-      
+
       // 有効な形式のAPIキー（テスト用のモック応答は別のテストで確認）
       expect(
         () => GeminiService(apiKey: 'AIzaSyA' + 'B' * 32),
@@ -1308,9 +1425,9 @@ Additional explanation follows.
       final service = TestGeminiService();
       service.shouldThrowError = true;
       service.errorMessage = 'Network connectivity error';
-      
+
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
-      
+
       // ネットワークエラーを想定
       expect(
         () => service.analyzeMultipleSlideImages([imageData]),
@@ -1327,16 +1444,16 @@ Additional explanation follows.
   "improve": ["テスト"]
 }
 ''';
-      
+
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
-      
+
       // 連続してAPIを呼び出し（レート制限をテスト）
       final results = <ReviewResult?>[];
       for (int i = 0; i < 10; i++) {
         final result = await service.analyzeMultipleSlideImages([imageData]);
         results.add(result);
       }
-      
+
       // 全て同じ結果が返ることを確認
       for (final result in results) {
         expect(result!.point, 80);
@@ -1352,14 +1469,15 @@ Additional explanation follows.
   "improve": ["スライド間のつながりを改善"]
 }
 ''';
-      
+
       // 大量の小さい画像データを作成
-      final manySmallImages = List.generate(100, (i) => 
-        Uint8List.fromList([i % 256, (i + 1) % 256])
+      final manySmallImages = List.generate(
+        100,
+        (i) => Uint8List.fromList([i % 256, (i + 1) % 256]),
       );
-      
+
       final result = await service.analyzeMultipleSlideImages(manySmallImages);
-      
+
       // メモリプレッシャーに対応してデータが処理される
       expect(result!.point, 75);
       expect(result.good, contains('複数スライドの一貫性'));
@@ -1374,14 +1492,14 @@ Additional explanation follows.
   "improve": ["テスト"]
 }
 ''';
-      
+
       final imageData = Uint8List.fromList([1, 2, 3, 4]);
-      
+
       // 同じデータで複数回呼び出し
       final result1 = await service.analyzeMultipleSlideImages([imageData]);
       final result2 = await service.analyzeMultipleSlideImages([imageData]);
       final result3 = await service.analyzeMultipleSlideImages([imageData]);
-      
+
       // 一貫して同じ結果が返ることを確認
       expect(result1!.point, result2!.point);
       expect(result2.point, result3!.point);
@@ -1400,9 +1518,9 @@ Additional explanation follows.
 }
 ```
 ''';
-        
+
         final result = service.extractJsonFromResponse(response);
-        
+
         expect(result, isNotNull);
         expect(result!['point'], 95);
         expect(result['good'], contains('Excellent'));
@@ -1419,9 +1537,9 @@ Here is the analysis:
 }
 End of analysis.
 ''';
-        
+
         final result = service.extractJsonFromResponse(response);
-        
+
         expect(result, isNotNull);
         expect(result!['point'], 88);
         expect(result['good'], contains('Great structure'));
@@ -1436,26 +1554,26 @@ End of analysis.
   "improve": "Missing bracket"
 }
 ''';
-        
+
         final result = service.extractJsonFromResponse(response);
-        
+
         expect(result, isNull);
       });
 
       test('should handle empty response', () {
         final service = GeminiService(apiKey: 'test_key_for_coverage');
-        
+
         final result = service.extractJsonFromResponse('');
-        
+
         expect(result, isNull);
       });
 
       test('should handle response with no JSON', () {
         final service = GeminiService(apiKey: 'test_key_for_coverage');
         final response = 'This is just plain text without any JSON';
-        
+
         final result = service.extractJsonFromResponse(response);
-        
+
         expect(result, isNull);
       });
 
@@ -1468,9 +1586,9 @@ End of analysis.
   "improve": ["Fix / issues", "Handle \\\\ backslashes"]
 }
 ''';
-        
+
         final result = service.extractJsonFromResponse(response);
-        
+
         expect(result, isNotNull);
         expect(result!['point'], 85);
         expect(result['good'][0], contains('"quotes"'));
@@ -1492,9 +1610,9 @@ End of analysis.
   ]
 }
 ''';
-        
+
         final result = service.extractJsonFromResponse(response);
-        
+
         expect(result, isNotNull);
         expect(result!['point'], 92);
         expect(result['good'], hasLength(3));
@@ -1520,9 +1638,9 @@ Second JSON:
   "improve": ["Second improve"]
 }
 ''';
-        
+
         final result = service.extractJsonFromResponse(response);
-        
+
         expect(result, isNotNull);
         expect(result!['point'], 70); // Should extract the first JSON block
         expect(result['good'], contains('First'));
@@ -1535,10 +1653,10 @@ Second JSON:
           '\n\n{"point": 85, "good": ["Test"], "improve": ["Test"]}\n\n',
           '\t{"point": 85, "good": ["Test"], "improve": ["Test"]}\t',
         ];
-        
+
         for (final response in responses) {
           final result = service.extractJsonFromResponse(response);
-          
+
           expect(result, isNotNull);
           expect(result!['point'], 85);
         }

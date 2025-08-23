@@ -6,7 +6,7 @@ import 'package:presen_neta/shared/service/image_generator_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  
+
   group('ImageGeneratorService', () {
     late ImageGeneratorService service;
 
@@ -18,9 +18,9 @@ void main() {
       // テスト環境でアセットローダーを設定
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMessageHandler('flutter/assets', (message) async {
-        // アセットファイルが見つからない場合は空のデータを返す
-        return Uint8List(0).buffer.asByteData();
-      });
+            // アセットファイルが見つからない場合は空のデータを返す
+            return Uint8List(0).buffer.asByteData();
+          });
     });
 
     tearDownAll(() {
@@ -103,7 +103,7 @@ void main() {
 
     test('should generate result image with long title', () async {
       const sleepPercentage = 30;
-      const title = 'This is a very long presentation title that might need to be wrapped or truncated in the generated image';
+      const title = 'これは生成された画像で折り返しや省略が必要になるかもしれない非常に長いプレゼンテーションタイトルです';
       const goodPoints = ['Good point'];
       const improvements = ['Some improvement'];
 
@@ -249,8 +249,8 @@ void main() {
         improvements: improvements,
       );
 
-      // Images should have the same size (though content might differ slightly due to rendering)
-      expect(result1.length, greaterThan(1000)); // Should be a reasonable size for PNG
+      // 画像は同じサイズであるべき（ただし、レンダリングの違いにより内容がわずかに異なる場合があります）
+      expect(result1.length, greaterThan(1000)); // PNGとして妥当なサイズであるべき
       expect(result2.length, greaterThan(1000));
     });
 
@@ -258,8 +258,8 @@ void main() {
       // バイナリメッセンジャーをリセットして、アセット読み込みエラーを発生させる
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMessageHandler('flutter/assets', (message) async {
-        throw Exception('Asset not found');
-      });
+            throw Exception('Asset not found');
+          });
 
       const sleepPercentage = 45;
       const title = 'Error Test';
@@ -280,8 +280,8 @@ void main() {
       // アセットローダーを元に戻す
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMessageHandler('flutter/assets', (message) async {
-        return Uint8List(0).buffer.asByteData();
-      });
+            return Uint8List(0).buffer.asByteData();
+          });
     });
 
     test('should generate images with extreme values', () async {
@@ -292,7 +292,7 @@ void main() {
         (25, 'Test', <String>['A' * 1000], <String>[]),
         (75, 'Test', <String>[], <String>['B' * 1000]),
       ];
-      
+
       for (final (percentage, title, good, improve) in extremeCases) {
         final result = await service.generateResultImage(
           sleepPercentage: percentage,
@@ -300,7 +300,7 @@ void main() {
           goodPoints: good,
           improvements: improve,
         );
-        
+
         expect(result, isA<Uint8List>());
         expect(result.isNotEmpty, true);
       }
@@ -313,15 +313,39 @@ void main() {
         // Very short
         (35, 'A', <String>['B'], <String>['C']),
         // Medium length
-        (40, 'Medium Length Title', <String>['Good point here'], <String>['Improvement here']),
+        (
+          40,
+          'Medium Length Title',
+          <String>['Good point here'],
+          <String>['Improvement here'],
+        ),
         // Very long strings
-        (45, 'Very Long Title That Might Need Wrapping Or Truncation In The Generated Image Because It Is So Long', <String>['Very long good point that contains a lot of detailed information about what is good'], <String>['Very long improvement suggestion with detailed explanation']),
+        (
+          45,
+          '生成された画像で折り返しや省略が必要になるかもしれない非常に長いタイトルです',
+          <String>[
+            '良い点について詳細な情報がたくさん含まれている非常に長い良い点',
+          ],
+          <String>[
+            '詳細な説明を含む非常に長い改善提案',
+          ],
+        ),
         // Special characters
-        (50, 'Title with 特殊文字 & symbols!', <String>['Good with émojis 🎉'], <String>['Improve with ñ accents']),
+        (
+          50,
+          'Title with 特殊文字 & symbols!',
+          <String>['Good with émojis 🎉'],
+          <String>['Improve with ñ accents'],
+        ),
         // Numbers and mixed content
-        (55, '2024 Analysis Report #1', <String>['99% better than before'], <String>['Reduce by 50%']),
+        (
+          55,
+          '2024 Analysis Report #1',
+          <String>['99% better than before'],
+          <String>['Reduce by 50%'],
+        ),
       ];
-      
+
       for (final (percentage, title, good, improve) in textVariations) {
         final result = await service.generateResultImage(
           sleepPercentage: percentage,
@@ -329,7 +353,7 @@ void main() {
           goodPoints: good,
           improvements: improve,
         );
-        
+
         expect(result, isA<Uint8List>());
         expect(result.isNotEmpty, true);
       }
@@ -341,15 +365,18 @@ void main() {
       const goodPoints = ['Concurrency'];
       const improvements = ['Performance'];
 
-      final futures = List.generate(5, (i) => service.generateResultImage(
-        sleepPercentage: sleepPercentage + i,
-        title: '$title $i',
-        goodPoints: goodPoints,
-        improvements: improvements,
-      ));
-      
+      final futures = List.generate(
+        5,
+        (i) => service.generateResultImage(
+          sleepPercentage: sleepPercentage + i,
+          title: '$title $i',
+          goodPoints: goodPoints,
+          improvements: improvements,
+        ),
+      );
+
       final results = await Future.wait(futures);
-      
+
       for (final result in results) {
         expect(result, isA<Uint8List>());
         expect(result.isNotEmpty, true);
@@ -375,7 +402,7 @@ void main() {
       expect(result2, isA<Uint8List>());
       expect(result1.isNotEmpty, true);
       expect(result2.isNotEmpty, true);
-      
+
       // Images should be different (though we can't easily compare content)
       // At minimum, they should both be valid images
     });
@@ -387,14 +414,35 @@ void main() {
         // Single items
         (<String>['Single good'], <String>['Single improve']),
         // Many items
-        (List.generate(20, (i) => 'Good point $i'), List.generate(15, (i) => 'Improvement $i')),
+        (
+          List.generate(20, (i) => 'Good point $i'),
+          List.generate(15, (i) => 'Improvement $i'),
+        ),
         // Mixed lengths
-        (<String>['Short', 'Medium length point', 'Very long good point with lots of detail'], <String>['Brief', 'Detailed improvement suggestion with explanation']),
+        (
+          <String>[
+            'Short',
+            'Medium length point',
+            'Very long good point with lots of detail',
+          ],
+          <String>['Brief', 'Detailed improvement suggestion with explanation'],
+        ),
         // Special characters in lists
-        (<String>['Good with 🎉', 'Point with "quotes"', 'Item with \n newline'], <String>['Fix & improve', 'Handle / slashes', 'Address \\ backslashes']),
+        (
+          <String>[
+            'Good with 🎉',
+            'Point with "quotes"',
+            'Item with \n newline',
+          ],
+          <String>[
+            'Fix & improve',
+            'Handle / slashes',
+            r'Address \ backslashes',
+          ],
+        ),
       ];
-      
-      for (int i = 0; i < listTestCases.length; i++) {
+
+      for (var i = 0; i < listTestCases.length; i++) {
         final (good, improve) = listTestCases[i];
         final result = await service.generateResultImage(
           sleepPercentage: 40 + i * 10,
@@ -402,7 +450,7 @@ void main() {
           goodPoints: good,
           improvements: improve,
         );
-        
+
         expect(result, isA<Uint8List>());
         expect(result.isNotEmpty, true);
       }
@@ -415,7 +463,7 @@ void main() {
       const improvements = ['Standards'];
 
       final results = <Uint8List>[];
-      for (int i = 0; i < 3; i++) {
+      for (var i = 0; i < 3; i++) {
         final result = await service.generateResultImage(
           sleepPercentage: sleepPercentage,
           title: title,
@@ -424,7 +472,7 @@ void main() {
         );
         results.add(result);
       }
-      
+
       // All results should be non-empty images
       for (final result in results) {
         expect(result, isA<Uint8List>());
@@ -436,16 +484,16 @@ void main() {
 
     test('should handle various percentage display formats', () async {
       final percentageTests = [
-        0,   // 0%
-        1,   // 1%
-        10,  // 10%
-        25,  // 25%
-        50,  // 50%
-        75,  // 75%
-        99,  // 99%
+        0, // 0%
+        1, // 1%
+        10, // 10%
+        25, // 25%
+        50, // 50%
+        75, // 75%
+        99, // 99%
         100, // 100%
       ];
-      
+
       for (final percentage in percentageTests) {
         final result = await service.generateResultImage(
           sleepPercentage: percentage,
@@ -453,7 +501,7 @@ void main() {
           goodPoints: ['Test'],
           improvements: ['Test'],
         );
-        
+
         expect(result, isA<Uint8List>());
         expect(result.isNotEmpty, true);
       }
@@ -461,16 +509,24 @@ void main() {
 
     test('should handle memory-intensive text content', () async {
       // Test with large amounts of text
-      final largeGoodPoints = List.generate(100, (i) => 'Good point number $i with some additional text to make it longer');
-      final largeImprovements = List.generate(100, (i) => 'Improvement number $i with detailed explanation and suggestions');
-      
+      final largeGoodPoints = List.generate(
+        100,
+        (i) =>
+            'Good point number $i with some additional text to make it longer',
+      );
+      final largeImprovements = List.generate(
+        100,
+        (i) =>
+            'Improvement number $i with detailed explanation and suggestions',
+      );
+
       final result = await service.generateResultImage(
         sleepPercentage: 65,
-        title: 'Memory Test with Very Long Title That Contains Lots of Text and Information',
+        title: '大量のテキストと情報を含む非常に長いタイトルによるメモリテスト',
         goodPoints: largeGoodPoints,
         improvements: largeImprovements,
       );
-      
+
       expect(result, isA<Uint8List>());
       expect(result.isNotEmpty, true);
     });
@@ -490,17 +546,17 @@ void main() {
 
       expect(result, isA<Uint8List>());
       expect(result.isNotEmpty, true);
-      
+
       // Verify PNG signature (first 8 bytes)
       expect(result.length, greaterThan(8));
       expect(result[0], 137); // PNG signature byte 1
-      expect(result[1], 80);  // 'P'
-      expect(result[2], 78);  // 'N'
-      expect(result[3], 71);  // 'G'
-      expect(result[4], 13);  // CR
-      expect(result[5], 10);  // LF
-      expect(result[6], 26);  // SUB
-      expect(result[7], 10);  // LF
+      expect(result[1], 80); // 'P'
+      expect(result[2], 78); // 'N'
+      expect(result[3], 71); // 'G'
+      expect(result[4], 13); // CR
+      expect(result[5], 10); // LF
+      expect(result[6], 26); // SUB
+      expect(result[7], 10); // LF
     });
 
     test('should handle canvas operations without errors', () async {
@@ -519,7 +575,7 @@ void main() {
 
       expect(result, isA<Uint8List>());
       expect(result.isNotEmpty, true);
-      
+
       // Should be a reasonable size for a PNG image
       expect(result.length, greaterThan(1000));
       expect(result.length, lessThan(1000000)); // Not too large
