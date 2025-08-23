@@ -12,6 +12,6 @@ abstract class EnvConfig {
   ///
   /// Google Gemini API を使用するために必要な API キーを取得する。
   /// 環境変数 `API_KEY` から値を取得する。
-  @EnviedField(varName: 'API_KEY')
+  @EnviedField(varName: 'GEMINI_API_KEY_DEV')
   static const String geminiApiKey = _EnvConfig.geminiApiKey;
 }
