@@ -6,7 +6,7 @@ part 'env_config.g.dart';
 ///
 /// アプリケーションで使用する環境変数を定義し、型安全にアクセスできるようにする。
 /// [envied] パッケージを使用して環境変数をコンパイル時に注入する。
-@Envied()
+@Envied(path: '.env')
 abstract class EnvConfig {
   /// Gemini API のキー。
   ///
