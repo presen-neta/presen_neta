@@ -271,14 +271,10 @@ void main() {
 
   group('Real GeminiService with Mocks', () {
     late MockGenerativeModelInterface mockModel;
-    late MockGenerateContentResponse mockResponse;
-    late MockCountTokensResponse mockCountResponse;
     late GeminiService geminiService;
 
     setUp(() {
       mockModel = MockGenerativeModelInterface();
-      mockResponse = MockGenerateContentResponse(text: '{}');
-      mockCountResponse = MockCountTokensResponse(totalTokens: 0);
       geminiService = GeminiService(mockModel: mockModel);
     });
 
