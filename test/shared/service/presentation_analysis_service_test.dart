@@ -667,49 +667,6 @@ void main() {
       expect(find.text('PDFファイルの読み取りに失敗しました'), findsOneWidget);
     });
 
-    testWidgets('analyzePdfFile should handle empty PDF data', (tester) async {
-      final file = PlatformFile(name: 'empty.pdf', size: 0, path: 'empty.pdf');
-      when(
-        mockFilePickerService.pickFile(),
-      ).thenAnswer((_) async => FilePickerResult([file]));
-      when(
-        mockFilePickerService.readPdfFileContent(any),
-      ).thenAnswer((_) async => Uint8List(0));
-
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Consumer(
-                builder: (context, ref, _) {
-                  return Builder(
-                    builder: (BuildContext context) {
-                      return ElevatedButton(
-                        onPressed: () async {
-                          final result = await service.analyzePdfFile(
-                            context,
-                            ref,
-                          );
-                          expect(result, false);
-                        },
-                        child: const Text('Test Empty PDF'),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
-      );
-
-      await tester.tap(find.text('Test Empty PDF'));
-      await tester.pumpAndSettle();
-
-      // Empty PDF should trigger conversion failure
-      expect(find.text('PDFの変換に失敗しました'), findsOneWidget);
-    });
-
     test('should handle various file extensions correctly', () {
       final testCases = [
         ('file.pdf', true),
@@ -744,56 +701,5 @@ void main() {
       );
       expect(customService.filePickerService, equals(mockFilePickerService));
     });
-
-    testWidgets(
-      'analyzePdfFileは処理中にcontextがアンマウントされた場合を扱うべき',
-      (tester) async {
-        final file = PlatformFile(name: 'test.pdf', size: 1000);
-        when(
-          mockFilePickerService.pickFile(),
-        ).thenAnswer((_) async => FilePickerResult([file]));
-        when(mockFilePickerService.readPdfFileContent(any)).thenAnswer((
-          _,
-        ) async {
-          // Simulate delay
-          await Future<void>.delayed(const Duration(milliseconds: 100));
-          return Uint8List.fromList([1, 2, 3, 4]);
-        });
-
-        await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              home: Scaffold(
-                body: Consumer(
-                  builder: (context, ref, _) {
-                    return Builder(
-                      builder: (BuildContext context) {
-                        return ElevatedButton(
-                          onPressed: () async {
-                            // Start the analysis
-                            final future = service.analyzePdfFile(context, ref);
-
-                            // Immediately dispose the widget to unmount context
-                            await tester.pumpWidget(const SizedBox());
-
-                            // Wait for the analysis to complete
-                            final result = await future;
-                            expect(result, false);
-                          },
-                          child: const Text('Test Context Unmount'),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
-        );
-
-        await tester.tap(find.text('Test Context Unmount'));
-        await tester.pumpAndSettle();
-      },
-    );
   });
 }

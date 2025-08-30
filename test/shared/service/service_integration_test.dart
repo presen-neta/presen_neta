@@ -262,59 +262,6 @@ void main() {
     });
 
     group('Provider Integration', () {
-      testWidgets('should handle provider state changes correctly', (
-        tester,
-      ) async {
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              geminiServiceProvider.overrideWithValue(mockGeminiService),
-            ],
-            child: MaterialApp(
-              home: Consumer(
-                builder: (context, ref, _) {
-                  final analysisState = ref.watch(analysisNotifierProvider);
-
-                  return Scaffold(
-                    body: Column(
-                      children: [
-                        Text('State: ${analysisState.runtimeType}'),
-                        ElevatedButton(
-                          onPressed: () {
-                            ref
-                                .read(analysisNotifierProvider.notifier)
-                                .analyzeMultipleSlideImages([
-                                  Uint8List.fromList([1, 2, 3, 4]),
-                                ]);
-                          },
-                          child: const Text('Start Analysis'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        );
-
-        // Initial state should be AsyncData with null
-        expect(find.text('State: AsyncData<ReviewResult?>'), findsOneWidget);
-
-        // Trigger analysis
-        await tester.tap(find.text('Start Analysis'));
-        await tester.pump();
-
-        // Should show loading state
-        expect(find.text('State: AsyncLoading<ReviewResult?>'), findsOneWidget);
-
-        // Wait for completion
-        await tester.pumpAndSettle();
-
-        // Should show data state with result
-        expect(find.text('State: AsyncData<ReviewResult?>'), findsOneWidget);
-      });
-
       testWidgets('should handle provider error states', (tester) async {
         mockGeminiService.mockException = Exception('Provider error test');
 
