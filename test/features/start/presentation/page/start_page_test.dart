@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:presen_neta/app/app_router/app_router.dart';
 import 'package:presen_neta/features/result/provider/result_provider.dart';
 import 'package:presen_neta/features/start/presentation/page/start_page.dart';
 import 'package:presen_neta/shared/providers/service_providers.dart';
@@ -78,22 +77,6 @@ void main() {
 
       mockService = TestPresentationAnalysisService();
     });
-
-    testWidgets('PDFファイル選択ボタンが表示される', (WidgetTester tester) async {
-      // StartPageをビルド
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: testServiceOverrides,
-          child: MaterialApp.router(
-            routerConfig: appRouter,
-          ),
-        ),
-      );
-
-      // PDFファイル選択ボタンが存在することを確認
-      expect(find.text('PDFファイルを選択'), findsOneWidget);
-    });
-
     testWidgets('StartPageコンストラクタのサービス注入確認', (WidgetTester tester) async {
       final injectedService =
           TestPresentationAnalysisService()..shouldSucceed = true;

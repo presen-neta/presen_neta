@@ -1,20 +1,15 @@
 import 'dart:typed_data';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mockito/annotations.dart';
-import 'package:mockito/mockito.dart';
 import 'package:presen_neta/features/result/provider/result_provider.dart';
 import 'package:presen_neta/shared/models/review_result.dart';
 import 'package:presen_neta/shared/providers/service_providers.dart';
 import 'package:presen_neta/shared/service/file_picker_service.dart';
 import 'package:presen_neta/shared/service/image_generator_service.dart';
 import 'package:presen_neta/shared/service/interfaces/gemini_service_interface.dart';
-import 'package:presen_neta/shared/service/presentation_analysis_service.dart';
-
-import 'service_integration_test.mocks.dart';
 
 /// Mock implementation of GeminiService for integration testing
 class MockGeminiServiceForIntegration implements GeminiServiceInterface {
@@ -57,17 +52,11 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('Service Integration Tests', () {
-    late MockFilePickerService mockFilePickerService;
     late MockGeminiServiceForIntegration mockGeminiService;
-    late PresentationAnalysisService presentationService;
     late ImageGeneratorService imageService;
 
     setUp(() {
-      mockFilePickerService = MockFilePickerService();
       mockGeminiService = MockGeminiServiceForIntegration();
-      presentationService = PresentationAnalysisService(
-        filePickerService: mockFilePickerService,
-      );
       imageService = const ImageGeneratorService();
     });
     group('Image Generation Integration', () {
