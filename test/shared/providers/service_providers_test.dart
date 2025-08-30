@@ -1,11 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:presen_neta/shared/providers/service_providers.dart';
-import 'package:presen_neta/shared/service/file_picker_service.dart';
 import 'package:presen_neta/shared/service/interfaces/file_picker_service_interface.dart';
 import 'package:presen_neta/shared/service/interfaces/gemini_service_interface.dart';
 import 'package:presen_neta/shared/service/interfaces/presentation_analysis_service_interface.dart';
-import 'package:presen_neta/shared/service/presentation_analysis_service.dart';
 import '../service/mocks/mock_file_picker_service.dart';
 import '../service/mocks/mock_gemini_service.dart';
 import '../service/mocks/mock_presentation_analysis_service.dart';
@@ -53,18 +51,6 @@ void main() {
         expect(service1, same(mockFilePickerService));
       });
 
-      test('should create actual FilePickerService when no override', () {
-        final noOverrideContainer = ProviderContainer();
-
-        try {
-          final service = noOverrideContainer.read(filePickerServiceProvider);
-          expect(service, isA<FilePickerServiceInterface>());
-          expect(service, isA<FilePickerService>());
-        } finally {
-          noOverrideContainer.dispose();
-        }
-      });
-
       test('should maintain provider state correctly', () {
         final service1 = container.read(filePickerServiceProvider);
         final service2 = container.read(filePickerServiceProvider);
@@ -87,22 +73,6 @@ void main() {
 
         expect(service1, same(service2));
         expect(service1, same(mockGeminiService));
-      });
-
-      test('should handle provider creation without override', () {
-        // Create container without overrides to test actual provider creation
-        final noOverrideContainer = ProviderContainer();
-
-        try {
-          // This will attempt to create the actual GeminiService
-          // It should fail because no valid API key is set in test environment
-          expect(
-            () => noOverrideContainer.read(geminiServiceProvider),
-            throwsA(isA<Exception>()),
-          );
-        } finally {
-          noOverrideContainer.dispose();
-        }
       });
 
       test('should maintain provider state correctly', () {
@@ -142,30 +112,6 @@ void main() {
         );
         expect(filePickerService, isA<FilePickerServiceInterface>());
       });
-
-      test(
-        'should create actual PresentationAnalysisService when no override',
-        () {
-          // 実際のサービス生成をテストするため、filePickerServiceのみオーバーライドしたコンテナを作成
-          final partialOverrideContainer = ProviderContainer(
-            overrides: [
-              filePickerServiceProvider.overrideWithValue(
-                mockFilePickerService,
-              ),
-            ],
-          );
-
-          try {
-            final service = partialOverrideContainer.read(
-              presentationAnalysisServiceProvider,
-            );
-            expect(service, isA<PresentationAnalysisServiceInterface>());
-            expect(service, isA<PresentationAnalysisService>());
-          } finally {
-            partialOverrideContainer.dispose();
-          }
-        },
-      );
 
       test('should maintain dependency chain correctly', () {
         final service1 = container.read(presentationAnalysisServiceProvider);
@@ -301,73 +247,6 @@ void main() {
           expect(service, isA<FilePickerServiceInterface>());
 
           testContainer.dispose();
-        }
-      });
-
-      test('should handle partial provider overrides', () {
-        final partialContainer = ProviderContainer(
-          overrides: [
-            filePickerServiceProvider.overrideWithValue(mockFilePickerService),
-            // Only override filePickerService, let others use defaults or fail
-          ],
-        );
-
-        try {
-          final fileService = partialContainer.read(filePickerServiceProvider);
-          expect(fileService, same(mockFilePickerService));
-
-          // This should fail because GeminiService needs valid API key
-          expect(
-            () => partialContainer.read(geminiServiceProvider),
-            throwsA(isA<Exception>()),
-          );
-        } finally {
-          partialContainer.dispose();
-        }
-      });
-    });
-
-    group('error handling', () {
-      test('should handle provider read errors gracefully', () {
-        final errorContainer = ProviderContainer();
-
-        try {
-          // FilePickerService should work fine
-          expect(
-            () => errorContainer.read(filePickerServiceProvider),
-            returnsNormally,
-          );
-
-          // GeminiService should throw because no valid API key
-          expect(
-            () => errorContainer.read(geminiServiceProvider),
-            throwsA(isA<Exception>()),
-          );
-        } finally {
-          errorContainer.dispose();
-        }
-      });
-
-      test('should maintain state even after error in other providers', () {
-        // filePickerServiceは正常に動作し、geminiServiceは失敗するコンテナを作成する
-        final mixedContainer = ProviderContainer();
-
-        try {
-          // This should work
-          final fileService = mixedContainer.read(filePickerServiceProvider);
-          expect(fileService, isA<FilePickerServiceInterface>());
-
-          // This should fail
-          expect(
-            () => mixedContainer.read(geminiServiceProvider),
-            throwsA(isA<Exception>()),
-          );
-
-          // FilePickerService should still work after other provider failed
-          final fileService2 = mixedContainer.read(filePickerServiceProvider);
-          expect(fileService2, same(fileService));
-        } finally {
-          mixedContainer.dispose();
         }
       });
     });

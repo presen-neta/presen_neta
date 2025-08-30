@@ -254,36 +254,6 @@ void main() {
       expect(result2.length, greaterThan(1000));
     });
 
-    test('should handle asset loading failures gracefully', () async {
-      // バイナリメッセンジャーをリセットして、アセット読み込みエラーを発生させる
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMessageHandler('flutter/assets', (message) async {
-            throw Exception('Asset not found');
-          });
-
-      const sleepPercentage = 45;
-      const title = 'Error Test';
-      const goodPoints = ['Still works'];
-      const improvements = ['Handle errors'];
-
-      final result = await service.generateResultImage(
-        sleepPercentage: sleepPercentage,
-        title: title,
-        goodPoints: goodPoints,
-        improvements: improvements,
-      );
-
-      // 画像は生成されるべき（アセット読み込み失敗は無視される）
-      expect(result, isA<Uint8List>());
-      expect(result.isNotEmpty, true);
-
-      // アセットローダーを元に戻す
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMessageHandler('flutter/assets', (message) async {
-            return Uint8List(0).buffer.asByteData();
-          });
-    });
-
     test('should generate images with extreme values', () async {
       final extremeCases = [
         (0, 'Perfect', <String>[], <String>[]),

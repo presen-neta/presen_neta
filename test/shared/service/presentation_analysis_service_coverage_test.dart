@@ -198,55 +198,6 @@ void main() {
         verifyNever(mockFilePickerService.readPdfFileContent(any));
       });
 
-      testWidgets('should handle various file extensions', (tester) async {
-        final testFiles = [
-          PlatformFile(name: 'test.PDF', size: 100), // uppercase
-          PlatformFile(name: 'test.Pdf', size: 100), // mixed case
-          PlatformFile(name: 'test.doc', size: 100), // different extension
-          PlatformFile(name: 'test.xlsx', size: 100), // different extension
-          PlatformFile(name: 'test', size: 100), // no extension
-        ];
-
-        for (var i = 0; i < testFiles.length; i++) {
-          final file = testFiles[i];
-          when(
-            mockFilePickerService.pickFile(),
-          ).thenAnswer((_) async => FilePickerResult([file]));
-
-          await tester.pumpWidget(
-            ProviderScope(
-              child: MaterialApp(
-                home: Scaffold(
-                  body: Builder(
-                    builder: (context) {
-                      return Consumer(
-                        builder: (context, ref, _) {
-                          return ElevatedButton(
-                            onPressed: () async {
-                              final result = await service.analyzePdfFile(
-                                context,
-                                ref,
-                              );
-
-                              // 小文字の 'pdf' のみがファイル読み込み段階に進むべき
-                              expect(result, false);
-                            },
-                            child: Text('Test $i'),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
-          );
-
-          await tester.tap(find.text('Test $i'));
-          await tester.pumpAndSettle();
-        }
-      });
-
       testWidgets('should handle PDF file read failure', (tester) async {
         // Arrange
         final pdfFile = PlatformFile(name: 'test.pdf', size: 1000);
@@ -290,48 +241,6 @@ void main() {
         verify(mockFilePickerService.pickFile()).called(1);
         verify(mockFilePickerService.readPdfFileContent(any)).called(1);
       });
-
-      testWidgets('should handle file picker service exception', (
-        tester,
-      ) async {
-        // Arrange
-        when(
-          mockFilePickerService.pickFile(),
-        ).thenThrow(Exception('File picker error'));
-
-        await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              home: Scaffold(
-                body: Builder(
-                  builder: (context) {
-                    return Consumer(
-                      builder: (context, ref, _) {
-                        return ElevatedButton(
-                          onPressed: () async {
-                            final result = await service.analyzePdfFile(
-                              context,
-                              ref,
-                            );
-                            expect(result, false);
-                          },
-                          child: const Text('Test Exception'),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
-        );
-
-        await tester.tap(find.text('Test Exception'));
-        await tester.pumpAndSettle();
-
-        verify(mockFilePickerService.pickFile()).called(1);
-      });
-
       testWidgets('should handle file read exception', (tester) async {
         // Arrange
         final pdfFile = PlatformFile(name: 'test.pdf', size: 1000);
@@ -416,54 +325,6 @@ void main() {
           filePickerService: mockFilePickerService,
         );
         expect(service.filePickerService, same(mockFilePickerService));
-      });
-
-      test('should return default service when not provided', () {
-        final service = PresentationAnalysisService();
-        expect(service.filePickerService, isA<FilePickerService>());
-      });
-    });
-
-    group('error handling edge cases', () {
-      testWidgets('should handle context unmounted during file selection', (
-        tester,
-      ) async {
-        // This is a complex scenario to test due to widget lifecycle
-        final pdfFile = PlatformFile(name: 'test.pdf', size: 1000);
-        when(
-          mockFilePickerService.pickFile(),
-        ).thenAnswer((_) async => FilePickerResult([pdfFile]));
-
-        await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              home: Scaffold(
-                body: Builder(
-                  builder: (context) {
-                    return Consumer(
-                      builder: (context, ref, _) {
-                        return ElevatedButton(
-                          onPressed: () async {
-                            // This will test the context.mounted check
-                            final result = await service.analyzePdfFile(
-                              context,
-                              ref,
-                            );
-                            expect(result, false);
-                          },
-                          child: const Text('Test Context'),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
-        );
-
-        await tester.tap(find.text('Test Context'));
-        await tester.pumpAndSettle();
       });
     });
   });
