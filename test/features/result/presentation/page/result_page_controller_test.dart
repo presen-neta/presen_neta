@@ -7,290 +7,376 @@ import 'package:mockito/mockito.dart';
 import 'package:presen_neta/features/result/presentation/page/result_page_controller.dart';
 import 'package:presen_neta/shared/service/image_generator_service.dart';
 import 'package:share_plus/share_plus.dart';
-
 import 'result_page_controller_test.mocks.dart';
 
-@GenerateMocks([
-  ImageGeneratorService,
-  SharePlus,
-  Directory,
-  File,
-])
+@GenerateMocks([ImageGeneratorService, SharePlus, Directory, File])
 void main() {
-  late ResultPageController controller;
-  late MockImageGeneratorService mockImageGenerator;
-  late MockSharePlus mockSharePlus;
-  late MockDirectory mockDirectory;
-  late MockFile mockFile;
-
-  setUp(() {
-    mockImageGenerator = MockImageGeneratorService();
-    mockSharePlus = MockSharePlus();
-    mockDirectory = MockDirectory();
-    mockFile = MockFile();
-
-    controller = ResultPageController(
-      imageGenerator: mockImageGenerator,
-      shareService: mockSharePlus,
-      getTempDir: () async => mockDirectory,
-    );
-  });
-
   group('ResultPageController', () {
+    late MockImageGeneratorService mockImageGenerator;
+    late MockSharePlus mockShareService;
+    late MockDirectory mockTempDir;
+
+    setUp(() {
+      mockImageGenerator = MockImageGeneratorService();
+      mockShareService = MockSharePlus();
+      mockTempDir = MockDirectory();
+    });
+
+    test('デフォルトコンストラクタで正常にインスタンス化される', () {
+      final controller = ResultPageController();
+      expect(controller, isA<ResultPageController>());
+    });
+
+    test('カスタムサービスでインスタンス化される', () {
+      final controller = ResultPageController(
+        imageGenerator: mockImageGenerator,
+        shareService: mockShareService,
+        getTempDir: () async => mockTempDir,
+      );
+
+      expect(controller, isA<ResultPageController>());
+    });
+
     group('shareResult', () {
-      test('正常に画像生成とシェアが実行される', () async {
-        // モックの設定
-        final testImageBytes = Uint8List.fromList([1, 2, 3, 4]);
+      const sleepPercentage = 60;
+      const title = 'Test Presentation';
+      const goodPoints = ['Good point 1', 'Good point 2'];
+      const improvements = ['Improvement 1', 'Improvement 2'];
+
+      test('画像生成が成功した場合に画像付きでシェアする', () async {
+        final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
+        const tempDirPath = 'assets';
+
+        final controller = ResultPageController(
+          imageGenerator: mockImageGenerator,
+          shareService: mockShareService,
+          getTempDir: () async => mockTempDir,
+        );
+
         when(
           mockImageGenerator.generateResultImage(
-            sleepPercentage: 69,
-            title: 'つまらん！',
-            goodPoints: anyNamed('goodPoints'),
-            improvements: anyNamed('improvements'),
+            sleepPercentage: sleepPercentage,
+            title: title,
+            goodPoints: goodPoints,
+            improvements: improvements,
           ),
-        ).thenAnswer((_) async => testImageBytes);
+        ).thenAnswer((_) async => imageBytes);
 
-        when(mockDirectory.path).thenReturn('/tmp');
-        when(mockFile.writeAsBytes(any)).thenAnswer((_) async => mockFile);
-
-        when(mockSharePlus.share(any)).thenAnswer(
-          (_) async => const ShareResult(
-            '',
-            ShareResultStatus.success,
-          ),
+        when(mockTempDir.path).thenReturn(tempDirPath);
+        when(
+          mockShareService.share(any),
+        ).thenAnswer(
+          (_) async => const ShareResult('', ShareResultStatus.success),
         );
 
-        // テスト実行
         await controller.shareResult(
-          sleepPercentage: 69,
-          title: 'つまらん！',
-          goodPoints: [
-            'スライドの構成が分かりやすい',
-            '文字サイズが適切',
-            '色使いが統一されている',
-          ],
-          improvements: [
-            'アニメーションを追加して動きを出す',
-            'より具体的なデータを提示する',
-            '結論を最初に示す',
-          ],
+          sleepPercentage: sleepPercentage,
+          title: title,
+          goodPoints: goodPoints,
+          improvements: improvements,
         );
 
-        // モックが呼ばれたことを確認
         verify(
           mockImageGenerator.generateResultImage(
-            sleepPercentage: 69,
-            title: 'つまらん！',
-            goodPoints: anyNamed('goodPoints'),
-            improvements: anyNamed('improvements'),
+            sleepPercentage: sleepPercentage,
+            title: title,
+            goodPoints: goodPoints,
+            improvements: improvements,
           ),
         ).called(1);
 
-        verify(mockSharePlus.share(any)).called(1);
+        verify(mockShareService.share(any)).called(1);
       });
 
-      test('画像生成が失敗した場合、テキストのみでシェアする', () async {
-        // モックの設定 - 例外を投げる
+      test('画像生成が失敗した場合にテキストのみでシェアする', () async {
+        final controller = ResultPageController(
+          imageGenerator: mockImageGenerator,
+          shareService: mockShareService,
+          getTempDir: () async => mockTempDir,
+        );
+
         when(
           mockImageGenerator.generateResultImage(
-            sleepPercentage: 69,
-            title: 'つまらん！',
+            sleepPercentage: anyNamed('sleepPercentage'),
+            title: anyNamed('title'),
             goodPoints: anyNamed('goodPoints'),
             improvements: anyNamed('improvements'),
           ),
-        ).thenThrow(Exception('Test exception'));
+        ).thenThrow(Exception('Image generation failed'));
 
-        when(mockSharePlus.share(any)).thenAnswer(
-          (_) async => const ShareResult(
-            '',
-            ShareResultStatus.success,
-          ),
-        );
-
-        // テスト実行
-        await controller.shareResult(
-          sleepPercentage: 69,
-          title: 'つまらん！',
-          goodPoints: [
-            'スライドの構成が分かりやすい',
-            '文字サイズが適切',
-            '色使いが統一されている',
-          ],
-          improvements: [
-            'アニメーションを追加して動きを出す',
-            'より具体的なデータを提示する',
-            '結論を最初に示す',
-          ],
-        );
-
-        // エラー時のシェアが呼ばれたことを確認
-        verify(mockSharePlus.share(any)).called(1);
-      });
-
-      test('異なるパラメータで正常に動作する', () async {
-        // モックの設定
-        final testImageBytes = Uint8List.fromList([1, 2, 3, 4]);
         when(
-          mockImageGenerator.generateResultImage(
-            sleepPercentage: 50,
-            title: 'まあまあ',
-            goodPoints: anyNamed('goodPoints'),
-            improvements: anyNamed('improvements'),
-          ),
-        ).thenAnswer((_) async => testImageBytes);
-
-        when(mockDirectory.path).thenReturn('/tmp');
-        when(mockFile.writeAsBytes(any)).thenAnswer((_) async => mockFile);
-        when(mockSharePlus.share(any)).thenAnswer(
-          (_) async => const ShareResult(
-            '',
-            ShareResultStatus.success,
-          ),
+          mockShareService.share(any),
+        ).thenAnswer(
+          (_) async => const ShareResult('', ShareResultStatus.success),
         );
 
-        // テスト実行
         await controller.shareResult(
-          sleepPercentage: 50,
-          title: 'まあまあ',
-          goodPoints: ['良い点1'],
-          improvements: ['改善点1'],
+          sleepPercentage: sleepPercentage,
+          title: title,
+          goodPoints: goodPoints,
+          improvements: improvements,
         );
 
-        // モックが呼ばれたことを確認
         verify(
           mockImageGenerator.generateResultImage(
-            sleepPercentage: 50,
-            title: 'まあまあ',
-            goodPoints: anyNamed('goodPoints'),
-            improvements: anyNamed('improvements'),
+            sleepPercentage: sleepPercentage,
+            title: title,
+            goodPoints: goodPoints,
+            improvements: improvements,
           ),
         ).called(1);
+
+        verify(mockShareService.share(any)).called(1);
       });
 
-      test('空のリストでも正常に動作する', () async {
-        // モックの設定
-        final testImageBytes = Uint8List.fromList([1, 2, 3, 4]);
-        when(
-          mockImageGenerator.generateResultImage(
-            sleepPercentage: 0,
-            title: '素晴らしい！',
-            goodPoints: anyNamed('goodPoints'),
-            improvements: anyNamed('improvements'),
-          ),
-        ).thenAnswer((_) async => testImageBytes);
+      test('空のリストを処理する', () async {
+        final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
+        const tempDirPath = 'assets';
 
-        when(mockDirectory.path).thenReturn('/tmp');
-        when(mockFile.writeAsBytes(any)).thenAnswer((_) async => mockFile);
-        when(mockSharePlus.share(any)).thenAnswer(
-          (_) async => const ShareResult(
-            '',
-            ShareResultStatus.success,
-          ),
+        final controller = ResultPageController(
+          imageGenerator: mockImageGenerator,
+          shareService: mockShareService,
+          getTempDir: () async => mockTempDir,
         );
 
-        // テスト実行
+        when(
+          mockImageGenerator.generateResultImage(
+            sleepPercentage: sleepPercentage,
+            title: title,
+            goodPoints: [],
+            improvements: [],
+          ),
+        ).thenAnswer((_) async => imageBytes);
+
+        when(mockTempDir.path).thenReturn(tempDirPath);
+        when(
+          mockShareService.share(any),
+        ).thenAnswer(
+          (_) async => const ShareResult('', ShareResultStatus.success),
+        );
+
         await controller.shareResult(
-          sleepPercentage: 0,
-          title: '素晴らしい！',
+          sleepPercentage: sleepPercentage,
+          title: title,
           goodPoints: [],
           improvements: [],
         );
 
-        // モックが呼ばれたことを確認
+        verify(
+          mockImageGenerator.generateResultImage(
+            sleepPercentage: sleepPercentage,
+            title: title,
+            goodPoints: [],
+            improvements: [],
+          ),
+        ).called(1);
+      });
+
+      test('睡眠パーセンテージが0の場合を処理する', () async {
+        final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
+        const tempDirPath = 'assets';
+
+        final controller = ResultPageController(
+          imageGenerator: mockImageGenerator,
+          shareService: mockShareService,
+          getTempDir: () async => mockTempDir,
+        );
+
+        when(
+          mockImageGenerator.generateResultImage(
+            sleepPercentage: 0,
+            title: title,
+            goodPoints: goodPoints,
+            improvements: improvements,
+          ),
+        ).thenAnswer((_) async => imageBytes);
+
+        when(mockTempDir.path).thenReturn(tempDirPath);
+        when(
+          mockShareService.share(any),
+        ).thenAnswer(
+          (_) async => const ShareResult('', ShareResultStatus.success),
+        );
+
+        await controller.shareResult(
+          sleepPercentage: 0,
+          title: title,
+          goodPoints: goodPoints,
+          improvements: improvements,
+        );
+
         verify(
           mockImageGenerator.generateResultImage(
             sleepPercentage: 0,
-            title: '素晴らしい！',
-            goodPoints: anyNamed('goodPoints'),
-            improvements: anyNamed('improvements'),
+            title: title,
+            goodPoints: goodPoints,
+            improvements: improvements,
           ),
         ).called(1);
       });
 
-      test('極端な値でも正常に動作する', () async {
-        // モックの設定
-        final testImageBytes = Uint8List.fromList([1, 2, 3, 4]);
+      test('ディレクトリアクセスエラーを処理する', () async {
+        final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
+
+        final controller = ResultPageController(
+          imageGenerator: mockImageGenerator,
+          shareService: mockShareService,
+          getTempDir: () => throw Exception('Directory access failed'),
+        );
+
         when(
           mockImageGenerator.generateResultImage(
-            sleepPercentage: 100,
-            title: '最悪！',
+            sleepPercentage: anyNamed('sleepPercentage'),
+            title: anyNamed('title'),
             goodPoints: anyNamed('goodPoints'),
             improvements: anyNamed('improvements'),
           ),
-        ).thenAnswer((_) async => testImageBytes);
+        ).thenAnswer((_) async => imageBytes);
 
-        when(mockDirectory.path).thenReturn('/tmp');
-        when(mockFile.writeAsBytes(any)).thenAnswer((_) async => mockFile);
-        when(mockSharePlus.share(any)).thenAnswer(
-          (_) async => const ShareResult(
-            '',
-            ShareResultStatus.success,
-          ),
+        when(
+          mockShareService.share(any),
+        ).thenAnswer(
+          (_) async => const ShareResult('', ShareResultStatus.success),
         );
 
-        // テスト実行
+        await controller.shareResult(
+          sleepPercentage: sleepPercentage,
+          title: title,
+          goodPoints: goodPoints,
+          improvements: improvements,
+        );
+
+        verify(mockShareService.share(any)).called(1);
+      });
+
+      test('シェアサービスの失敗を適切に処理する', () async {
+        final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
+        const tempDirPath = 'assets';
+
+        final controller = ResultPageController(
+          imageGenerator: mockImageGenerator,
+          shareService: mockShareService,
+          getTempDir: () async => mockTempDir,
+        );
+
+        when(
+          mockImageGenerator.generateResultImage(
+            sleepPercentage: sleepPercentage,
+            title: title,
+            goodPoints: goodPoints,
+            improvements: improvements,
+          ),
+        ).thenAnswer((_) async => imageBytes);
+
+        when(mockTempDir.path).thenReturn(tempDirPath);
+
+        // Share サービスの呼び出しをカウントするためのカウンター
+        var shareCallCount = 0;
+        when(mockShareService.share(any)).thenAnswer((_) async {
+          shareCallCount++;
+          if (shareCallCount == 1) {
+            throw Exception('Share failed');
+          }
+          return const ShareResult('', ShareResultStatus.success);
+        });
+
+        // 例外が発生しないことを確認
+        await controller.shareResult(
+          sleepPercentage: sleepPercentage,
+          title: title,
+          goodPoints: goodPoints,
+          improvements: improvements,
+        );
+
+        // Share サービスが2回呼ばれることを確認（1回目は失敗、2回目は成功）
+        verify(mockShareService.share(any)).called(2);
+      });
+
+      test('睡眠パーセンテージが100の場合を処理する', () async {
+        final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
+        const tempDirPath = 'assets';
+
+        final controller = ResultPageController(
+          imageGenerator: mockImageGenerator,
+          shareService: mockShareService,
+          getTempDir: () async => mockTempDir,
+        );
+
+        when(
+          mockImageGenerator.generateResultImage(
+            sleepPercentage: 100,
+            title: title,
+            goodPoints: goodPoints,
+            improvements: improvements,
+          ),
+        ).thenAnswer((_) async => imageBytes);
+
+        when(mockTempDir.path).thenReturn(tempDirPath);
+        when(
+          mockShareService.share(any),
+        ).thenAnswer(
+          (_) async => const ShareResult('', ShareResultStatus.success),
+        );
+
         await controller.shareResult(
           sleepPercentage: 100,
-          title: '最悪！',
-          goodPoints: ['良い点1', '良い点2', '良い点3'],
-          improvements: ['改善点1', '改善点2', '改善点3'],
+          title: title,
+          goodPoints: goodPoints,
+          improvements: improvements,
         );
 
-        // モックが呼ばれたことを確認
         verify(
           mockImageGenerator.generateResultImage(
             sleepPercentage: 100,
-            title: '最悪！',
-            goodPoints: anyNamed('goodPoints'),
-            improvements: anyNamed('improvements'),
+            title: title,
+            goodPoints: goodPoints,
+            improvements: improvements,
           ),
         ).called(1);
       });
 
-      test('長いテキストでも正常に動作する', () async {
-        // モックの設定
-        final testImageBytes = Uint8List.fromList([1, 2, 3, 4]);
+      test('長いタイトルとリストを処理する', () async {
+        final imageBytes = Uint8List.fromList([1, 2, 3, 4]);
+        const tempDirPath = 'assets';
+        final longTitle = 'A' * 1000; // 非常に長いタイトル
+        final longGoodPoints = List.generate(100, (i) => 'Good point $i');
+        final longImprovements = List.generate(100, (i) => 'Improvement $i');
+
+        final controller = ResultPageController(
+          imageGenerator: mockImageGenerator,
+          shareService: mockShareService,
+          getTempDir: () async => mockTempDir,
+        );
+
         when(
           mockImageGenerator.generateResultImage(
-            sleepPercentage: 75,
-            title: '非常に長いタイトルでテストしてみる',
-            goodPoints: anyNamed('goodPoints'),
-            improvements: anyNamed('improvements'),
+            sleepPercentage: sleepPercentage,
+            title: longTitle,
+            goodPoints: longGoodPoints,
+            improvements: longImprovements,
           ),
-        ).thenAnswer((_) async => testImageBytes);
+        ).thenAnswer((_) async => imageBytes);
 
-        when(mockDirectory.path).thenReturn('/tmp');
-        when(mockFile.writeAsBytes(any)).thenAnswer((_) async => mockFile);
-        when(mockSharePlus.share(any)).thenAnswer(
-          (_) async => const ShareResult(
-            '',
-            ShareResultStatus.success,
-          ),
+        when(mockTempDir.path).thenReturn(tempDirPath);
+        when(
+          mockShareService.share(any),
+        ).thenAnswer(
+          (_) async => const ShareResult('', ShareResultStatus.success),
         );
 
-        // テスト実行
         await controller.shareResult(
-          sleepPercentage: 75,
-          title: '非常に長いタイトルでテストしてみる',
-          goodPoints: [
-            '非常に長い良い点のテキストをテストしてみる',
-            'もう一つの長い良い点のテキスト',
-            '三つ目の長い良い点のテキスト',
-          ],
-          improvements: [
-            '非常に長い改善提案のテキストをテストしてみる',
-            'もう一つの長い改善提案のテキスト',
-            '三つ目の長い改善提案のテキスト',
-          ],
+          sleepPercentage: sleepPercentage,
+          title: longTitle,
+          goodPoints: longGoodPoints,
+          improvements: longImprovements,
         );
 
-        // モックが呼ばれたことを確認
         verify(
           mockImageGenerator.generateResultImage(
-            sleepPercentage: 75,
-            title: '非常に長いタイトルでテストしてみる',
-            goodPoints: anyNamed('goodPoints'),
-            improvements: anyNamed('improvements'),
+            sleepPercentage: sleepPercentage,
+            title: longTitle,
+            goodPoints: longGoodPoints,
+            improvements: longImprovements,
           ),
         ).called(1);
       });

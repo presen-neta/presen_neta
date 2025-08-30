@@ -53,7 +53,7 @@ class ResultPageController {
 
       final tempDir = await _getTemporaryDirectory();
       final imageFile = File(
-        '${tempDir.path}/result_image.png',
+        '${tempDir.path}/ResultPage.png',
       );
       await imageFile.writeAsBytes(imageBytes);
 
